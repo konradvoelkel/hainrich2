@@ -2,7 +2,6 @@ node_modules/
 .venv/
 __pycache__/
 .claude/
-.sync-exclude.lst
 
 # local-only by design (Playbook §2)
 CLAUDE.local.md

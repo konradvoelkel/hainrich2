@@ -59,5 +59,5 @@ Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
    Eigentümers.
 7. **Strenge CSP ist Teil des Tests.** `site/serve.mjs` setzt sie, weil die Runtime sonst still über
    `blob:` lädt (`env.useWasmCache = false` in `lib/model.js`). Die gültige CSP gehört ins Server-Repo.
-8. **Sciebo:** Das Verzeichnis wird synchronisiert. `node_modules`, Modelle und Datenbanken gehören in
-   `.sync-exclude.lst`; große Arbeitsdaten nach `/media/konrad/xtraspace`.
+8. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
+   `/media/konrad/xtraspace/hainrich2/`, nicht im Repo.
