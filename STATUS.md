@@ -15,7 +15,7 @@ _Stand 2026-11-04._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Entwürfe von Impressum und
-  Datenschutz. 66 Unit-Tests und 13 Smoke-Tests grün (`npm test`, `npm run smoke`). Sie zeigt vorerst die
+  Datenschutz. 73 Unit-Tests und 13 Smoke-Tests grün (`npm test`, `npm run smoke`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - `site/deploy.sh`: liefert den fertigen Baum per rsync in den Docroot.
 - `https://hai.konradvoelkel.com/eidl/` ist seit 2026-11-04 online, als Staging: der Vorschau-Baum mit den
@@ -23,6 +23,8 @@ _Stand 2026-11-04._
   Konrads Entscheidung, er liest die Rechtstexte dort. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
+- Der Korpus ist vom Skriptstand 2026-11-04 abends, 442 Passagen, nach dem Umbau des Skripts. Alle Zitat-Links der 30
+  Frageseiten antworten. Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate nach Wortlaut um.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
@@ -39,9 +41,6 @@ _Stand 2026-11-04._
 - Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
 - 81 der 90 Antworten stammen noch aus der Suche mit `k = 60`, nur s02, s08 und s12 sind neu. Bei den übrigen
   wäre die Auswahl heute meist etwas anders; ihre Zitate betrifft das nicht.
-- Der Korpus stammt von vor dem Umbau des Skripts am 2026-11-04. `latente-raeume` heißt dort jetzt
-  `latente-raeume-geometrisch`, die Links aus 6 Frageseiten enden in einer 404. Ob alle Zitate noch wörtlich im
-  Skript stehen, ist nicht geprüft.
 - Ob der Prüfschritt etwas taugt: 58 von 87 Hinweisen, bei allen Modellen ähnlich oft.
 - Impressum und Datenschutz sind Entwürfe. Der Datenschutztext gilt nur für die Fassung ohne Schreibpfade.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie

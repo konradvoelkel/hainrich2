@@ -24,6 +24,8 @@ for (const file of execFileSync('git', ['-C', skript, 'ls-tree', '-r', '--name-o
   const m = file.match(/^part-[^/]+\/(\d\d-)(.+)\.md$/);
   if (m) prefixOf[m[2]] = m[1];
 }
+/** nach dem Stand des Testsets umbenannt */
+prefixOf['latente-raeume-geometrisch'] = prefixOf['latente-raeume'];
 const lexical = buildBm25(passages.map(p => [p.title, ...p.path, p.text].join(' ')));
 const embedder = await createEmbedder();
 const queries = set.pos.flatMap(([a, b, gold]) => [[a, gold], [b, gold]]);

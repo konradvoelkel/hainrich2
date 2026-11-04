@@ -554,6 +554,11 @@ diesem Set gewählt, der Abstand liegt nahe am Rauschen. Anlass war s02: Eine en
 Passagen in der Fusion (Vektor Platz 4 und 6, danach 19 und 21), die Modelle meldeten das als offen. s02 und s08
 sind seitdem deutsch (D18) und mit s12 neu beantwortet, die übrigen 81 Antworten stammen aus `k = 60`.
 
+Korpus nach dem Umbau des Skripts (2026-11-04 abends, 442 statt 424 Passagen), gleiche Anfragen, Top 3 / Top 5 / Top 12:
+Vektor 91 / 94 / 99 %, BM25 80 / 87 / 94 %, hybrid 94 / 95 / 99 %. Von 131 zitierten Passagen war keine inhaltlich
+geändert; `tools/move-citations.mjs` zog alle 345 Zitatstellen um, 18 auf die umbenannte Seite, 10 mit neuem Linkziel,
+3 in eine größere Passage. Geänderter Wortlaut zieht nicht um und bricht den Build.
+
 Antworten, 30 Seeds mal 3 Modelle, Prompt-Version 1:
 
 | | Opus 5.5 | Sonnet 5.5 | Haiku 5.5 |
