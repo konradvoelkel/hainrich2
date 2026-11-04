@@ -13,6 +13,7 @@ Cross-Projekt-Regeln stehen in `~/files/work/PLAYBOOK.md`. §5 ist die Startlist
 | `DEVELOPMENT_PLAN.md` | Entscheidungen, Invarianten, Architektur, Phasen, Messungen. Stabile Abschnittsnummern. |
 | `STATUS.md` | Was existiert, was geprüft ist, was nicht. Gleicher Commit wie die Arbeit. |
 | `research/` | Datierte Messungen mit Skripten. |
+| `.claude/TODO.md` | Übergabe und offene Punkte in Reihenfolge. Lokal, nicht im Repo. Für neue Sitzungen zuerst. |
 
 ## Befehle
 

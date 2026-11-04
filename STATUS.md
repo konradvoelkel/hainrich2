@@ -17,13 +17,15 @@ _Stand 2026-11-04._
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Entwürfe von Impressum und
   Datenschutz. 64 Unit-Tests und 13 Smoke-Tests grün (`npm test`, `npm run smoke`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
+- Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
+  `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
   `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
 
 ## Was nicht existiert
 
-- Keine Schreibpfade, keine Rolle im Server-Repo, kein DNS-Eintrag, kein `site/deploy.sh`. Nichts ist
-  veröffentlicht.
+- Keine Schreibpfade, keine Rolle im Server-Repo, kein A- oder AAAA-Eintrag für `hai`, kein
+  `site/deploy.sh`. Unter `https://hai.konradvoelkel.com/` ist nichts erreichbar.
 - Keine Nutzungsbedingungen, die braucht erst Phase 3. Keine Vorschaukarte (`og:image`).
 - Kein Key für den VPS. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
@@ -34,9 +36,6 @@ _Stand 2026-11-04._
 - Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
 - Ob der Prüfschritt etwas taugt: 54 von 87 Hinweisen, bei allen Modellen gleich oft.
 - Impressum und Datenschutz sind Entwürfe. Der Datenschutztext gilt nur für die Fassung ohne Schreibpfade.
-- Ob `mail@hai.konradvoelkel.com` ankommt. Der MX für `hai` und die Fastmail-Option für Subdomains stehen
-  seit 2026-11-04, eine Testmail von außerhalb von Fastmail fehlt noch. Eine Mail aus dem eigenen Konto
-  läuft intern und beweist den Weg über den MX nicht.
 - Die CSP steht bisher nur in `site/serve.mjs`, Caddy und `precompressed` sind nicht geprüft.
 - Smoke-Test nur in Chromium, nicht in Firefox und Safari.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.

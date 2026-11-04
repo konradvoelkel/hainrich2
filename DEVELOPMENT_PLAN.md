@@ -427,8 +427,7 @@ keine fremden Anfragen.
 Stand 2026-11-04: Der lokale Teil steht. `site/build.mjs` baut 33 Seiten, die Suche läuft im Browser,
 Impressum und Datenschutz liegen als Entwurf vor. Smoke-Test grün unter der geplanten CSP, keine fremden
 Anfragen, kein seitliches Scrollen auf allen 33 Seiten bei fünf Breiten. Die Abnahme gilt lokal, nicht auf dem
-Server. Offen: Rolle, DNS und Caddy-Block mit CSP `[owner]`, Testmail an die Kontaktadresse von außerhalb
-von Fastmail `[owner]`, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph, `site/deploy.sh`.
+Server. Offen: Rolle, A/AAAA und Caddy-Block mit CSP `[owner]`, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph, `site/deploy.sh`.
 
 **Phase 3: Schreibpfad und Moderation.** Token, Zustimmung, Checker, `pending`, `/mod/`, Votes,
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle
@@ -452,7 +451,8 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 
 ## 17. Offene Punkte `[owner]`
 
-1. ~~Hostname.~~ Entschieden 2026-11-04: `hai.konradvoelkel.com/eidl` (D11). DNS-Eintrag steht noch aus.
+1. ~~Hostname.~~ Entschieden 2026-11-04: `hai.konradvoelkel.com/eidl` (D11). Der MX steht seit 2026-11-04,
+   A und AAAA fehlen noch.
 2. ~~Remote.~~ Entschieden 2026-11-04: privates GitHub-Repo `konradvoelkel/hainrich2`. Öffentlich erst
    nach dem Audit aus Playbook §5 Punkt 10; die Messskripte enthalten noch lokale Pfade.
 3. Antwortmodell nach dem Blindvergleich in Phase 1. Das Budget steht (D14).
