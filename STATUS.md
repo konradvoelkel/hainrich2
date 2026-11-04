@@ -8,19 +8,25 @@ _Stand 2026-11-04._
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
+- `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
+  außerhalb des Repos auf `xtraspace`, die Token-IDs im Repo.
 
 ## Was nicht existiert
 
-- Kein Anwendungscode, keine Rolle im Server-Repo, kein Hostname, keine Rechtstexte.
+- Kein Anwendungscode, keine Rolle im Server-Repo, kein DNS-Eintrag, keine Rechtstexte.
+- Kein Key für den VPS. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
 
-- Alle Client-Kandidaten aus Plan §6.1. Gemessen sind bisher nur MiniLM und multilingual-e5-large.
-- Claude als Richter und als Antwortgeber, Citations mit Opus 5.5.
+- Ob der Laptop-Key im Workspace `hainrich2` hängt und das Limit von 20 $ greift. Der Key zeigt nur
+  eine Workspace-ID, das lässt sich von hier nicht unterscheiden.
+- Claude als Antwortgeber, Citations mit Opus 5.5.
+- Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
 - Text-Fragmente auf den MyST-Seiten.
-- Die Größenangaben für geschnittene Modelle sind Schätzungen.
+- Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.
+- Der Abnahmewert für Duplikate in den Top 5 (85 %) ist nicht erreicht: 74 bis 80 %.
 
 ## Nächster Schritt
 
-Phase 0 aus dem Plan. Sie braucht rund 270 MB Modell-Downloads von Hugging Face (zwei int8-Modelle
-samt Tokenizer), für den Vokabelschnitt des Siegers weitere 470 MB und für den Richter einen API-Key.
+Phase 1 aus dem Plan: Korpus, Antwort-Pipeline, Seeds. Phase 0 ist abgeschlossen, bis auf die Latenz
+auf einem echten Telefon.

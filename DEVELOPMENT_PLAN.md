@@ -112,7 +112,7 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
    Standardgrund.
 6. **Freigabe.** Der Text wandert ohne Geheimnis-Hash nach `public.db`. Ab hier gibt es serverseitig
    keine Verbindung zur Person. „Meine Fragen“ lebt nur im Browser (`localStorage`).
-7. **Richter.** Der Worker holt die fünf ähnlichsten Fragen, ein Modell entscheidet über Duplikate
+7. **Richter.** Der Worker holt die 20 ähnlichsten Fragen, ein Modell entscheidet über Duplikate
    (§6.4). Bei Duplikat wird die Frage Variante und die vorhandene Antwort gilt.
 8. **Antwort.** Sonst entsteht eine Bot-Antwort mit Zitat, sichtbar mit Badge `ungeprüft`, `noindex`.
 9. **Kein Beleg.** Nach einem zweiten Anlauf mit ganzen Kapiteln (§7.2) geht die Frage als
@@ -128,43 +128,69 @@ nicht speichern wollen.
 
 ### 6.1 Was läuft
 
-Gleicher Stack wie hAInrich: transformers.js, ONNX Runtime WASM, Web Worker, Modell selbst
-ausgeliefert. Dateigrößen aus der Hugging-Face-API vom 2026-11-04.
+Ergebnis von Phase 0 (2026-11-04): **`multilingual-e5-small`, Vokabular auf 16.384 Tokens geschnitten.**
+Gleicher Stack wie hAInrich: transformers.js, ONNX Runtime WASM, Web Worker, `numThreads = 1`, Modell
+selbst ausgeliefert. Anfragen tragen das Prefix `query: `, Passagen `passage: `. Download 29,4 MB
+(28,6 MB Modell, 0,8 MB Tokenizer), komprimiert rund 21 MB, dazu 14 MB WASM-Runtime.
 
-| Kandidat | Download (int8 + Tokenizer) | Lizenz | Läuft ohne Umbau | Anmerkung |
-|---|---|---|---|---|
-| `Xenova/paraphrase-multilingual-MiniLM-L12-v2` | 118 + 17 = 135 MB | Apache 2.0 | ja | auf Paraphrasen trainiert, kein Prefix |
-| `Xenova/multilingual-e5-small` | 118 + 17 = 135 MB | MIT | ja | braucht `query:` und `passage:`, auch für Retrieval trainiert |
-| `ibm-granite/granite-embedding-97m-multilingual-r2` | 98 + 25 = 123 MB | Apache 2.0 | zu prüfen | Mai 2026, Unterstützung in transformers.js ungeprüft |
-| `ferrisS/german-multilingual-e5-small` | ~39 MB (geschätzt, 35,8M Parameter) | MIT | nein, ONNX-Export und Quantisierung fehlen | nur Deutsch, Englisch leidet |
-| eigener Schnitt auf Deutsch und Englisch | ~28 MB (geschätzt, 16k Tokens) | wie Basis | nein, Trim und Export nötig | einziger Weg zum 30-MB-Ziel |
+| Kandidat | Download (int8 + Tokenizer) | Lizenz | Ergebnis |
+|---|---|---|---|
+| `multilingual-e5-small`, geschnitten | 29,4 MB | MIT | **gewählt**, gleiche Qualität wie ungeschnitten |
+| `Xenova/multilingual-e5-small` | 135 MB | MIT | gleiche Qualität, gut viermal so groß |
+| `Xenova/paraphrase-multilingual-MiniLM-L12-v2` | 135 MB | Apache 2.0 | verworfen, Skript-Suche nicht besser als MiniLM |
+| `ibm-granite/granite-embedding-97m-multilingual-r2` | 123 MB | Apache 2.0 | nicht gemessen, nicht mehr nötig |
+| `ferrisS/german-multilingual-e5-small` | ~39 MB (geschätzt) | MIT | nicht gemessen, nicht mehr nötig |
 
-Keiner davon ist bisher gemessen. Die Zahlen in §19 gelten für MiniLM und e5-large.
+### 6.2 Der Schnitt
 
-### 6.2 Vorgehen
+Ein Vokabelschnitt ändert keine Gewichte: Texte, deren Tokens erhalten bleiben, bekommen denselben
+Vektor. Die Tabelle liegt im int8-ONNX als Initializer eines `Gather` vor und macht 96 der 118 MB aus,
+der Rest sind 21,7 MB. `research/2026-11-04-browsermodell/trim.py` schneidet Tabelle und Tokenizer
+direkt, die vollen Gewichte braucht es dafür nicht.
 
-Erst die beiden ungeschnittenen Modelle messen, dann den Sieger schneiden. Ein Vokabelschnitt ändert
-keine Gewichte: Texte, deren Tokens erhalten bleiben, bekommen dasselbe Ergebnis. Die Qualität
-entscheidet sich also am Basismodell, der Schnitt muss nur Parität zeigen. Behalten werden die
-Tokens eines deutschen und englischen Textkorpus plus alle Tokens des Skripts und des Glossars.
+Behalten werden Spezialtokens, Einzelzeichen, alle 6.734 Tokens des Skripts, dann die häufigsten
+Tokens aus Transkripten, anderen Skripten und englischen Texten. Das Skript zuerst ist entscheidend:
+Ohne diese Regel blieben 40 % der Passagen gleich tokenisiert, mit ihr 99,8 %. Fehlende Wörter
+zerfallen in kleinere Stücke, `<unk>` kam nicht vor.
 
-Zum Modell kommen 14 MB WASM-Runtime. Das Modell lädt erst beim ersten Fokus ins Suchfeld, Crawler
-und reine Leser zahlen nichts. Bis es da ist, läuft eine lexikalische Suche, die auch als Rückfall
-bleibt. Der eigene Host erlaubt erstmals COOP und COEP, also WASM-Threads; das Playbook setzt
-`numThreads = 1` nur wegen statischer Fremd-Hosts. Lohnt sich das, wird es gemessen.
+`keep-ids-16384.txt` macht den Schnitt ohne die privaten Korpustexte reproduzierbar. Der Build in
+Phase 2 wendet die Liste auf das festgepinnte Basismodell an (Revision `761b726d`) und prüft die
+SHA-256 aus dem Messbericht. Neue Fachwörter im Skript kosten etwas Genauigkeit, ein Neuschnitt ist
+ein Skriptlauf.
+
+Das Modell lädt erst beim ersten Fokus ins Suchfeld, Crawler und reine Leser zahlen nichts. Bis es da
+ist, läuft eine lexikalische Suche, die auch als Rückfall bleibt. WASM-Threads wären auf dem eigenen
+Host möglich, lohnen aber nicht: 11 statt 31 ms auf dem Desktop bei ohnehin reichender Latenz. COOP und
+COEP entfallen damit.
 
 ### 6.3 Was die Suche leistet
 
 Embeddings liefern Kandidaten, sie entscheiden nichts (§19). Ein Schwellwert kommt nirgends vor. Die
 Top 5 erscheinen als Vorschläge, die Entscheidung trifft ein Klick oder der Richter.
 
+Der direkte Kosinus zwischen Fragen findet das Duplikat nur zu gut 60 % in den Top 5. Besser ist der
+Umweg über das Skript: Jede Frage bekommt ein Profil aus ihren 20 ähnlichsten Passagen, die Rangfolge
+mischt Kosinus und Profilähnlichkeit (z-normiert, Profil doppelt gewichtet). Das hebt die Top 5 auf 74
+bis 80 % und die Top 20 auf 92 %, ohne größeres Modell. Die Passagen-Ähnlichkeiten rechnet der Client
+für die Skript-Suche ohnehin. Sobald Antworten Zitate tragen, kann das Profil aus den echten Zitaten
+kommen; das dürfte besser sein, ist aber nicht gemessen.
+
 ### 6.4 Der Richter
 
-Nach der Freigabe entscheidet ein Modell über die Top-5-Kandidaten, die der Worker mit demselben
-Embedder neu berechnet; Vektoren vom Client gelten nicht. Lokal erreichten `qwen3.6:27b` und `gemma4`
-22 bis 23 von 24 Duplikaten bei null falschen Zusammenlegungen. Für den Betrieb ist `claude-haiku-5-5`
-vorgesehen und in Phase 0 mit demselben Set nachzumessen. Die Moderation kann jede Zusammenlegung
-trennen, jeder Fall landet im Revisionslog.
+Nach der Freigabe entscheidet `claude-haiku-5-5` in zwei Schritten. Die Kandidaten berechnet der
+Worker mit demselben Embedder neu, Vektoren vom Client gelten nicht.
+
+1. **Liste:** Die neue Frage und ihre Top 20 gehen in einen Aufruf, das Modell nennt eine Nummer oder 0.
+   Top 20 statt Top 5, weil das die Trefferquote von rund 75 auf 92 % hebt.
+2. **Bestätigung:** Der Treffer geht als Einzelpaar noch einmal an dasselbe Modell. Zusammengelegt wird
+   nur, wenn beide Schritte zustimmen.
+
+Der zweite Schritt ist nötig: In der Liste legte Haiku „L1-Regularisierung“ mit „L2-Regularisierung“
+zusammen, als Einzelpaar lehnte es das ab. Nach der Bestätigung blieb keine klar falsche
+Zusammenlegung übrig, automatisch erkannt werden rund 60 % der echten Duplikate (§19). Das ist gewollt
+vorsichtig: Ein verpasstes Duplikat kostet eine Antwort mehr und lässt sich von Hand zusammenlegen, eine
+falsche Zusammenlegung zeigt still eine falsche Antwort. Beide Aufrufe kosten zusammen rund 0,02 Cent.
+Die Moderation kann jede Zusammenlegung trennen, jeder Fall landet im Revisionslog.
 
 ## 7. Antworten
 
@@ -369,6 +395,12 @@ Richter, Latenz auf einem Mittelklasse-Telefon. Abnahme: Modellentscheidung mit 
 Der kleinste Kandidat gewinnt, der das Duplikat zu 85 % in die Top 5 und das richtige Kapitel zu 90 %
 in die Top 3 bringt, bei unter 500 ms je Anfrage.
 
+Stand 2026-11-04: Modell entschieden (§6.1). Kapitel in den Top 3: 92 %, erreicht. Latenz: 89 ms bei
+vierfacher und 139 ms bei sechsfacher CPU-Drosselung, erreicht, auf einem echten Telefon noch nicht
+geprüft. Duplikat in den Top 5: 74 bis 80 %, **nicht erreicht**, auch nicht von e5-large; deshalb
+bekommt der Richter die Top 20 (92 %). Haiku als Richter ist gemessen (§6.4, §19). Damit ist Phase 0
+abgeschlossen, bis auf die Latenz auf einem echten Telefon.
+
 **Phase 1: Korpus und Antworten, offline.** Segmentierung, Citations, Prüfschritt, Seeds,
 Blindvergleich der Modelle, Opus-Durchgang. Abnahme: 30 von dir geprüfte Antworten mit Zitat, falsche
 Ablehnungen benannt, Antwortmodell entschieden.
@@ -389,6 +421,8 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 ## 16. Tests
 
 - Reine Module (Checker, Zustände, Segmentierung, Limits) als Node-Unit-Tests.
+- Modell: SHA-256 der ausgelieferten Dateien, Vektor-Parität zwischen Node und Browser. Native
+  Runtime und WASM unterscheiden sich bei int8 leicht (Kosinus bis 0,995), die Rangfolge hält das aus.
 - API gegen temporäres SQLite, Claude immer als Stub. Kein Test ruft die echte API.
 - Je Invariante ein Test. I1 auch strukturell: Der Test startet den Worker unter derselben Unit-Regel.
 - Eigenschaftstest: Kein öffentlicher Datensatz trifft eine harte Regel.
@@ -402,7 +436,9 @@ Betrieb mit echten Kosten im `usage`-Bericht.
    nach dem Audit aus Playbook §5 Punkt 10; die Messskripte enthalten noch lokale Pfade.
 3. Antwortmodell nach dem Blindvergleich in Phase 1. Das Budget steht (D14).
 4. ~~Moderation.~~ Entschieden 2026-11-04 (D15).
-5. Anthropic-Konto: Workspace, Key, Ausgabenlimit anlegen; Key in den Vault.
+5. Anthropic-Konto: Der Laptop-Key läuft seit 2026-11-04 (`~/.config/hainrich2/anthropic.env`, nicht
+   im Repo). Ob er im Workspace `hainrich2` hängt und das Limit greift, ist in der Console zu prüfen.
+   Für den VPS kommt ein eigener Service-Account-Key in den Vault.
 6. ~~Frist für ungeprüfte Antworten.~~ Entschieden 2026-11-04: keine Frist (D10).
 7. ~~Format der Matrikelnummer.~~ Entfällt durch D16.
 
@@ -413,6 +449,9 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 | GitLab Pages mit Pipeline-Trigger | Kein POST-Ziel für ein Forum, rund 20 s Job je Klick, Votes unmöglich. |
 | 4090 als Backend im Betrieb | D1. Für Offline-Arbeit bleibt sie verfügbar, wird aber nicht gebraucht. |
 | Schwellwert auf Kosinus | §19: trennt nicht, selbst mit e5-large. Ein falscher Merge zeigt still eine falsche Antwort. |
+| `paraphrase-multilingual-MiniLM` | 135 MB, Skript-Suche 69 % statt 92 %, Duplikate schlechter als e5-small. |
+| Ungeschnittenes e5-small | Gleiche Qualität bei 135 statt 29,4 MB. |
+| WASM-Threads mit COOP und COEP | 11 statt 31 ms, unnötig; zusätzliche Header und Isolationsregeln für nichts. |
 | Richter vor der Freigabe | Würde ungeprüften Text in die USA senden, bricht I1. |
 | Vektoren vom Client übernehmen | Beliebig fälschbar; der Worker rechnet selbst. |
 | JSON für Antworttexte | LaTeX bricht (`\t`, `\b` als Escape), §19. |
@@ -442,4 +481,41 @@ Richter: `qwen3.6:27b` 22 von 24, `gemma4` 23 von 24, je etwa 0,5 s pro Paar. An
 ab, MSE gegen Cross-Entropy und RLHF aber zu Unrecht. `gemma4` beantwortete die Übungsfrage mit
 Unsinn, belegte eine Antwort mit einer unpassenden Stelle und zerstörte LaTeX im JSON-Modus.
 
-Noch nicht gemessen: alle Kandidaten aus §6.1, Claude als Richter und als Antwortgeber.
+Zweite Messung, Details in `research/2026-11-04-browsermodell/`: 50 Duplikate, 50 Negativpaare, 10
+Paare Deutsch/Englisch, 150 Fragen im Bestand, 100 Anfragen an 631 Passagen, alle Kapitel. Bei 50
+Paaren ist ein Punkt 2 %, das 95-%-Intervall um 64 % reicht von 50 bis 76 %.
+
+| | MiniLM | paraphrase | e5-small | e5-small, Schnitt | e5-large |
+|---|---|---|---|---|---|
+| Download | 23 MB | 135 MB | 135 MB | 29,4 MB | zu groß |
+| Kapitel in Top 3 | 72 % | 69 % | 92 % | 92 % | 95 % |
+| Kapitel in Top 5 | 80 % | 79 % | 98 % | 98 % | 98 % |
+| Duplikat in Top 5, Kosinus | 32 % | 48 % | 64 % | 62 % | 70 % |
+| Duplikat in Top 5, mit Profil | – | – | 80 % | 80 % | – |
+| Duplikat in Top 20, mit Profil | – | – | 92 % | 92 % | – |
+| Kosinus gleiche Frage Deutsch/Englisch | 0,31 | 0,83 | 0,91 | 0,91 | 0,93 |
+
+Die Profil-Gewichte sind auf demselben Set gewählt, die 80 % also eher optimistisch. In der Mischung
+aus dem Betrieb (Anfrage im Browser, Bestand aus Node) bleibt die Kapitelsuche bei 92/98 %, Duplikate
+liegen bei 74 % in den Top 5 und 92 % in den Top 20.
+
+Latenz im Headless-Chromium, WASM, ein Thread, 40 deutsche Fragen: 31 ms im Median, 89 ms bei
+vierfacher, 139 ms bei sechsfacher CPU-Drosselung (p95 177 ms). Laden 1,0 bis 2,8 s vom lokalen Server.
+
+Haiku 5.5 als Richter, Aufwand `low`, 110 Paare und 100 Fragen gegen ihre Top 20, Kosten zusammen
+2,3 Cent:
+
+| | Ergebnis |
+|---|---|
+| Einzelpaare: Duplikate erkannt | 37 von 50 |
+| Einzelpaare: falsche Zusammenlegungen | 0 von 50 |
+| Einzelpaare: gleiche Frage Deutsch/Englisch | 10 von 10 |
+| Top 20, nur Liste: klar falsche Zusammenlegungen | 2 (L1/L2, Gradient der Cross-Entropy/„Was ist Cross-Entropy?“) |
+| Top 20, Liste plus Bestätigung: klar falsche Zusammenlegungen | 0 |
+| Top 20, Liste plus Bestätigung: Duplikate automatisch erkannt | 32 von 50 |
+
+Die 13 verpassten Einzelpaare sind überwiegend solche, bei denen eine Seite nur einen Teil der anderen
+fragt, und die Regel im Prompt verlangt genau das. Das Set enthält unbeabsichtigt echte Duplikate unter
+den Negativfragen; die Urteile dazu sind von Hand gelesen, nicht automatisch gezählt.
+
+Noch nicht gemessen: Claude als Antwortgeber, die Latenz auf einem echten Telefon.

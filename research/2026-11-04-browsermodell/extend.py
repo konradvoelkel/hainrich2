@@ -1,0 +1,68 @@
+"""Baut set2.json aus dem Set der ersten Messung plus 26 Duplikaten, 26 Negativpaaren, 4 Paaren DE/EN."""
+import json,sys
+d=json.load(open(sys.argv[1]))
+pos=[
+("Was macht eine Faltungsschicht eigentlich?","Wie funktioniert die Convolution in einem CNN?",["20-"]),
+("Wozu braucht man Pooling in CNNs?","Warum verkleinert man die Feature Maps nach der Faltung?",["20-"]),
+("Was bedeutet Stride bei einer Faltung?","Was passiert, wenn ich die Schrittweite des Filters erhöhe?",["20-","10-"]),
+("Warum ist ein CNN für Bilder besser geeignet als ein vollverbundenes Netz?","Wieso nimmt man bei Bilddaten Faltungen statt Dense Layers?",["20-"]),
+("Wie trainiert man ein GAN?","Wie läuft das Training von Generator und Diskriminator ab?",["22-"]),
+("Was ist Mode Collapse?","Warum erzeugt mein GAN immer wieder fast dasselbe Bild?",["22-"]),
+("Worin unterscheiden sich GANs und VAEs?","Was ist besser zum Bilder generieren, GAN oder Variational Autoencoder?",["23-","22-","15-"]),
+("Was bedeutet Arithmetik im Latent Space?","Wieso kann man mit Wortvektoren rechnen, König minus Mann plus Frau?",["23-","16-"]),
+("Was ist Knowledge Distillation?","Wie bringt man ein kleines Modell dazu, ein großes nachzuahmen?",["25-"]),
+("Wozu dient die Temperatur beim Destillieren?","Warum teilt man die Logits beim Distillation Loss durch T?",["25-"]),
+("Was ist Momentum beim Gradientenabstieg?","Warum merkt sich der Optimierer die vorherige Schrittrichtung?",["26-"]),
+("Warum ist Adam oft besser als normales SGD?","Was bringt mir Adam gegenüber einfachem stochastischem Gradientenabstieg?",["26-"]),
+("Was ist eine Adversarial Attack?","Wie kann man ein Bild minimal verändern, damit das Netz es falsch klassifiziert?",["27-"]),
+("Was meint die Manifold-Hypothese?","Liegen echte Daten wirklich auf einer niedrigdimensionalen Mannigfaltigkeit?",["27-","23-"]),
+("Wie viel Speicher braucht ein LLM mit 7 Milliarden Parametern?","Passt ein 7B-Modell auf meine Grafikkarte?",["21-"]),
+("Wie kann ich ein LLM lokal laufen lassen?","Wie benutze ich ein Sprachmodell auf meinem eigenen Rechner?",["21-"]),
+("Wie finetunet man einen Transformer?","Wie passe ich ein vortrainiertes Sprachmodell an meine eigenen Daten an?",["21-","04-"]),
+("Was ist ein LSTM und wozu die Gates?","Wofür sind die Tore in einem Long Short-Term Memory gut?",["18-"]),
+("Was ist node2vec?","Wie bekommt man Embeddings für die Knoten eines Graphen?",["17-"]),
+("Wie funktioniert ein Graph Neural Network?","Wie tauschen die Knoten in einem GNN Informationen aus?",["17-"]),
+("Was ist Broadcasting in PyTorch?","Wieso kann ich einen Vektor zu einer Matrix addieren, obwohl die Shapes nicht passen?",["05-"]),
+("Wie schiebe ich mein Modell auf die GPU?","Was muss ich tun, damit PyTorch auf der Grafikkarte rechnet?",["04-","05-","14-"]),
+("Wie benutze ich ein vortrainiertes Modell von Hugging Face?","Wie lade ich fertige Modelle aus dem Hugging Face Hub?",["04-"]),
+("Warum sollte man die Gewichte nicht alle mit null initialisieren?","Was geht schief, wenn alle Startgewichte gleich sind?",["03-","08-","09-","11-","13-"]),
+("Was ist der Unterschied zwischen Regression und Klassifikation?","Wann spricht man von Regression und wann von Klassifikation?",["01-"]),
+("Was ist Dropout?","Wieso schaltet man beim Training zufällig Neuronen ab?",["12-","14-"]),
+]
+neg=[
+("Was macht eine Faltungsschicht?","Was macht eine Pooling-Schicht?"),
+("Was bedeutet Stride bei einer Faltung?","Was bedeutet Padding bei einer Faltung?"),
+("Was macht der Generator im GAN?","Was macht der Diskriminator im GAN?"),
+("Wie trainiert man einen VAE?","Wie trainiert man ein GAN?"),
+("Wie funktioniert Momentum?","Wie funktioniert die adaptive Lernrate?"),
+("Warum ist Adam besser als SGD?","Warum ist SGD manchmal besser als Adam?"),
+("Wie groß ist der Speicherbedarf beim Training eines LLM?","Wie groß ist der Speicherbedarf bei der Inferenz eines LLM?"),
+("Was ist das Input Gate im LSTM?","Was ist das Forget Gate im LSTM?"),
+("Was ist node2vec?","Was ist word2vec?"),
+("Was ist ein Student-Modell?","Was ist ein Teacher-Modell?"),
+("Was ist die Interpolation im Latent Space?","Was ist die Superposition im Latent Space?"),
+("Wie greift man ein Bildklassifikationsmodell an?","Wie trainiert man ein Bildklassifikationsmodell?"),
+("Wie lade ich ein Modell von Hugging Face?","Wie speichere ich ein Modell in PyTorch?"),
+("Was ist Regression?","Was ist Klassifikation?"),
+("Was ist Overfitting?","Was ist Underfitting?"),
+("Wie rechnet PyTorch auf der GPU?","Wie rechnet PyTorch auf der CPU?"),
+("Was ist Dropout?","Was ist Batch Normalization?"),
+("Was ist der Encoder im Autoencoder?","Was ist der Decoder im Autoencoder?"),
+("Wie viele Parameter hat eine Faltungsschicht?","Wie viele Parameter hat eine vollverbundene Schicht?"),
+("Was ist der Trainingsdatensatz?","Was ist der Testdatensatz?"),
+("Was ist ein Skalar in PyTorch?","Was ist eine Matrix in PyTorch?"),
+("Wie wählt man die Anzahl der Epochen?","Wie wählt man die Anzahl der Schichten?"),
+("Warum verwendet man Softmax bei Mehrklassenproblemen?","Warum verwendet man Sigmoid bei Binärproblemen?"),
+("Wie berechnet man die Ableitung von ReLU?","Wie berechnet man die Ableitung von Sigmoid?"),
+("Wie funktioniert Greedy Decoding?","Wie funktioniert Sampling mit Temperatur?"),
+("Was ist Perplexity?","Was ist Cross-Entropy?"),
+]
+cross=[
+("What is the difference between a GAN and a VAE?","Worin unterscheiden sich GANs und VAEs?"),
+("How do I move my model to the GPU?","Wie schiebe ich mein Modell auf die GPU?"),
+("What is mode collapse?","Was ist Mode Collapse?"),
+("Why shouldn't all weights be initialized to zero?","Warum sollte man die Gewichte nicht alle mit null initialisieren?"),
+]
+d['pos']+= [list(x) for x in pos]; d['neg']+=[list(x) for x in neg]; d['cross']+=[list(x) for x in cross]
+json.dump(d,open(sys.argv[2],'w'),ensure_ascii=False)
+print(len(d['pos']),len(d['neg']),len(d['cross']),'chunks',len(d['chunks']))
