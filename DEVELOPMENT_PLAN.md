@@ -37,6 +37,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D14 | Budget: 20 $ im Monat als Limit in der Console. |
 | D15 | Anfangs moderiert nur Konrad, gegebenenfalls kommt eine Tutorin dazu. |
 | D16 | Der Checker sperrt jede Zahl mit 6 bis 12 Ziffern. |
+| D17 | Kontakt im Impressum ist `mail@hai.konradvoelkel.com`, Zustellung als `hai@konradvoelkel.com` im Fastmail-Konto. Anschrift wie bei Laberampel. |
 
 ## 3. Invarianten
 
@@ -426,8 +427,8 @@ keine fremden Anfragen.
 Stand 2026-11-04: Der lokale Teil steht. `site/build.mjs` baut 33 Seiten, die Suche läuft im Browser,
 Impressum und Datenschutz liegen als Entwurf vor. Smoke-Test grün unter der geplanten CSP, keine fremden
 Anfragen, kein seitliches Scrollen auf allen 33 Seiten bei fünf Breiten. Die Abnahme gilt lokal, nicht auf dem
-Server. Offen: Rolle, DNS und Caddy-Block mit CSP `[owner]`, `SITE_KONTAKT` und `SITE_ANSCHRIFT`
-`[owner]`, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph, `site/deploy.sh`.
+Server. Offen: Rolle, DNS und Caddy-Block mit CSP `[owner]`, Testmail an die Kontaktadresse von außerhalb
+von Fastmail `[owner]`, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph, `site/deploy.sh`.
 
 **Phase 3: Schreibpfad und Moderation.** Token, Zustimmung, Checker, `pending`, `/mod/`, Votes,
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle

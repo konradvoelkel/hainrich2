@@ -33,8 +33,10 @@ _Stand 2026-11-04._
   eine Workspace-ID, das lässt sich von hier nicht unterscheiden.
 - Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
 - Ob der Prüfschritt etwas taugt: 54 von 87 Hinweisen, bei allen Modellen gleich oft.
-- Impressum und Datenschutz sind Entwürfe. Kontaktadresse und Anschrift fehlen, ein Release bricht
-  deshalb ab. Der Datenschutztext gilt nur für die Fassung ohne Schreibpfade.
+- Impressum und Datenschutz sind Entwürfe. Der Datenschutztext gilt nur für die Fassung ohne Schreibpfade.
+- Ob `mail@hai.konradvoelkel.com` ankommt. Der MX für `hai` und die Fastmail-Option für Subdomains stehen
+  seit 2026-11-04, eine Testmail von außerhalb von Fastmail fehlt noch. Eine Mail aus dem eigenen Konto
+  läuft intern und beweist den Weg über den MX nicht.
 - Die CSP steht bisher nur in `site/serve.mjs`, Caddy und `precompressed` sind nicht geprüft.
 - Smoke-Test nur in Chromium, nicht in Firefox und Safari.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.

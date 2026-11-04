@@ -31,7 +31,7 @@ const ROUND = 4;
 
 const env = Object.fromEntries(fs.readFileSync(path.join(here, 'site.env'), 'utf8').split('\n')
   .filter(l => /^[A-Z_]+=/.test(l)).map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
-if (args.release && (!env.SITE_KONTAKT || !env.SITE_ANSCHRIFT)) throw new Error('site.env: SITE_KONTAKT und SITE_ANSCHRIFT fehlen für ein Release.');
+if (!env.SITE_KONTAKT || !env.SITE_ANSCHRIFT) throw new Error('site.env: SITE_KONTAKT und SITE_ANSCHRIFT fehlen.');
 
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const seeds = readJson(path.join(repo, 'seeds/fragen.json'));
@@ -116,8 +116,8 @@ const site = {
 };
 
 const fill = text => text
-  .replaceAll('__KONTAKT__', env.SITE_KONTAKT || '(Adresse steht noch aus)')
-  .replaceAll('__ANSCHRIFT__', !env.SITE_ANSCHRIFT ? '  \n(Anschrift steht noch aus)' : env.SITE_ANSCHRIFT === '-' ? '' : `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
+  .replaceAll('__KONTAKT__', env.SITE_KONTAKT)
+  .replaceAll('__ANSCHRIFT__', `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
 
 write('index.html', indexPage(questions, site));
 for (const q of questions) write(`f/${q.id}/index.html`, questionPage(q, site));

@@ -6,7 +6,7 @@ Konrad Völkel__ANSCHRIFT__
 
 E-Mail: __KONTAKT__
 
-Dieses Angebot ist privat und steht in keiner Verbindung zur Heinrich-Heine-Universität Düsseldorf. Die Nutzung ist freiwillig und hat keinen Einfluss auf Prüfungen oder Bewertungen.
+Dieses Angebot ist privat und steht in keiner Verbindung zur Heinrich-Heine-Universität Düsseldorf; die Anschrift dient allein der Erreichbarkeit. Die Nutzung ist freiwillig und hat keinen Einfluss auf Prüfungen oder Bewertungen.
 
 ## Inhalte melden
 
