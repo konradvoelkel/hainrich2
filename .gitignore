@@ -1,0 +1,26 @@
+node_modules/
+.venv/
+__pycache__/
+.claude/
+.sync-exclude.lst
+
+# local-only by design (Playbook §2)
+CLAUDE.local.md
+BRANDING.md
+HUMAN_RELEASE_CHECKLIST.md
+
+# fetched and verified at build time, never committed (Playbook §2)
+models/
+wasm/
+
+# runtime data and secrets
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+
+# derived measurement data; the scripts regenerate it
+research/**/set.json
+research/**/minilm.json
+research/**/e5large.json
