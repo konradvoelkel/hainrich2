@@ -4,7 +4,10 @@
  * Anlauf mit ganzen Kapiteln (Plan §7.2). Refusal-Fallbacks sind hier bewusst aus: Im Blindvergleich darf
  * kein anderes Modell einspringen. Für den Worker in Phase 4 gehören sie dazu.
  *
- *   node tools/answer-seeds.mjs <arbeitsverzeichnis> <fragen.json> <antworten.json>
+ *   node tools/answer-seeds.mjs <arbeitsverzeichnis> <fragen.json> <antworten.json> [s02,s08]
+ *
+ * Mit einer Liste läuft ein Nachlauf für diese Seeds: eigene Batches, und nur ihre Zeilen in antworten.json
+ * werden ersetzt. Ohne Liste schreibt das Skript die Datei neu, die übrigen Antworten wären dann weg.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,9 +16,13 @@ import { openCorpus } from '../lib/corpus.js';
 import { buildRequest, parseAnswer, PROMPT_VERSION } from '../lib/answer.js';
 import { Ledger } from '../lib/budget.js';
 
-const [dir, seedsFile, out] = process.argv.slice(2);
+const [dir, seedsFile, out, only] = process.argv.slice(2);
 const MODELS = { opus: 'claude-opus-5-5', sonnet: 'claude-sonnet-5-5', haiku: 'claude-haiku-5-5' };
-const seeds = JSON.parse(fs.readFileSync(seedsFile, 'utf8'));
+const picked = only?.split(',');
+const allSeeds = JSON.parse(fs.readFileSync(seedsFile, 'utf8'));
+const seeds = picked ? allSeeds.filter(s => picked.includes(s.id)) : allSeeds;
+if (picked && seeds.length !== picked.length) throw new Error(`Seeds nicht gefunden: ${only}`);
+const suffix = picked ? `-${picked.join('-')}` : '';
 const corpus = await openCorpus(dir);
 const ledger = new Ledger(path.join(dir, 'ledger.json'), 5);
 const client = new Anthropic();
@@ -60,8 +67,8 @@ for (const seed of seeds) {
     jobs.push({ id: `${seed.id}-${key}`, seed, key, passages, params: buildRequest({ question: seed.frage, passages, model }) });
   }
 }
-ledger.assertRoom(2.5);
-const first = await runBatch('antworten', jobs);
+ledger.assertRoom(jobs.length * 0.03);
+const first = await runBatch(`antworten${suffix}`, jobs);
 
 const retry = [];
 for (const { job, answer } of first) {
@@ -71,7 +78,7 @@ for (const { job, answer } of first) {
 }
 console.log('zweiter Anlauf', retry.length);
 ledger.assertRoom(retry.length * 0.1);
-const second = await runBatch('kapitel', retry);
+const second = await runBatch(`kapitel${suffix}`, retry);
 
 const final = new Map(first.map(r => [r.job.id, { ...r, attempt: 1 }]));
 for (const r of second) final.set(r.job.id.replace(/-kapitel$/, ''), { ...r, attempt: 2 });
@@ -87,7 +94,9 @@ const rows = [...final.values()].map(({ job, answer, usage, attempt }) => ({
   output: usage.output_tokens,
   promptVersion: PROMPT_VERSION,
 }));
-fs.writeFileSync(out, `${JSON.stringify(rows, null, 1)}\n`);
+const fresh = new Map(rows.map(r => [`${r.seed}-${r.key}`, r]));
+const merged = picked ? JSON.parse(fs.readFileSync(out, 'utf8')).map(r => fresh.get(`${r.seed}-${r.key}`) ?? r) : rows;
+fs.writeFileSync(out, `${JSON.stringify(merged, null, 1)}\n`);
 const count = {};
 for (const r of rows) count[`${r.key} ${r.status}${r.attempt > 1 ? ' (2. Anlauf)' : ''}`] = (count[`${r.key} ${r.status}${r.attempt > 1 ? ' (2. Anlauf)' : ''}`] ?? 0) + 1;
 console.log(count, 'Kosten bisher', ledger.total.toFixed(3), '$');

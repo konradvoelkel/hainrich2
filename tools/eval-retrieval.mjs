@@ -2,23 +2,27 @@
 /**
  * Kapitel-Trefferquote der Suche auf dem Testset aus Phase 0, je Verfahren.
  *
- *   node tools/eval-retrieval.mjs <arbeitsverzeichnis> <set2.json> <skript-verzeichnis>
+ *   node tools/eval-retrieval.mjs <arbeitsverzeichnis> <set2.json> <skript-verzeichnis> <commit>
+ *
+ * Das Testset nennt Kapitelnummern, und die wandern mit dem Skript. <commit> ist der Stand, zu dem sie
+ * gehören (09251b0); mit dem Arbeitsbaum zeigen die Sollwerte still auf falsche Kapitel. Plan §19 ist die
+ * Gegenprobe: Vektor 91 / 95 / 99 % muss herauskommen.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { buildBm25, dot, fuse } from '../lib/search.js';
 import { createEmbedder } from '../lib/embedder.js';
 
-const [work, setFile, skript] = process.argv.slice(2);
+const [work, setFile, skript, stand] = process.argv.slice(2);
+if (!stand) throw new Error('<commit> fehlt: Zu welchem Skriptstand gehören die Kapitelnummern?');
 const { passages } = JSON.parse(fs.readFileSync(path.join(work, 'corpus.json'), 'utf8'));
 const vectors = JSON.parse(fs.readFileSync(path.join(work, 'vectors.json'), 'utf8'));
 const set = JSON.parse(fs.readFileSync(setFile, 'utf8'));
 const prefixOf = {};
-for (const d of fs.readdirSync(skript).filter(x => x.startsWith('part-'))) {
-  for (const f of fs.readdirSync(path.join(skript, d))) {
-    const m = f.match(/^(\d\d-)(.+)\.md$/);
-    if (m) prefixOf[m[2]] = m[1];
-  }
+for (const file of execFileSync('git', ['-C', skript, 'ls-tree', '-r', '--name-only', stand], { encoding: 'utf8' }).split('\n')) {
+  const m = file.match(/^part-[^/]+\/(\d\d-)(.+)\.md$/);
+  if (m) prefixOf[m[2]] = m[1];
 }
 const lexical = buildBm25(passages.map(p => [p.title, ...p.path, p.text].join(' ')));
 const embedder = await createEmbedder();

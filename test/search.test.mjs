@@ -23,6 +23,20 @@ test('ohne lexikalischen Treffer zählt nur der Vektor', () => {
   assert.equal(order[0], 0);
 });
 
+/** 40 Dokumente, Dokument i steht in der Vektorsuche auf Rang i + 1 */
+const vectorRanks = Array.from({ length: 40 }, (_, i) => 40 - i);
+
+test('ein guter Vektortreffer bleibt vor mittelmäßigen Treffern aus beiden Listen', () => {
+  const lexical = vectorRanks.map((_, i) => (i >= 18 && i <= 29 ? 30 - i : 0));
+  const order = fuse(vectorRanks, lexical);
+  assert.ok(order.indexOf(3) < order.indexOf(29), 'Vektor Rang 4 vor Vektor Rang 30 mit Stichwort Rang 12');
+});
+
+test('ein exakter Bezeichner gewinnt, auch wenn der Vektor ihn nicht kennt', () => {
+  const lexical = vectorRanks.map((_, i) => (i === 39 ? 7 : 0));
+  assert.equal(fuse(vectorRanks, lexical)[0], 39);
+});
+
 const passages = n => Array.from({ length: n }, (_, i) => ({ page: i < 3 ? 'a' : 'b', text: 'x'.repeat(10) }));
 
 test('Nachbarn kommen dazu, aber nicht über die Seitengrenze', () => {

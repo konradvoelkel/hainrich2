@@ -8,9 +8,9 @@
  },
  {
   "id": "s02",
-  "frage": "Why do we normalize vectors before comparing them? Doesn't that throw away the information in their length?",
+  "frage": "Warum normalisieren wir Vektoren, bevor wir sie vergleichen? Geht dabei nicht die Information in ihrer Länge verloren?",
   "kapitel": "hintergrundwissen-lineare-algebra",
-  "blick": "international",
+  "blick": "mathe",
   "hoersaal": false
  },
  {
@@ -50,9 +50,9 @@
  },
  {
   "id": "s08",
-  "frage": "Is softmax with two classes exactly the same thing as the logistic sigmoid, or am I missing something?",
+  "frage": "Ist Softmax mit zwei Klassen genau dasselbe wie die logistische Sigmoidfunktion, oder übersehe ich etwas?",
   "kapitel": "logistische-regression",
-  "blick": "international",
+  "blick": "mathe",
   "hoersaal": false
  },
  {

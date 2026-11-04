@@ -33,11 +33,10 @@ Schreibe aus diesen Blickwinkeln:
 - praxis: schreibt gerade PyTorch-Code und hängt
 - skeptisch: fragt, warum man das überhaupt so macht
 - pruefung: wiederholt Begriffe und will sie sauber trennen
-- international: fragt auf Englisch
 
 Nur inhaltliche Fragen. Keine Fragen zu Übungsaufgaben, Übungsblättern, Klausuren, Terminen oder Organisatorischem. Keine Namen.
 
-Schreibe etwa 100 Fragen, gleichmäßig über alle Kapitel verteilt, etwa fünf davon auf Englisch. Gib zu jeder den Slug des Kapitels an. Übernimm gute Fragen aus der Liste „aus dem Hörsaal“ in eigener Formulierung und setze dann hoersaal auf true.`;
+Schreibe etwa 100 Fragen, gleichmäßig über alle Kapitel verteilt, alle auf Deutsch. Gib zu jeder den Slug des Kapitels an. Übernimm gute Fragen aus der Liste „aus dem Hörsaal“ in eigener Formulierung und setze dann hoersaal auf true.`;
 
 const schema = {
   type: 'object',
@@ -49,7 +48,7 @@ const schema = {
         properties: {
           frage: { type: 'string' },
           kapitel: { type: 'string' },
-          blick: { type: 'string', enum: ['anfaenger', 'mathe', 'praxis', 'skeptisch', 'pruefung', 'international'] },
+          blick: { type: 'string', enum: ['anfaenger', 'mathe', 'praxis', 'skeptisch', 'pruefung'] },
           hoersaal: { type: 'boolean' },
         },
         required: ['frage', 'kapitel', 'blick', 'hoersaal'],
@@ -88,10 +87,9 @@ const call = async request => {
   return response;
 };
 
-/** zwei englische Fragen, damit die Sprachregel mitgetestet wird, dann Hörsaalfragen, sonst feste Reihenfolge */
-const english = new Set(known.filter(c => c.blick === 'international').slice(0, 2));
-const priority = c => (english.has(c) ? 0 : c.hoersaal ? 1 : 2);
-const pool = [...known].sort((a, b) => priority(a) - priority(b));
+/** erst Hörsaalfragen, sonst feste Reihenfolge; die alten Kandidaten tragen noch englische Fragen (Plan D18) */
+const priority = c => (c.hoersaal ? 1 : 2);
+const pool = known.filter(c => c.blick !== 'international').sort((a, b) => priority(a) - priority(b));
 const quota = new Map([...chapters.keys()].map(k => [k, 1]));
 const big = [...chapters.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
 for (let i = 0; quota.size + i < TARGET; i++) quota.set(big[i % big.length], quota.get(big[i % big.length]) + 1);

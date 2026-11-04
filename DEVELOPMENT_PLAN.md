@@ -38,6 +38,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D15 | Anfangs moderiert nur Konrad, gegebenenfalls kommt eine Tutorin dazu. |
 | D16 | Der Checker sperrt jede Zahl mit 6 bis 12 Ziffern. |
 | D17 | Kontakt im Impressum ist `mail@hai.konradvoelkel.com`, Zustellung als `hai@konradvoelkel.com` im Fastmail-Konto. Anschrift wie bei Laberampel. |
+| D18 | Das Forum ist deutsch wie das Skript. Englische Fragen sind kein Ziel: keine Seeds, kein Testset, kein Tuning dafür (Konrad, 2026-11-04). Was der Schreibpfad mit einer englischen Frage tut, bleibt für Phase 3 offen. |
 
 ## 3. Invarianten
 
@@ -419,7 +420,7 @@ Ablehnungen benannt, Antwortmodell entschieden.
 
 Stand 2026-11-04: Korpus, Suche, Citations, Richter, 30 Seeds und 90 Antworten stehen, die Review-Seite
 läuft (`node tools/review.mjs`). Offen sind dein Blindvergleich, die Modellwahl und danach der
-Opus-Durchgang über die Antworten des gewählten Modells. Bisher 3,26 $, Deckel 5 $.
+Opus-Durchgang über die Antworten des gewählten Modells. Bisher 3,54 $, Deckel 5 $.
 
 **Phase 2: Öffentliche Lese-Site.** Hostname, Rolle im Server-Repo, Caddy-Block mit CSP, Rechtstexte,
 Suche, statische Seiten. Braucht noch keine Schreibpfade. Abnahme: Smoke-Test, Telefonbreite gemessen,
@@ -544,8 +545,14 @@ fragt, und die Regel im Prompt verlangt genau das. Das Set enthält unbeabsichti
 den Negativfragen; die Urteile dazu sind von Hand gelesen, nicht automatisch gezählt.
 
 Suche über die 424 Passagen, gleiche 100 Anfragen, Kapitel in Top 3 / Top 5 / Top 12: Vektor 91 / 95 /
-99 %, BM25 80 / 87 / 94 %, hybrid 90 / 93 / 99 %. Das Set ist absichtlich lexikalisch fern, BM25 hilft
-hier also nicht. Es bleibt für exakte Bezeichner wie `zero_grad`, das ist aber nicht gemessen.
+99 %, BM25 80 / 87 / 94 %, hybrid mit `k = 60` 90 / 93 / 99 %, mit `k = 10` 94 / 95 / 99 % (2026-11-04,
+Skriptstand `09251b0`). Das Set ist absichtlich lexikalisch fern. Für BM25 sprechen exakte Bezeichner: 60
+seltene wie `drop_last` als Frage, Treffer in Top 1 / Top 5 / Top 12: Vektor 17 / 34 / 41, `k = 60` 43 / 60 / 60,
+`k = 10` 54 / 58 / 60. Den Vektor zusätzlich doppelt zu gewichten gewann bei den Fragen knapp (Top 5 97 %), ließ
+die Bezeichner aber auf 46 in den Top 5 fallen und ist deshalb verworfen. Ein Punkt ist eine Anfrage; `k` ist auf
+diesem Set gewählt, der Abstand liegt nahe am Rauschen. Anlass war s02: Eine englische Frage verlor die richtigen
+Passagen in der Fusion (Vektor Platz 4 und 6, danach 19 und 21), die Modelle meldeten das als offen. s02 und s08
+sind seitdem deutsch (D18) und mit s12 neu beantwortet, die übrigen 81 Antworten stammen aus `k = 60`.
 
 Antworten, 30 Seeds mal 3 Modelle, Prompt-Version 1:
 
