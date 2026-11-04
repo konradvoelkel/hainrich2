@@ -7,9 +7,9 @@ Inkscape braucht. Braucht Inkscape, Pillow und die Schrift Inter.
     python3 tools/render_brand.py           # schreibt alles neu
     python3 tools/render_brand.py --check   # prüft, ob die Dateien zum Skript passen
 
-Das Motiv: Hai und Heine, also Hai-Profil mit Zähnen, dazu Seitenscheitel, Vatermörder und Halsbinde. Unter 64 Pixeln trägt
-das nicht mehr, dafür gibt es die Kachel: helles Gesicht, Haar, Auge, Lächeln. Die Domain steht bewusst nicht im Bild, es
-überlebt einen Umzug.
+Das Motiv: ein flippiger Hai, der einfach wie ein Hai aussieht, und ein Toupet im Stil von Heine, das schief auf dem Kopf sitzt.
+Nicht böse, also keine Zähne. Unter 64 Pixeln trägt das nicht mehr, dafür gibt es die Kachel: helle Silhouette, Toupet und Auge
+dunkel. Die Domain steht bewusst nicht im Bild, es überlebt einen Umzug.
 """
 import math
 import pathlib
@@ -46,49 +46,38 @@ MARKE = oklch(.52, .12, HUE)
 FLAECHE = oklch(.95, .03, HUE)
 TINTE = oklch(.25, .015, HUE)
 
-BODY = ('M26 256 C58 214 126 192 196 178 C262 164 340 168 392 198 C446 230 476 282 464 340 '
-        'C452 398 388 440 300 442 C206 444 118 404 62 330 C42 304 24 276 26 256 Z')
-BELLY = 'M30 276 C120 296 232 322 318 338 C380 350 432 340 484 306 L484 472 L20 472 Z'
-# Seitenscheitel, flache Wellen ohne Spitze, unten wippt die Locke nach außen. Gestapelte Wülste mit Spitze sehen
-# aus wie etwas anderes (Konrad, 2026-11-05).
-HAIR = ('M146 218 C150 176 176 150 206 146 C214 122 248 100 286 102 C300 88 334 84 362 96 '
-        'C398 96 440 122 456 160 C484 176 500 216 488 254 C506 282 504 322 486 346 C500 352 510 350 520 338 '
-        'C518 372 486 394 452 378 C440 396 404 398 386 374 C374 388 344 384 336 362 '
-        'C354 330 368 282 372 240 C336 212 286 200 240 202 C208 204 178 226 146 218 Z')
-MOUTH = 'M66 304 C116 350 200 356 272 306 C226 392 104 382 66 304 Z'
-TEETH = 'M104 331 L118 356 L134 342 Z M146 346 L160 370 L176 348 Z M190 344 L206 364 L218 332 Z'
-# Biedermeier wie auf den Porträts: dunkler Rock, Vatermörder, Halsbinde
-COAT = 'M120 512 C132 440 200 360 300 356 C400 352 470 430 490 512 Z'
-SHIRT = 'M246 404 L354 404 L300 500 Z'
-COLLAR = 'M226 360 L204 446 L300 414 L396 446 L374 360 Z'
-BOW = 'M264 420 L300 434 L336 420 L336 456 L300 442 L264 456 Z'
-TILE_HEAD = ('M60 280 C96 244 150 226 214 212 C276 200 348 206 392 234 C436 262 452 306 440 350 '
-             'C428 396 372 430 296 430 C214 430 136 396 90 336 C74 316 58 296 60 280 Z')
-TILE_HAIR = ('M170 238 C172 200 196 176 224 172 C232 148 264 128 298 130 C312 118 342 114 368 126 '
-             'C402 128 440 150 454 186 C482 202 494 240 482 274 C498 300 496 336 478 358 C492 362 502 360 510 348 '
-             'C508 382 478 402 448 388 C436 404 402 404 386 382 C374 394 350 390 344 370 '
-             'C368 336 386 296 392 258 C358 234 310 222 262 224 C232 226 202 246 170 238 Z')
+BODY = 'M30 214 C84 178 158 172 226 200 C288 226 356 222 414 168 L440 190 C408 270 330 326 236 324 C150 322 76 282 30 214 Z'
+BELLY = 'M26 226 C110 248 190 268 262 266 C330 264 392 246 442 198 L460 360 L20 360 Z'
+TAIL = 'M410 172 C430 140 452 110 496 80 C486 124 480 152 484 176 C498 192 508 216 510 244 C480 228 456 214 436 194 Z'
+DORSAL = 'M258 214 C278 176 314 140 362 120 C352 156 350 186 358 214 C326 230 290 230 258 214 Z'
+PECTORAL = 'M196 312 C214 340 246 372 292 388 C286 360 274 332 262 310 Z'
+# Flach und breit, sitzt schief auf dem Kopf. Haar nie als gestapelte Wülste mit Spitze, das sieht aus wie etwas anderes.
+TOUPET = ('M88 182 C92 150 122 124 158 122 C176 104 208 100 230 114 C250 112 272 126 276 148 '
+          'C288 152 300 146 308 134 C312 166 284 190 254 182 C238 192 214 188 204 178 C176 170 134 170 88 182 Z')
+TOUPET_TILT = 'rotate(-5 180 150)'
 
 
 def mark():
-    return f'''<path d="{COAT}" fill="{TINTE}"/><path d="{SHIRT}" fill="#fff"/><path d="{COLLAR}" fill="#fff"/><path d="{BOW}" fill="{TINTE}"/>
-<g transform="translate(4 -26) scale(.92)">
+    return f'''<g transform="translate(0 40)">
 <clipPath id="koerper"><path d="{BODY}"/></clipPath>
+<path d="{TAIL}" fill="{MARKE}"/><path d="{DORSAL}" fill="{MARKE}"/><path d="{PECTORAL}" fill="{MARKE}"/>
 <path d="{BODY}" fill="{MARKE}"/>
 <path d="{BELLY}" fill="{FLAECHE}" clip-path="url(#koerper)"/>
-<path d="{BODY}" fill="none" stroke="{MARKE}" stroke-width="20" stroke-linejoin="round"/>
-<path d="{HAIR}" fill="{TINTE}"/>
-<g fill="none" stroke="{MARKE}" stroke-width="9" stroke-linecap="round"><path d="M226 150 C296 138 372 168 420 236"/><path d="M420 236 C436 262 444 296 438 330"/></g>
-<circle cx="200" cy="250" r="31" fill="#fff"/><circle cx="192" cy="252" r="15" fill="{TINTE}"/>
-<path d="{MOUTH}" fill="{TINTE}"/><path d="{TEETH}" fill="#fff"/>
-<g fill="none" stroke="{FLAECHE}" stroke-width="12" stroke-linecap="round"><path d="M290 244 C298 262 298 280 290 298"/><path d="M326 248 C334 266 334 284 326 302"/></g>
+<path d="{BODY}" fill="none" stroke="{MARKE}" stroke-width="14" stroke-linejoin="round"/>
+<g fill="none" stroke="{FLAECHE}" stroke-width="9" stroke-linecap="round"><path d="M200 222 C206 234 206 246 200 256"/><path d="M224 228 C230 240 230 250 224 262"/><path d="M248 232 C254 244 254 254 248 264"/></g>
+<circle cx="132" cy="216" r="23" fill="#fff"/><circle cx="126" cy="217" r="12" fill="{TINTE}"/><circle cx="122" cy="212" r="4" fill="#fff"/>
+<path d="M64 250 C94 274 132 278 166 258" fill="none" stroke="{TINTE}" stroke-width="9" stroke-linecap="round"/>
+<g transform="{TOUPET_TILT}"><path d="{TOUPET}" fill="{TINTE}"/><path d="M130 158 C168 136 214 136 256 156" fill="none" stroke="{MARKE}" stroke-width="6" stroke-linecap="round"/></g>
 </g>'''
 
 
 def face():
-    return f'''<path d="{TILE_HEAD}" fill="{FLAECHE}"/><path d="{TILE_HAIR}" fill="{TINTE}"/>
-<circle cx="214" cy="290" r="30" fill="{TINTE}"/>
-<path d="M104 340 C160 382 236 382 300 340" fill="none" stroke="{TINTE}" stroke-width="26" stroke-linecap="round"/>'''
+    """Für die Kachel: nah am Kopf, der Körper läuft aus dem Bild. Helle Silhouette, nur Toupet und Auge dunkel"""
+    return f'''<g transform="translate(-26 -116) scale(1.62)">
+<path d="{DORSAL}" fill="{FLAECHE}"/><path d="{BODY}" fill="{FLAECHE}"/>
+<circle cx="130" cy="222" r="19" fill="{TINTE}"/>
+<g transform="{TOUPET_TILT}"><path d="{TOUPET}" fill="{TINTE}"/></g>
+</g>'''
 
 
 def svg(body, width=512, height=512, label='hAInrich'):
@@ -97,12 +86,13 @@ def svg(body, width=512, height=512, label='hAInrich'):
 
 
 def tile(radius=104):
-    return svg(f'<rect width="512" height="512" rx="{radius}" fill="{MARKE}"/>\n{face()}')
+    return svg(f'<clipPath id="kachel"><rect width="512" height="512" rx="{radius}"/></clipPath>\n'
+               f'<g clip-path="url(#kachel)"><rect width="512" height="512" fill="{MARKE}"/>\n{face()}</g>')
 
 
 def maskable():
     """Volle Fläche: Das System schneidet selbst, also das Gesicht in die sichere Mitte"""
-    return svg(f'<rect width="512" height="512" fill="{MARKE}"/>\n<g transform="translate(77 72) scale(.7)">{face()}</g>')
+    return svg(f'<rect width="512" height="512" fill="{MARKE}"/>\n<g transform="translate(70 70) scale(.72)">{face()}</g>')
 
 
 def fit(text, font_file, size, limit):
@@ -124,7 +114,7 @@ def card():
     rows = '\n'.join(f'<text x="{x}" y="{y}" style="{style};font-size:{size}px" fill="{TINTE}">{text}</text>' for text, _, size, x, y in lines[1:])
     return svg(f'''<rect width="{CARD_W}" height="{CARD_H}" fill="{FLAECHE}"/>
 <rect x="0" y="{CARD_H - 14}" width="{CARD_W}" height="14" fill="{MARKE}"/>
-<g transform="translate(40 96) scale(.84)">{mark()}</g>
+<g transform="translate(14 70) scale(.92)">{mark()}</g>
 {title}
 {rows}''', CARD_W, CARD_H, 'hAInrich: Fragen und Antworten zum Skript')
 

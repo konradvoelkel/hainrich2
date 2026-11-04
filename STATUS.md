@@ -28,7 +28,7 @@ _Stand 2026-11-04._
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
-  `og:`- und `twitter:`-Tags, seit 2026-11-05 auf dem Server. Konrad will das Motiv neu denken.
+  `og:`- und `twitter:`-Tags, seit 2026-11-05 auf dem Server. Der Hai mit Toupet ist Konrads Arbeitshypothese.
 - `research/2026-11-05-skriptluecken/`: Übersicht, was die Antworten offenlassen, gegen den ganzen Korpus geprüft.
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
   `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
