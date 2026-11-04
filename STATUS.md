@@ -30,10 +30,10 @@ _Stand 2026-11-04._
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
   `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
 
-- Moderation, lokal fertig, nicht auf dem Server: `lib/store.js` (`public.db`), `lib/auth.js`, `lib/checker.js` (harte
-  Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`, `tools/import-public.mjs`,
-  `tools/mod-account.mjs`, `site/deploy-app.sh`. Anmelden, Fragen und Antworten bearbeiten, prüfen, zurückziehen, Verlauf.
-  Die Rolle dafür liegt uncommittet im Arbeitsbaum von `~/files/work/server`.
+- Moderation seit 2026-11-05 auf dem Server, `https://hai.konradvoelkel.com/eidl/mod/`: Anmelden, Fragen und Antworten
+  bearbeiten, prüfen, zurückziehen, Verlauf. Dienst `hainrich2-web`, `public.db` auf dem VPS ist die Quelle für alles
+  Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Code in `lib/store.js`, `lib/auth.js`,
+  `lib/checker.js` (harte Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`.
 
 ## Was nicht existiert
 
@@ -49,9 +49,10 @@ _Stand 2026-11-04._
 - 81 der 90 Antworten stammen noch aus der Suche mit `k = 60`, nur s02, s08 und s12 sind neu. Bei den übrigen
   wäre die Auswahl heute meist etwas anders; ihre Zitate betrifft das nicht.
 - Ob der Prüfschritt etwas taugt: 58 von 87 Hinweisen, bei allen Modellen ähnlich oft.
-- Impressum und Datenschutz hat Konrad am 2026-11-05 geprüft, in der Fassung ohne Moderation. Der neue Absatz zur
-  Moderation und der geänderte erste Satz sind von ihm noch nicht gelesen. Für Fragen von außen ändert sich der Text wieder.
-- Der Caddy-Block mit `handle` und `reverse_proxy`: Lokal gibt es kein Caddy, geprüft wird er erst beim Ausspielen.
+- Impressum und Datenschutz hat Konrad am 2026-11-05 freigegeben, mit dem Absatz zur Moderation. Für Fragen von außen
+  ändert sich der Text wieder.
+- Ein echter Login am Server ist erst mit Konrads Passphrase geprüft. Gemessen sind bisher die falsche Passphrase im Browser
+  (401), fremde Herkunft (403), Kopfzeilen und Smoke-Test gegen den Host.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
 - Smoke-Test nur in Chromium, nicht in Firefox und Safari.
@@ -62,5 +63,5 @@ _Stand 2026-11-04._
 
 ## Nächster Schritt
 
-Moderation ausspielen, sobald Konrad den Datenschutzabsatz gelesen und zugestimmt hat (Reihenfolge in `.claude/TODO.md`).
-Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten, nicht die Seeds.
+Konrad moderiert die 30 Seeds. Danach entscheidet er, wann die Vorschau endet; erst dann wird Geprüftes indexierbar. Der
+Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten, nicht die Seeds.

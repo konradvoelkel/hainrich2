@@ -441,11 +441,11 @@ Offen: Rechtstexte lesen `[owner]`, Firefox und Safari, Antwortmodell aus Phase 
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle
 Invarianten als Tests grün, ein Durchlauf mit echten Fragen.
 
-Stand 2026-11-05: Die Moderation kommt zuerst, auf Konrads Wunsch. Lokal fertig: Anmelden, Fragen und Antworten bearbeiten,
+Stand 2026-11-05: Die Moderation kommt zuerst, auf Konrads Wunsch, und läuft auf dem Server: Anmelden, Fragen und Antworten bearbeiten,
 als geprüft markieren, zurückziehen, Verlauf; `public.db` aus §9 ohne `variants`, `votes`, `pairs`, `usage`. Sitzungen
 und Fehlversuche liegen nur im Arbeitsspeicher. Vorgaben, die Konrad umdrehen kann: Die Seeds bleiben sichtbar, und
 bearbeitet wird der Bestand von Opus 5.5; der Blindvergleich entscheidet dann nur noch das Modell für neue Antworten. Solange
-die Site Vorschau ist, bleibt auch Geprüftes `noindex`. Offen: Ausspielen `[owner]`, neue Vektoren für bearbeitete
+die Site Vorschau ist, bleibt auch Geprüftes `noindex`. Offen: Ende der Vorschau `[owner]`, neue Vektoren für bearbeitete
 Fragen, weiche Treffer des Checkers, alles zu Fragen von außen.
 
 **Phase 4: Worker live.** Richter, Antworten, Budgetdeckel, Skriptstand-Prüfung. Abnahme: Eine Woche
