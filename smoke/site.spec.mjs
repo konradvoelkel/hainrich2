@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const PAGES = ['/eidl/', '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/impressum/', '/eidl/datenschutz/'];
 const WIDTHS = [320, 375, 414, 768, 1200];
-const own = url => new URL(url).host === 'localhost:8772';
+const own = url => new URL(url).origin === new URL(process.env.SMOKE_URL ?? 'http://localhost:8772').origin;
 
 /** sammelt alle Anfragen und jede Meldung, die nach Fehler aussieht */
 function watch(page) {
@@ -77,13 +77,13 @@ test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link, noindex', async ({ pa
   await expect(page).toHaveURL(/#z1$/);
 });
 
-test('ohne JavaScript bleibt alles lesbar, das tote Suchfeld fehlt', async ({ browser }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
+test('ohne JavaScript bleibt alles lesbar, das tote Suchfeld fehlt', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
   const page = await context.newPage();
-  await page.goto('http://localhost:8772/eidl/');
+  await page.goto('/eidl/');
   await expect(page.locator('.fragen li')).toHaveCount(30);
   await expect(page.locator('#suche')).toBeHidden();
-  await page.goto('http://localhost:8772/eidl/f/s04/');
+  await page.goto('/eidl/f/s04/');
   await expect(page.locator('.katex').first()).toBeVisible();
   await context.close();
 });

@@ -36,6 +36,8 @@ node site/build.mjs --modell claude-opus-5-5
 npm run smoke
 ```
 
+Mit `SMOKE_URL=https://hai.konradvoelkel.com` läuft er gegen den echten Host.
+
 Ausliefern braucht die Zustimmung des Eigentümers, zuerst immer der Probelauf:
 
 ```bash

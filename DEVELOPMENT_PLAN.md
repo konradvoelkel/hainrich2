@@ -427,10 +427,10 @@ keine fremden Anfragen.
 
 Stand 2026-11-04: Der lokale Teil steht. `site/build.mjs` baut 33 Seiten, die Suche läuft im Browser,
 Impressum und Datenschutz liegen als Entwurf vor. Smoke-Test grün unter der geplanten CSP, keine fremden
-Anfragen, kein seitliches Scrollen auf allen 33 Seiten bei fünf Breiten. Die Abnahme gilt lokal, nicht auf dem
-Server. Seit 2026-11-04 stehen DNS, Rolle mit CSP und Zertifikat, der Docroot ist noch leer. Offen: Rechtstexte
-lesen und Vorschau entscheiden `[owner]`, erster Deploy, Abnahme gegen den echten Host, Antwortmodell aus Phase 1,
-Vorschaukarte für Open Graph.
+Anfragen, kein seitliches Scrollen auf allen 33 Seiten bei fünf Breiten. Seit 2026-11-04 steht die Vorschau als
+Staging auf `hai.konradvoelkel.com`: Der Name ist nirgends verlinkt, alle Seiten tragen `noindex` und Banner, die
+Sitemap ist leer (Entscheidung Konrad, er liest die Rechtstexte dort). Der Smoke-Test ist dort in Chromium grün.
+Offen: Rechtstexte lesen `[owner]`, Firefox und Safari, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph.
 
 **Phase 3: Schreibpfad und Moderation.** Token, Zustimmung, Checker, `pending`, `/mod/`, Votes,
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle

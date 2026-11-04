@@ -6,7 +6,8 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "test": "node --test 'test/*.test.mjs'"
+    "test": "node --test 'test/*.test.mjs'",
+    "smoke": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.4.0",
