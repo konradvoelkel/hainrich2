@@ -77,6 +77,10 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
 
 - **`hainrich2-web`:** Node 24 aus der Rolle `node`, `node:http` und `node:sqlite`, keine
   Framework-Abhängigkeit. Nur Schreibpfade und Moderation. `MemoryMax` eng gesetzt.
+- **`live/`:** Der Web-Prozess schreibt Startseite, Frageseiten, Sitemap und `daten/fragen.json` samt `.br`, `.zst` und `.gz`
+  in ein eigenes Verzeichnis, Caddy bedient diese Pfade von dort. Im Docroot würde das `--delete` von `site/deploy.sh` jede
+  Bearbeitung überschreiben. Der Vektor einer Frage steht in `fragen.json` am Eintrag, sonst verrutscht die Suche, sobald
+  eine Frage zurückgezogen wird.
 - **`hainrich2-worker`:** `systemd`-Timer mit Oneshot-Unit, kein Daemon. Läuft etwa alle fünf
   Minuten, tut nur etwas, wenn Arbeit da ist, und lädt das Embedding-Modell nur dann. Im Leerlauf
   kostet er also keinen Speicher.
@@ -436,6 +440,13 @@ Offen: Rechtstexte lesen `[owner]`, Firefox und Safari, Antwortmodell aus Phase 
 **Phase 3: Schreibpfad und Moderation.** Token, Zustimmung, Checker, `pending`, `/mod/`, Votes,
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle
 Invarianten als Tests grün, ein Durchlauf mit echten Fragen.
+
+Stand 2026-11-05: Die Moderation kommt zuerst, auf Konrads Wunsch. Lokal fertig: Anmelden, Fragen und Antworten bearbeiten,
+als geprüft markieren, zurückziehen, Verlauf; `public.db` aus §9 ohne `variants`, `votes`, `pairs`, `usage`. Sitzungen
+und Fehlversuche liegen nur im Arbeitsspeicher. Vorgaben, die Konrad umdrehen kann: Die Seeds bleiben sichtbar, und
+bearbeitet wird der Bestand von Opus 5.5; der Blindvergleich entscheidet dann nur noch das Modell für neue Antworten. Solange
+die Site Vorschau ist, bleibt auch Geprüftes `noindex`. Offen: Ausspielen `[owner]`, neue Vektoren für bearbeitete
+Fragen, weiche Treffer des Checkers, alles zu Fragen von außen.
 
 **Phase 4: Worker live.** Richter, Antworten, Budgetdeckel, Skriptstand-Prüfung. Abnahme: Eine Woche
 Betrieb mit echten Kosten im `usage`-Bericht.

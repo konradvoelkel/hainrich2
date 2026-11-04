@@ -36,7 +36,8 @@ async function modell() {
     createEmbedder(transformers, { modelPath: './models/', wasmPath: './wasm/' }),
   ]);
   const centered = centerPassages(vektoren.passagen);
-  semantik = { embedder, centered, passagen: vektoren.passagen, fragen: vektoren.fragen, profile: vektoren.fragen.map(v => profile(centered, v)) };
+  const frageVektoren = fragen.map(f => f.vektor);
+  semantik = { embedder, centered, passagen: vektoren.passagen, fragen: frageVektoren, profile: frageVektoren.map(v => profile(centered, v)) };
 }
 
 /** nur Dokumente, die ein Wort der Anfrage enthalten */
@@ -58,7 +59,7 @@ self.onmessage = async ({ data }) => {
     postMessage({
       act: 'treffer',
       nummer: data.nummer,
-      fragen: f.slice(0, TOP_FRAGEN).map(i => fragen[i]),
+      fragen: f.slice(0, TOP_FRAGEN).map(i => ({ id: fragen[i].id, text: fragen[i].text, kapitel: fragen[i].kapitel })),
       skript: s.slice(0, TOP_SKRIPT).map(i => passagen[i]),
     });
   } catch (fehler) {

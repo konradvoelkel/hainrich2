@@ -101,3 +101,21 @@ pre { overflow-x: auto; }
   h1 { font-size: 1.25rem; }
   .antwort { padding: .8rem; }
 }
+
+/* Moderation: Formulare ohne JavaScript, am Telefon bedienbar */
+.mod .kopf { align-items: center; }
+.mod .kopf form { margin-left: auto; }
+.mod h1 { margin: 1rem 0 .3rem; }
+.formular { display: grid; gap: .35rem; margin: 1rem 0; }
+.formular label { margin-top: .7rem; font-weight: 600; }
+.formular input, .formular textarea { width: 100%; padding: .55rem .7rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; }
+.formular textarea { resize: vertical; line-height: 1.5; hyphens: manual; }
+.formular input:focus, .formular textarea:focus { outline: 2px solid var(--marke); outline-offset: 1px; }
+.knoepfe { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+.mod button { padding: .5rem .8rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; cursor: pointer; }
+.mod button.haupt { border-color: var(--marke); background: var(--marke); color: var(--grund); }
+.fehler, .gemeldet { margin: .6rem 0; padding: .5rem .7rem; border-radius: .4rem; }
+.fehler { background: var(--offen-grund); color: var(--offen); }
+.gemeldet { background: var(--gut-grund); color: var(--gut); }
+.mod pre { overflow-x: auto; padding: .5rem; border: 1px solid var(--linie); border-radius: .4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
+.verlauf, .zitatliste { padding-left: 1.2rem; }

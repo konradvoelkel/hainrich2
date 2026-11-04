@@ -36,12 +36,21 @@ node site/build.mjs --modell claude-opus-5-5
 npm run smoke
 ```
 
-Mit `SMOKE_URL=https://hai.konradvoelkel.com` läuft er gegen den echten Host.
+Mit `SMOKE_URL=https://hai.konradvoelkel.com` läuft er gegen den echten Host. Die Moderation im echten Browser, gegen eine
+Wegwerf-Datenbank:
+
+```bash
+npm run smoke:mod
+```
 
 Ausliefern braucht die Zustimmung des Eigentümers, zuerst immer der Probelauf:
 
 ```bash
 DRY_RUN=1 site/deploy.sh
+```
+
+```bash
+DRY_RUN=1 site/deploy-app.sh
 ```
 
 Echte API-Läufe brauchen den Key in einer Subshell und laufen durch `lib/budget.js`:
@@ -67,5 +76,9 @@ Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
    Eigentümers.
 7. **Strenge CSP ist Teil des Tests.** `site/serve.mjs` setzt sie, weil die Runtime sonst still über
    `blob:` lädt (`env.useWasmCache = false` in `lib/model.js`). Die gültige CSP gehört ins Server-Repo.
-8. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
+8. **`public.db` auf dem VPS ist die Quelle für alles Öffentliche**, sobald die Moderation läuft. `site/deploy.sh` liefert
+   nur noch Assets, Frageseiten kommen aus `live/`. Nie eine lokale `public.db` über die auf dem Server legen.
+9. **`site/serve.mjs` muss Caddy nachahmen, auch bei den Kopfzeilen.** `no-referrer` macht `Origin` zu `null`; ohne diese
+   Kopfzeile blieb der Browser-Test mit dem Fehler grün.
+10. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
    `/media/konrad/xtraspace/hainrich2/`, nicht im Repo.

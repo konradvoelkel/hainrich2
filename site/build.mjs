@@ -76,9 +76,10 @@ const round = v => v.map(x => +x.toFixed(ROUND));
 const questionVectors = [];
 for (const q of questions) questionVectors.push(round(await embedder.query(q.text)));
 
-write('daten/fragen.json', JSON.stringify(questions.map(q => ({ id: q.id, text: q.text, kapitel: q.kapitel }))));
+/** Vektor am Eintrag: Zieht die Moderation eine Frage zurück, verrutscht nichts */
+write('daten/fragen.json', JSON.stringify(questions.map((q, i) => ({ id: q.id, text: q.text, kapitel: q.kapitel, vektor: questionVectors[i] }))));
 write('daten/passagen.json', JSON.stringify(passages.map(p => ({ titel: p.title, pfad: p.path, text: p.text, url: quoteUrl(p), ausschnitt: excerpt(p.text) }))));
-write('daten/vektoren.json', JSON.stringify({ modell: MODEL_ID, passagen: passageVectors.map(round), fragen: questionVectors }));
+write('daten/vektoren.json', JSON.stringify({ modell: MODEL_ID, passagen: passageVectors.map(round) }));
 
 /** .br, .zst und .gz für Caddy `precompressed`; bei den großen Dateien reicht eine mittlere Stufe */
 const COMPRESS = /\.(html|css|js|mjs|json|svg|xml|txt|wasm|onnx)$/;
@@ -120,6 +121,7 @@ const fill = text => text
   .replaceAll('__ANSCHRIFT__', `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
 
 write('index.html', indexPage(questions, site));
+write('daten/meta.json', JSON.stringify({ ladegroesse: site.ladegroesse }));
 for (const q of questions) write(`f/${q.id}/index.html`, questionPage(q, site));
 for (const name of ['impressum', 'datenschutz']) write(`${name}/index.html`, textPage(name, fill(fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'utf8')), site));
 write('sitemap.xml', sitemap(questions, site));

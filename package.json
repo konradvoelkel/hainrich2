@@ -7,7 +7,9 @@
   },
   "scripts": {
     "test": "node --test 'test/*.test.mjs'",
-    "smoke": "playwright test"
+    "smoke": "playwright test",
+    "smoke:mod": "playwright test -c playwright.mod.config.mjs",
+    "mod": "node server/web.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.4.0",
