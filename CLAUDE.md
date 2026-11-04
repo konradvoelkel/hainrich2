@@ -36,6 +36,12 @@ node site/build.mjs --modell claude-opus-5-5
 npm run smoke
 ```
 
+Ausliefern braucht die Zustimmung des Eigentümers, zuerst immer der Probelauf:
+
+```bash
+DRY_RUN=1 site/deploy.sh
+```
+
 Echte API-Läufe brauchen den Key in einer Subshell und laufen durch `lib/budget.js`:
 
 ```bash

@@ -86,10 +86,11 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
 - **Backups:** `restic_excludes` schließt `/srv/*/data/*.db` aus; gesichert wird nur, was in
   `restic_sqlite_dbs` steht. Dort kommt nur `public.db` hinein. So landet die Warteschlange nie in
   den bis zu sechs Monate alten Sicherungen.
-- **Zugriffsprotokoll:** `hainrich2_access_log: false`. Damit gilt die Fassung „ohne Protokoll“ aus
-  `~/files/work/RECHTSTEXTE.md` §3. Schalter und Satz gehen am selben Tag live.
+- **Zugriffsprotokoll:** Der Caddy-Block der Rolle hat keinen `log`-Block, wie bei `laberampel` und
+  `autokorrektur`; einen Schalter gibt es deshalb nicht. Damit gilt die Fassung „ohne Protokoll“ aus
+  `~/files/work/RECHTSTEXTE.md` §3. Wer das ändert, ändert am selben Tag den Satz.
 - **Server:** Rolle `hainrich2` in `~/files/work/server`, das Projekt-Repo liefert nur Dateien
-  (`site/build.mjs`, später `site/deploy.sh`). Erst DNS, dann Caddy-Block. Beides `[owner]`.
+  (`site/build.mjs`, `site/deploy.sh`). Erst DNS, dann Caddy-Block. Beides `[owner]`.
 - **Adresse:** Alles liegt unter dem Pfad `/eidl/`, also `/eidl/api/*` und `/eidl/mod/`; Seiten
   verweisen relativ, `/eidl` leitet auf `/eidl/` um. Der Pfad ist zugleich der Wert von `corpus`,
   weitere Skripte bekommen eigene Pfade. Im Browser trennt der Pfad aber nichts: `localStorage` gilt
@@ -427,7 +428,9 @@ keine fremden Anfragen.
 Stand 2026-11-04: Der lokale Teil steht. `site/build.mjs` baut 33 Seiten, die Suche läuft im Browser,
 Impressum und Datenschutz liegen als Entwurf vor. Smoke-Test grün unter der geplanten CSP, keine fremden
 Anfragen, kein seitliches Scrollen auf allen 33 Seiten bei fünf Breiten. Die Abnahme gilt lokal, nicht auf dem
-Server. Offen: Rolle, A/AAAA und Caddy-Block mit CSP `[owner]`, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph, `site/deploy.sh`.
+Server. Seit 2026-11-04 stehen DNS, Rolle mit CSP und Zertifikat, der Docroot ist noch leer. Offen: Rechtstexte
+lesen und Vorschau entscheiden `[owner]`, erster Deploy, Abnahme gegen den echten Host, Antwortmodell aus Phase 1,
+Vorschaukarte für Open Graph.
 
 **Phase 3: Schreibpfad und Moderation.** Token, Zustimmung, Checker, `pending`, `/mod/`, Votes,
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle
@@ -458,7 +461,7 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 3. Antwortmodell nach dem Blindvergleich in Phase 1. Das Budget steht (D14).
 4. ~~Moderation.~~ Entschieden 2026-11-04 (D15).
 5. Anthropic-Konto: Der Laptop-Key läuft seit 2026-11-04 (`~/.config/hainrich2/anthropic.env`, nicht
-   im Repo). Ob er im Workspace `hainrich2` hängt und das Limit greift, ist in der Console zu prüfen.
+   im Repo). Das Limit von 20 $ greift für ihn (Konrad, 2026-11-04).
    Für den VPS kommt ein eigener Service-Account-Key in den Vault.
 6. ~~Frist für ungeprüfte Antworten.~~ Entschieden 2026-11-04: keine Frist (D10).
 7. ~~Format der Matrikelnummer.~~ Entfällt durch D16.

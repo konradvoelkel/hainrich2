@@ -1,7 +1,7 @@
 /**
  * Statischer Server für Vorschau und Smoke-Test: node site/serve.mjs [port] [verzeichnis]. Ahmt den
  * Caddy-Block nach, also Umleitung auf /eidl/ und dieselbe CSP. Das ist eine zweite Definition; die
- * gültige steht im Server-Repo, sobald die Rolle existiert.
+ * gültige steht im Server-Repo, Rolle hainrich2.
  */
 import http from 'node:http';
 import fs from 'node:fs';
