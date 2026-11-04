@@ -1,6 +1,7 @@
 # hAInrich2: Entwicklungsplan
 
-_Stand 2026-11-04. Das ist ein Plan, gebaut ist nichts. Die Abschnittsnummern bleiben stabil,
+_Stand 2026-11-04. Gebaut sind Phase 0, Phase 1 bis zum Blindvergleich und der lokale Teil von Phase 2,
+was fehlt, steht in §15 und `STATUS.md`. Die Abschnittsnummern bleiben stabil,
 Entscheidungen tragen ihr Datum. Was der Eigentümer tun oder entscheiden muss, ist mit `[owner]`
 markiert._
 
@@ -87,7 +88,7 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
 - **Zugriffsprotokoll:** `hainrich2_access_log: false`. Damit gilt die Fassung „ohne Protokoll“ aus
   `~/files/work/RECHTSTEXTE.md` §3. Schalter und Satz gehen am selben Tag live.
 - **Server:** Rolle `hainrich2` in `~/files/work/server`, das Projekt-Repo liefert nur Dateien
-  (`site/build.sh`, `site/deploy.sh`). Erst DNS, dann Caddy-Block. Beides `[owner]`.
+  (`site/build.mjs`, später `site/deploy.sh`). Erst DNS, dann Caddy-Block. Beides `[owner]`.
 - **Adresse:** Alles liegt unter dem Pfad `/eidl/`, also `/eidl/api/*` und `/eidl/mod/`; Seiten
   verweisen relativ, `/eidl` leitet auf `/eidl/` um. Der Pfad ist zugleich der Wert von `corpus`,
   weitere Skripte bekommen eigene Pfade. Im Browser trennt der Pfad aber nichts: `localStorage` gilt
@@ -153,10 +154,10 @@ Tokens aus Transkripten, anderen Skripten und englischen Texten. Das Skript zuer
 Ohne diese Regel blieben 40 % der Passagen gleich tokenisiert, mit ihr 99,8 %. Fehlende Wörter
 zerfallen in kleinere Stücke, `<unk>` kam nicht vor.
 
-`keep-ids-16384.txt` macht den Schnitt ohne die privaten Korpustexte reproduzierbar. Der Build in
-Phase 2 wendet die Liste auf das festgepinnte Basismodell an (Revision `761b726d`) und prüft die
-SHA-256 aus dem Messbericht. Neue Fachwörter im Skript kosten etwas Genauigkeit, ein Neuschnitt ist
-ein Skriptlauf.
+`keep-ids-16384.txt` macht den Schnitt ohne die privaten Korpustexte reproduzierbar. `site/build.mjs`
+kopiert das fertig geschnittene Modell von `xtraspace` und prüft die SHA-256 aus dem Messbericht; auf
+einem frischen Rechner muss vorher `trim.py` auf dem festgepinnten Basismodell laufen (Revision
+`761b726d`). Neue Fachwörter im Skript kosten etwas Genauigkeit, ein Neuschnitt ist ein Skriptlauf.
 
 Das Modell lädt erst beim ersten Fokus ins Suchfeld, Crawler und reine Leser zahlen nichts. Bis es da
 ist, läuft eine lexikalische Suche, die auch als Rückfall bleibt. WASM-Threads wären auf dem eigenen
@@ -422,6 +423,12 @@ Opus-Durchgang über die Antworten des gewählten Modells. Bisher 3,26 $, Deckel
 Suche, statische Seiten. Braucht noch keine Schreibpfade. Abnahme: Smoke-Test, Telefonbreite gemessen,
 keine fremden Anfragen.
 
+Stand 2026-11-04: Der lokale Teil steht. `site/build.mjs` baut 33 Seiten, die Suche läuft im Browser,
+Impressum und Datenschutz liegen als Entwurf vor. Smoke-Test grün unter der geplanten CSP, keine fremden
+Anfragen, kein seitliches Scrollen auf allen 33 Seiten bei fünf Breiten. Die Abnahme gilt lokal, nicht auf dem
+Server. Offen: Rolle, DNS und Caddy-Block mit CSP `[owner]`, `SITE_KONTAKT` und `SITE_ANSCHRIFT`
+`[owner]`, Antwortmodell aus Phase 1, Vorschaukarte für Open Graph, `site/deploy.sh`.
+
 **Phase 3: Schreibpfad und Moderation.** Token, Zustimmung, Checker, `pending`, `/mod/`, Votes,
 eigene Antworten, gelabelte Paare. Noch ohne API, Antworten schreibt die Moderation. Abnahme: alle
 Invarianten als Tests grün, ein Durchlauf mit echten Fragen.
@@ -547,5 +554,16 @@ Antworten, 30 Seeds mal 3 Modelle, Prompt-Version 1:
 
 Die Prüfhinweise sind eine Lesehilfe, kein Urteil: Der Prüfer sah nur die zitierten Passagen, die Schwere
 ordnete Haiku ein. Ob die Antworten gut sind, entscheidet der Blindvergleich.
+
+Lese-Site, gebaut mit `site/build.mjs`: Der erste Klick lädt 24,2 MB Brotli, davon Modell und Runtime
+fast alles, die drei Datendateien 0,4 MB. `lib/rank.js` reproduziert `cand2.py` exakt (Top 5 80 %, Top 20
+92 %, `rank-parity.mjs`). Vektoren gerundet, 30 Seeds gegen 424 Passagen, gegen ungerundet:
+
+| Dezimalen | Top 5 identisch | Top-12-Menge identisch | JSON |
+|---|---|---|---|
+| 3 | 21 von 30 | 27 von 30 | 1,04 MB |
+| 4 | 30 von 30 | 30 von 30 | 1,20 MB |
+
+e5 packt Treffer eng, deshalb 4 statt der 3 aus hAInrich.
 
 Noch nicht gemessen: Qualität der Antworten durch Menschen, die Latenz auf einem echten Telefon.

@@ -2,12 +2,19 @@
   "name": "hainrich2",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.13" },
-  "scripts": { "test": "node --test 'test/*.test.mjs'" },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "test": "node --test 'test/*.test.mjs'"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "1.4.0",
     "@huggingface/transformers": "4.3.0",
     "katex": "0.19.1",
     "markdown-it": "15.0.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
   }
 }

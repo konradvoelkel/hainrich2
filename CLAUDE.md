@@ -24,6 +24,17 @@ npm test
 node tools/review.mjs
 ```
 
+Die Site bauen, dann gegen den fertigen Baum testen. `--modell` zeigt vorerst nur Platzhalter, bis der
+Blindvergleich entschieden ist:
+
+```bash
+node site/build.mjs --modell claude-opus-5-5
+```
+
+```bash
+npm run smoke
+```
+
 Echte API-Läufe brauchen den Key in einer Subshell und laufen durch `lib/budget.js`:
 
 ```bash
@@ -45,5 +56,7 @@ Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
 5. **Rechtstexte und Technik gehen am selben Tag live.** Autorität ist `~/files/work/RECHTSTEXTE.md`.
 6. **Kein Test ruft die echte API.** Echte Aufrufe kosten Geld und brauchen die Zustimmung des
    Eigentümers.
-7. **Sciebo:** Das Verzeichnis wird synchronisiert. `node_modules`, Modelle und Datenbanken gehören in
+7. **Strenge CSP ist Teil des Tests.** `site/serve.mjs` setzt sie, weil die Runtime sonst still über
+   `blob:` lädt (`env.useWasmCache = false` in `lib/model.js`). Die gültige CSP gehört ins Server-Repo.
+8. **Sciebo:** Das Verzeichnis wird synchronisiert. `node_modules`, Modelle und Datenbanken gehören in
    `.sync-exclude.lst`; große Arbeitsdaten nach `/media/konrad/xtraspace`.

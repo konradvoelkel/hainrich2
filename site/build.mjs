@@ -1,0 +1,149 @@
+/**
+ * Baut die öffentliche Site: node site/build.mjs --modell <id> [--release] [--ziel <verzeichnis>].
+ * Allowlist statt Kopie des Repos (Playbook §3.10). Ohne --release trägt jede Seite ein Vorschau-Banner.
+ */
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { promisify, parseArgs } from 'node:util';
+import zlib from 'node:zlib';
+import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
+import { excerpt, foreignSource, indexPage, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { quoteUrl } from '../lib/segment.js';
+
+const here = path.dirname(new URL(import.meta.url).pathname);
+const repo = path.dirname(here);
+const { values: args } = parseArgs({ options: {
+  modell: { type: 'string' },
+  release: { type: 'boolean', default: false },
+  ziel: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/site' },
+  daten: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/work/phase1' },
+} });
+if (!args.modell) throw new Error('--modell fehlt: Welche Antworten die Site zeigt, entscheidet der Blindvergleich.');
+
+/** aus dem Messbericht, research/2026-11-04-browsermodell */
+const MODEL_SHA = {
+  'onnx/model_quantized.onnx': 'f37dfa6645b390114197d006274c4f330a71b12c973f55194f64a301aaef20d4',
+  'tokenizer.json': 'a7b955b5cb8d67f95542125b44e791248280deab367f8f4fa7da6eb4866a68f4',
+};
+const MODEL_FILES = ['config.json', 'tokenizer_config.json', 'special_tokens_map.json', ...Object.keys(MODEL_SHA)];
+const ROUND = 4;
+
+const env = Object.fromEntries(fs.readFileSync(path.join(here, 'site.env'), 'utf8').split('\n')
+  .filter(l => /^[A-Z_]+=/.test(l)).map(l => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
+if (args.release && (!env.SITE_KONTAKT || !env.SITE_ANSCHRIFT)) throw new Error('site.env: SITE_KONTAKT und SITE_ANSCHRIFT fehlen für ein Release.');
+
+const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+const seeds = readJson(path.join(repo, 'seeds/fragen.json'));
+const rows = readJson(path.join(args.daten, 'antworten.json')).filter(r => r.model === args.modell);
+const { passages, fetched } = readJson(path.join(args.daten, 'corpus.json'));
+const passageVectors = readJson(path.join(args.daten, 'vectors.json'));
+if (passageVectors.length !== passages.length) throw new Error('vectors.json passt nicht zu corpus.json');
+if (rows.length !== seeds.length) throw new Error(`${args.modell}: ${rows.length} Antworten für ${seeds.length} Fragen`);
+
+const day = fetched.slice(0, 10);
+const questions = seeds.map(seed => publicQuestion(seed, rows.find(r => r.seed === seed.id), passages, day));
+
+const staging = fs.mkdtempSync(`${args.ziel}.bau-`);
+const base = path.join(staging, env.SITE_BASE);
+const write = (name, content) => {
+  const file = path.join(base, name);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, content);
+};
+const copy = (from, name) => {
+  fs.mkdirSync(path.dirname(path.join(base, name)), { recursive: true });
+  fs.copyFileSync(from, path.join(base, name));
+};
+const dep = (...p) => path.join(repo, 'node_modules', ...p);
+
+for (const name of ['style.css', 'app.js', 'such-worker.js', 'favicon.svg']) copy(path.join(here, name), name);
+for (const name of ['search.js', 'rank.js', 'model.js']) copy(path.join(repo, 'lib', name), name);
+copy(dep('@huggingface/transformers/dist/transformers.min.js'), 'transformers.min.js');
+for (const name of ['ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm']) copy(dep('onnxruntime-web/dist', name), `wasm/${name}`);
+copy(dep('katex/dist/katex.min.css'), 'katex/katex.min.css');
+for (const font of fs.readdirSync(dep('katex/dist/fonts')).filter(f => f.endsWith('.woff2'))) copy(dep('katex/dist/fonts', font), `katex/fonts/${font}`);
+
+for (const name of MODEL_FILES) {
+  const from = path.join(MODEL_DIR, MODEL_ID, name);
+  const sum = crypto.createHash('sha256').update(fs.readFileSync(from)).digest('hex');
+  if (MODEL_SHA[name] && MODEL_SHA[name] !== sum) throw new Error(`${name}: SHA-256 weicht vom Messbericht ab`);
+  copy(from, `models/${MODEL_ID}/${name}`);
+}
+
+const embedder = await createEmbedder();
+const round = v => v.map(x => +x.toFixed(ROUND));
+const questionVectors = [];
+for (const q of questions) questionVectors.push(round(await embedder.query(q.text)));
+
+write('daten/fragen.json', JSON.stringify(questions.map(q => ({ id: q.id, text: q.text, kapitel: q.kapitel }))));
+write('daten/passagen.json', JSON.stringify(passages.map(p => ({ titel: p.title, pfad: p.path, text: p.text, url: quoteUrl(p), ausschnitt: excerpt(p.text) }))));
+write('daten/vektoren.json', JSON.stringify({ modell: MODEL_ID, passagen: passageVectors.map(round), fragen: questionVectors }));
+
+/** .br, .zst und .gz für Caddy `precompressed`; bei den großen Dateien reicht eine mittlere Stufe */
+const COMPRESS = /\.(html|css|js|mjs|json|svg|xml|txt|wasm|onnx)$/;
+const brotli = promisify(zlib.brotliCompress);
+const zstd = promisify(zlib.zstdCompress);
+const gzip = promisify(zlib.gzip);
+const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+
+async function precompress(file) {
+  const data = fs.readFileSync(file);
+  const quality = data.length > 2_000_000 ? 9 : 11;
+  const [br, zst, gz] = await Promise.all([
+    brotli(data, { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: quality } }),
+    zstd(data, { params: { [zlib.constants.ZSTD_c_compressionLevel]: 19 } }),
+    gzip(data, { level: 9 }),
+  ]);
+  fs.writeFileSync(`${file}.br`, br);
+  fs.writeFileSync(`${file}.zst`, zst);
+  fs.writeFileSync(`${file}.gz`, gz);
+  return br.length;
+}
+
+/** Die Größe im Suchtext ist gemessen, nicht getippt: alles, was der erste Klick lädt */
+const assets = walk(base).filter(f => COMPRESS.test(f));
+const sizes = await Promise.all(assets.map(async f => [path.relative(base, f), await precompress(f)]));
+const firstClick = /^(such-worker|search|rank|model|transformers\.min)\.js$|^wasm\/|^models\/|^daten\//;
+const loadBytes = sizes.filter(([name]) => firstClick.test(name)).reduce((a, [, n]) => a + n, 0);
+
+const site = {
+  origin: env.SITE_ORIGIN,
+  base: env.SITE_BASE,
+  skript: env.SITE_SKRIPT,
+  vorschau: !args.release,
+  ladegroesse: `rund ${Math.round(loadBytes / 1e6)} MB`,
+};
+
+const fill = text => text
+  .replaceAll('__KONTAKT__', env.SITE_KONTAKT || '(Adresse steht noch aus)')
+  .replaceAll('__ANSCHRIFT__', !env.SITE_ANSCHRIFT ? '  \n(Anschrift steht noch aus)' : env.SITE_ANSCHRIFT === '-' ? '' : `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
+
+write('index.html', indexPage(questions, site));
+for (const q of questions) write(`f/${q.id}/index.html`, questionPage(q, site));
+for (const name of ['impressum', 'datenschutz']) write(`${name}/index.html`, textPage(name, fill(fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'utf8')), site));
+write('sitemap.xml', sitemap(questions, site));
+fs.writeFileSync(path.join(staging, 'robots.txt'), robotsTxt(site));
+
+/** Stolperdrähte auf dem fertigen Baum */
+const built = walk(staging);
+const pages = built.filter(f => f.endsWith('.html'));
+const texts = built.filter(f => /\.(html|css|json|xml|txt)$/.test(f) || /(app|such-worker|search|rank|model)\.js$/.test(f));
+for (const file of built) if (/\.(md|adoc|db|env)$/.test(file)) throw new Error(`gehört nicht auf die Site: ${file}`);
+for (const file of texts) {
+  const text = fs.readFileSync(file, 'utf8');
+  const hit = text.match(/__[A-Z][A-Z_]+__|sk-ant-[\w-]{8,}/);
+  if (hit) throw new Error(`${path.relative(staging, file)}: ${hit[0].slice(0, 12)}`);
+}
+for (const file of pages) {
+  const foreign = foreignSource(fs.readFileSync(file, 'utf8'));
+  if (foreign) throw new Error(`${path.relative(staging, file)}: fremde Quelle ${foreign}`);
+}
+
+await Promise.all(walk(staging).filter(f => COMPRESS.test(f) && !fs.existsSync(`${f}.br`)).map(precompress));
+
+fs.rmSync(args.ziel, { recursive: true, force: true });
+fs.renameSync(staging, args.ziel);
+fs.chmodSync(args.ziel, 0o755);
+
+console.log(`${pages.length} Seiten, ${questions.length} Fragen mit ${args.modell}, erster Klick ${(loadBytes / 1e6).toFixed(1)} MB Brotli, ${args.ziel}`);

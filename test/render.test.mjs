@@ -27,3 +27,9 @@ test('Preise sind keine Mathematik', () => {
 test('kaputtes LaTeX wirft nicht', () => {
   assert.doesNotThrow(() => renderMarkdown('$\\frac{1}{$'));
 });
+
+test('Verweise bleiben aus Code und Mathematik heraus', () => {
+  const html = renderMarkdown('Satz.[1] `a[1]` und $b[1]$', { marks: n => `<a>${n}</a>` });
+  assert.equal((html.match(/<a>1<\/a>/g) ?? []).length, 1);
+  assert.match(html, /<code>a\[1\]<\/code>/);
+});

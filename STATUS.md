@@ -13,12 +13,18 @@ _Stand 2026-11-04._
 
 - `lib/`, `tools/`, `test/`: Korpus aus dem Skript, hybride Suche, Antworten mit Citations, Richter,
   Kostenbuch mit Deckel, Review-Seite. 44 Tests, alle grün (`npm test`).
+- `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
+  `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Entwürfe von Impressum und
+  Datenschutz. 64 Unit-Tests und 13 Smoke-Tests grün (`npm test`, `npm run smoke`). Sie zeigt vorerst die
+  Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
   `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
 
 ## Was nicht existiert
 
-- Keine Webanwendung, keine Rolle im Server-Repo, kein DNS-Eintrag, keine Rechtstexte.
+- Keine Schreibpfade, keine Rolle im Server-Repo, kein DNS-Eintrag, kein `site/deploy.sh`. Nichts ist
+  veröffentlicht.
+- Keine Nutzungsbedingungen, die braucht erst Phase 3. Keine Vorschaukarte (`og:image`).
 - Kein Key für den VPS. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
@@ -27,6 +33,10 @@ _Stand 2026-11-04._
   eine Workspace-ID, das lässt sich von hier nicht unterscheiden.
 - Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
 - Ob der Prüfschritt etwas taugt: 54 von 87 Hinweisen, bei allen Modellen gleich oft.
+- Impressum und Datenschutz sind Entwürfe. Kontaktadresse und Anschrift fehlen, ein Release bricht
+  deshalb ab. Der Datenschutztext gilt nur für die Fassung ohne Schreibpfade.
+- Die CSP steht bisher nur in `site/serve.mjs`, Caddy und `precompressed` sind nicht geprüft.
+- Smoke-Test nur in Chromium, nicht in Firefox und Safari.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
 - Text-Fragmente nur in Chromium und nur an vier Links geprüft.
 - Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.
@@ -35,4 +45,5 @@ _Stand 2026-11-04._
 ## Nächster Schritt
 
 Blindvergleich durch den Eigentümer in der Review-Seite (`node tools/review.mjs`, Port 8770). Danach
-Modellwahl und Opus-Durchgang über die Antworten des gewählten Modells.
+Modellwahl und Opus-Durchgang über die Antworten des gewählten Modells. Parallel möglich, mit seiner
+Zustimmung: Rolle, DNS und Caddy-Block für `hai.konradvoelkel.com`.
