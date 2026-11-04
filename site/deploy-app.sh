@@ -16,7 +16,8 @@ VPS_APP=${VPS_APP:-/srv/hainrich2/app}
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT
 node tools/app-files.mjs > "$out.liste"
-rsync -a --relative --files-from="$out.liste" ./ "$out/"
+# -r ausdrücklich: --files-from schaltet die Rekursion von -a ab, die Verzeichnisse blieben sonst leer.
+rsync -ar --relative --files-from="$out.liste" ./ "$out/"
 rm -f "$out.liste"
 
 echo "deploy-app.sh: $out -> $VPS_HOST:$VPS_APP${DRY_RUN:+ (Probelauf)}"
