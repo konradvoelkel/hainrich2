@@ -110,7 +110,10 @@ test('jede Antwort trägt CSP und no-store, Abmelden beendet die Sitzung', async
   const page = await c.get('/eidl/mod/', cookie);
   assert.equal(page.headers.get('content-security-policy'), MOD_CSP);
   assert.equal(page.headers.get('cache-control'), 'no-store');
-  assert.ok(!(await page.text()).includes('<script'), 'keine Skripte unter /mod/');
+  assert.ok(!(await page.text()).includes('<script'), 'die Übersicht braucht kein Skript');
+  const edit = await (await c.get('/eidl/mod/f/s01/', cookie)).text();
+  assert.deepEqual(edit.match(/<script[^>]*>/g), ['<script src="/eidl/mod/tasten.js" defer>'], 'nur das eine Skript, nichts inline');
+  assert.ok(!MOD_CSP.includes('unsafe'));
   await c.form('/eidl/mod/abmelden', {}, { cookie });
   assert.match(await (await c.get('/eidl/mod/', cookie)).text(), /Passphrase/);
 });
@@ -199,6 +202,32 @@ test('HTML wird nirgends zu HTML, weder öffentlich noch in der Moderation', asy
   const mod = await (await c.get('/eidl/mod/f/s01/', cookie)).text();
   assert.ok(!mod.includes('<script>alert'));
   assert.ok(!(await (await c.get('/eidl/mod/', cookie)).text()).includes('<script>alert'));
+});
+
+test('Weiter und Zurück folgen der festen Reihenfolge, auch nach dem Prüfen und im Fehlerfall', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  const first = await (await c.get('/eidl/mod/f/s01/', cookie)).text();
+  assert.match(first, /rel="next" href="\/eidl\/mod\/f\/s02\/"/);
+  assert.ok(!first.includes('rel="prev"'));
+  assert.match(first, /1 von 2/);
+  await c.form('/eidl/mod/f/s01/', { ...edit, aktion: 'pruefen' }, { cookie });
+  const last = await (await c.get('/eidl/mod/f/s02/', cookie)).text();
+  assert.match(last, /rel="prev" href="\/eidl\/mod\/f\/s01\/"/, 'Geprüftes bleibt in der Reihe');
+  assert.ok(!last.includes('rel="next"'));
+  assert.match(last, /2 von 2/);
+  const failed = await c.form('/eidl/mod/f/s01/', { ...edit, antwort: 'a@example.test' }, { cookie });
+  assert.match(await failed.text(), /rel="next"/);
+});
+
+test('das Skript der Cursortasten kommt mit dem richtigen Typ, auch ohne Sitzung', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const res = await c.get('/eidl/mod/tasten.js');
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /^text\/javascript/);
+  assert.match(await res.text(), /ArrowRight/);
 });
 
 test('unbekannte Fragen und Aktionen enden sauber', async t => {

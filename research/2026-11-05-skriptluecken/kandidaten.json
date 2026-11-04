@@ -1,0 +1,23 @@
+[
+["s02","Wann trägt die Länge eines Embeddings Information, warum ignoriert man sie?","(länge|norm)[^.]{0,80}(embedding|häufig|frequen|information)|embedding[^.]{0,80}(länge|norm)"],
+["s04","Ist ein CNN ein MLP mit vielen Null-Gewichten? Welche Netze sind keine MLPs?","(mlp|multilayer|voll ?verbunden|fully connected)[^.]{0,120}(cnn|faltung|convolution|null)|(cnn|faltung)[^.]{0,120}(mlp|voll ?verbunden|dense)|weight sharing|gewichte teil"],
+["s05","Konvergiert das Perzeptron, was passiert bei nicht linear trennbaren Daten?","konvergenz|konvergiert|linear (nicht )?trennbar|nicht linear trennbar|novikoff|xor"],
+["s06","Wie gibt man bei der Hugging-Face-pipeline das device an?","device\\s*=|\\.to\\(|cuda|pipeline\\("],
+["s07","Was haben PyTorch-Tensoren mit Tensoren aus der Mathematik zu tun?","multilinear|tensorprodukt|tensor(en)? (der|aus der|in der) (mathematik|physik)|mathematisch[^.]{0,60}tensor|ko-?variant"],
+["s09","Warum modelliert man nicht direkt die Wahrscheinlichkeit linear und schneidet ab?","(linear|gerade)[^.]{0,100}(wahrscheinlichkeit)[^.]{0,100}(0|1|grenz|abschneid|intervall)|odds|logit"],
+["s10","Minimiert das Perzeptron implizit einen Loss?","perzeptron[^.]{0,120}(loss|verlust)|(loss|verlust)[^.]{0,120}perzeptron|hinge"],
+["s12","Warum ist rückwärts billiger als vorwärts? Forward Mode gegen Reverse Mode, Aufwand","forward[- ]mode|reverse[- ]mode|vorwärtsmodus|rückwärtsmodus|doppelte einer inferenz|unabhängig von der anzahl der parameter|von rechts nach links|klammer"],
+["s13","Was passiert im Training, wenn man zero_grad vergisst? Gradient Accumulation absichtlich nutzen","zero_grad|gradient(en)?[- ]?(akkumul|accumul|aufsummier|addier)|akkumul"],
+["s14","Wie erkennt man tote ReLU-Neuronen? Leaky ReLU im Vergleich zu Alternativen","(tot|gestorben|dying|dead)[^.]{0,80}(relu|neuron)|leaky|gelu|elu\\b"],
+["s16","Warum tiefe statt breiter Netze? Tiefe gegen Breite, Größenvergleich","tiefe[^.]{0,100}(breit|effizien|exponentiell|weniger (neuronen|parameter))|(breit|breite)[^.]{0,100}tief|depth"],
+["s19","Warum Summe statt Konkatenation für Dokumentvektoren?","(summ|mittel|average|pool)[^.]{0,120}(konkat|anein|verkett|dokument)|(konkat|verkett|aneinander)[^.]{0,120}(summ|mittel|länge)|feste[nr]? länge"],
+["s20","word2vec auf Audio: wav2vec, was sind Wörter und Kontext bei Audiodaten?","audio|wav|spektrogramm|sprache als signal|signal[^.]{0,60}token"],
+["s21","Orthogonale Matrizen gegen verschwindende Gradienten, Skip Connections stattdessen","orthogonal[^.]{0,120}(gradient|rnn|initial|gewicht)|skip[- ]connection|residual|verschwindend[^.]{0,80}gradient|vanishing"],
+["s22","Grenzen von BLEU, Kritik und Alternativen","bleu|rouge|meteor|bertscore"],
+["s23","Formel für die Ausgabegröße von Conv2d mit Padding und Stride","padding|stride|schrittweite|ausgabegröße|output size"],
+["s24","Temperatur in der Softmax, Grenzwerte T gegen 0 und unendlich","temperatur|temperature"],
+["s25","Lernt ein GAN aus zufälliger Initialisierung? Vortraining des Generators","(gan|generator)[^.]{0,120}(zufällig|initialis|vortrain|pretrain|decoder|autoencoder)|mode collapse"],
+["s27","Wie führt man mehrere Vektoren pro Mail zusammen? Welches Embedding-Modell?","e-?mail|postfach|mail"],
+["s28","Warum lernt der Schüler besser aus weichen Zielen? Dark Knowledge, Gradientenskalierung T²","dark knowledge|weiche[nr]? (ziel|label|wahrscheinlich)|soft (target|label)|t\\^2|temperatur"],
+["s29","Warum generalisiert SGD besser als Adam? Flache Minima","general(is|iz)[^.]{0,120}(sgd|adam|optimierer)|(sgd|adam)[^.]{0,120}general(is|iz)|flache[sn]? minim|sharp minim"]
+]

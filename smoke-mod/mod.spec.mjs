@@ -80,6 +80,54 @@ test('ein harter Treffer wird nicht gespeichert, das Getippte bleibt stehen', as
   await expect(page.locator('#antwort')).toHaveValue(/a@example\.test/);
 });
 
+test('Cursortasten und Knopf blättern, im Textfeld bleibt die Taste beim Feld', async ({ page }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await page.goto('/eidl/mod/f/s01/');
+  await page.click('a[rel="next"]');
+  await expect(page).toHaveURL(/\/f\/s02\/$/);
+  await expect(page.locator('.blaettern .meta')).toHaveText('2 von 4');
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/f\/s03\/$/);
+  await page.keyboard.press('ArrowLeft');
+  await expect(page).toHaveURL(/\/f\/s02\/$/);
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('Control+ArrowRight');
+  await expect(page).toHaveURL(/\/f\/s02\/$/);
+  await page.focus('#antwort');
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/f\/s02\/$/);
+  await page.focus('#frage');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page).toHaveURL(/\/f\/s02\/$/);
+  await page.goto('/eidl/mod/f/s04/');
+  await expect(page.locator('a[rel="next"]')).toHaveCount(0);
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/f\/s04\/$/);
+  expect(problems).toEqual([]);
+});
+
+test('ungespeicherte Änderungen gehen nicht still verloren, Speichern fragt nicht nach', async ({ page }) => {
+  await signIn(page);
+  await page.goto('/eidl/mod/f/s01/');
+  const dialogs = [];
+  page.on('dialog', dialog => {
+    dialogs.push(dialog.type());
+    dialog.dismiss();
+  });
+  await page.locator('#antwort').pressSequentially(' ergänzt');
+  await page.locator('h1').click();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => dialogs).toEqual(['beforeunload']);
+  await expect(page).toHaveURL(/\/f\/s01\/$/);
+  await expect(page.locator('#antwort')).toHaveValue(/ergänzt/);
+  await page.click('button[value="speichern"]');
+  await expect(page.locator('.gemeldet')).toContainText('Gespeichert');
+  await page.keyboard.press('ArrowRight');
+  await expect(page).toHaveURL(/\/f\/s02\/$/);
+  expect(dialogs).toEqual(['beforeunload']);
+});
+
 for (const width of [320, 375, 768]) {
   test(`kein seitliches Scrollen bei ${width} px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });

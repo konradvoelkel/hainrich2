@@ -8,7 +8,7 @@ import path from 'node:path';
 import { promisify, parseArgs } from 'node:util';
 import zlib from 'node:zlib';
 import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
-import { excerpt, foreignSource, indexPage, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { excerpt, foreignSource, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 import { quoteUrl } from '../lib/segment.js';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -57,7 +57,10 @@ const copy = (from, name) => {
 };
 const dep = (...p) => path.join(repo, 'node_modules', ...p);
 
-for (const name of ['style.css', 'app.js', 'such-worker.js', 'favicon.svg']) copy(path.join(here, name), name);
+for (const name of ['style.css', 'app.js', 'such-worker.js']) copy(path.join(here, name), name);
+for (const name of ['logo.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', OG_CARD.file]) copy(path.join(here, 'brand', name), name);
+/** Browser und Crawler fragen an der Wurzel des Hosts danach, egal was die Seite nennt */
+fs.copyFileSync(path.join(here, 'brand/favicon.ico'), path.join(staging, 'favicon.ico'));
 for (const name of ['search.js', 'rank.js', 'model.js']) copy(path.join(repo, 'lib', name), name);
 copy(dep('@huggingface/transformers/dist/transformers.min.js'), 'transformers.min.js');
 for (const name of ['ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm']) copy(dep('onnxruntime-web/dist', name), `wasm/${name}`);
@@ -137,6 +140,8 @@ for (const file of texts) {
   const hit = text.match(/__[A-Z][A-Z_]+__|sk-ant-[\w-]{8,}/);
   if (hit) throw new Error(`${path.relative(staging, file)}: ${hit[0].slice(0, 12)}`);
 }
+const card = fs.readFileSync(path.join(base, OG_CARD.file));
+if (card.readUInt32BE(16) !== OG_CARD.width || card.readUInt32BE(20) !== OG_CARD.height) throw new Error(`${OG_CARD.file}: ${card.readUInt32BE(16)} x ${card.readUInt32BE(20)}, angekündigt sind ${OG_CARD.width} x ${OG_CARD.height}`);
 for (const file of pages) {
   const foreign = foreignSource(fs.readFileSync(file, 'utf8'));
   if (foreign) throw new Error(`${path.relative(staging, file)}: fremde Quelle ${foreign}`);

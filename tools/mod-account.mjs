@@ -24,9 +24,15 @@ async function ask(prompt) {
   return value;
 }
 
+/** ein Tippfehler braucht keinen Stacktrace, aber die Zahl: Die Eingabe ist ja nicht zu sehen */
+const stop = message => {
+  console.error(`${message} Nichts gespeichert, bitte noch einmal.`);
+  process.exit(1);
+};
+
 const passphrase = await ask('Passphrase: ');
-if (terminal && passphrase !== await ask('Noch einmal: ')) throw new Error('Die Passphrasen stimmen nicht überein.');
-if (passphrase.length < MIN_PASSPHRASE) throw new Error(`Mindestens ${MIN_PASSPHRASE} Zeichen.`);
+if (terminal && passphrase !== await ask('Noch einmal: ')) stop('Die beiden Eingaben stimmen nicht überein.');
+if (passphrase.length < MIN_PASSPHRASE) stop(`Das waren ${passphrase.length} Zeichen, nötig sind mindestens ${MIN_PASSPHRASE}.`);
 reader.close();
 
 const store = openStore(dbFile);

@@ -9,7 +9,7 @@ import path from 'node:path';
 const repo = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const lock = JSON.parse(fs.readFileSync(path.join(repo, 'package-lock.json'), 'utf8')).packages;
 
-const CODE = ['package.json', 'server/web.mjs', 'tools/mod-account.mjs', ...['auth', 'checker', 'mod', 'mod-pages', 'publish', 'render', 'segment', 'site', 'store'].map(n => `lib/${n}.js`)];
+const CODE = ['package.json', 'server/web.mjs', 'tools/mod-account.mjs', ...['auth', 'checker', 'mod', 'mod-pages', 'mod-tasten', 'publish', 'render', 'segment', 'site', 'store'].map(n => `lib/${n}.js`)];
 
 const needed = new Set();
 const visit = name => {

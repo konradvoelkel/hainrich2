@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { excerpt, foreignSource, indexPage, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import fs from 'node:fs';
+import { excerpt, foreignSource, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: false, ladegroesse: 'rund 25 MB' };
 const passage = { id: 'p1', page: 'kapitel', title: 'Kapitel', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
@@ -81,6 +82,24 @@ test('jede Seite verweist relativ und nennt den Meldeweg', () => {
     assert.match(html, /impressum\/#inhalte-melden/);
     assert.doesNotMatch(html, /(?:src|href)="\/(?!\/)/);
   }
+});
+
+test('jede Seite trägt die Vorschaukarte, mit eigener Adresse und Alternativtext', () => {
+  const pages = [indexPage([], site), textPage('impressum', '# Impressum', site)];
+  for (const html of pages) {
+    const image = html.match(/property="og:image" content="([^"]+)"/)[1];
+    assert.equal(image, 'https://example.test/eidl/og-card.png');
+    assert.match(html, /property="og:image:width" content="1200"/);
+    assert.match(html, /property="og:image:height" content="630"/);
+    assert.match(html, /property="og:image:alt" content="[^"]{20,}"/);
+    assert.match(html, /name="twitter:card" content="summary_large_image"/);
+    assert.equal(html.match(/<link rel="canonical" href="([^"]+)"/)[1], html.match(/property="og:url" content="([^"]+)"/)[1]);
+  }
+});
+
+test('die Vorschaukarte hat wirklich die angekündigte Größe', () => {
+  const card = fs.readFileSync(new URL('../site/brand/og-card.png', import.meta.url));
+  assert.deepEqual([card.readUInt32BE(16), card.readUInt32BE(20)], [OG_CARD.width, OG_CARD.height]);
 });
 
 test('Vorschau-Banner nur in der Vorschau', () => {

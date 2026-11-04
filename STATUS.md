@@ -15,7 +15,7 @@ _Stand 2026-11-04._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 92 Unit-Tests, 13 Smoke-Tests und 7 Browser-Tests der Moderation grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 96 Unit-Tests, 13 Smoke-Tests und 9 Browser-Tests der Moderation grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - `site/deploy.sh`: liefert den fertigen Baum per rsync in den Docroot.
 - `https://hai.konradvoelkel.com/eidl/` ist seit 2026-11-04 online, als Staging: der Vorschau-Baum mit den
@@ -27,12 +27,15 @@ _Stand 2026-11-04._
   Frageseiten antworten. Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate nach Wortlaut um.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
+- Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
+  `og:`- und `twitter:`-Tags, seit 2026-11-05 auf dem Server. Konrad will das Motiv neu denken.
+- `research/2026-11-05-skriptluecken/`: Übersicht, was die Antworten offenlassen, gegen den ganzen Korpus geprüft.
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
   `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
 
 - Moderation seit 2026-11-05 auf dem Server, `https://hai.konradvoelkel.com/eidl/mod/`: Anmelden, Fragen und Antworten
-  bearbeiten, prüfen, zurückziehen, Verlauf. Dienst `hainrich2-web`, `public.db` auf dem VPS ist die Quelle für alles
-  Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Code in `lib/store.js`, `lib/auth.js`,
+  bearbeiten, prüfen, zurückziehen, Verlauf, blättern mit Weiter und Zurück oder den Cursortasten. Dienst `hainrich2-web`, `public.db` auf dem VPS ist die Quelle für alles
+  Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Konrads Login funktioniert (2026-11-05). Code in `lib/store.js`, `lib/auth.js`,
   `lib/checker.js` (harte Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`.
 
 ## Was nicht existiert
@@ -40,7 +43,7 @@ _Stand 2026-11-04._
 - Keine Fragen von außen: kein Kurscode, kein `pending.db`, keine Zustimmung, keine weichen Checker-Treffer.
 - Bearbeitete Fragen behalten ihren alten Vektor, bis die Moderation ihn neu rechnen kann. Die Stichwortsuche sieht den
   neuen Text, die semantische Suche den alten.
-- Keine Nutzungsbedingungen, die braucht erst Phase 3. Keine Vorschaukarte (`og:image`).
+- Keine Nutzungsbedingungen, die braucht erst Phase 3. Kein Web-Manifest, es bräuchte `manifest-src` in der CSP.
 - Kein Key für den VPS. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
@@ -51,8 +54,6 @@ _Stand 2026-11-04._
 - Ob der Prüfschritt etwas taugt: 58 von 87 Hinweisen, bei allen Modellen ähnlich oft.
 - Impressum und Datenschutz hat Konrad am 2026-11-05 freigegeben, mit dem Absatz zur Moderation. Für Fragen von außen
   ändert sich der Text wieder.
-- Ein echter Login am Server ist erst mit Konrads Passphrase geprüft. Gemessen sind bisher die falsche Passphrase im Browser
-  (401), fremde Herkunft (403), Kopfzeilen und Smoke-Test gegen den Host.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
 - Smoke-Test nur in Chromium, nicht in Firefox und Safari.
