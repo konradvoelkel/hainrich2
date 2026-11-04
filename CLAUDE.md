@@ -14,6 +14,24 @@ Cross-Projekt-Regeln stehen in `~/files/work/PLAYBOOK.md`. §5 ist die Startlist
 | `STATUS.md` | Was existiert, was geprüft ist, was nicht. Gleicher Commit wie die Arbeit. |
 | `research/` | Datierte Messungen mit Skripten. |
 
+## Befehle
+
+```bash
+npm test
+```
+
+```bash
+node tools/review.mjs
+```
+
+Echte API-Läufe brauchen den Key in einer Subshell und laufen durch `lib/budget.js`:
+
+```bash
+( set -a; . ~/.config/hainrich2/anthropic.env; set +a; node tools/try-answers.mjs <arbeitsverzeichnis> claude-opus-5-5 -- "Frage" )
+```
+
+Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
+
 ## Was beißt
 
 1. **Der Kurscode steht nirgends in diesem Repo, in keiner Memory und keinem Client-Bundle.** Nur ein

@@ -197,8 +197,9 @@ Die Moderation kann jede Zusammenlegung trennen, jeder Fall landet im Revisionsl
 ### 7.1 Korpus
 
 Quelle ist `https://eidl-skript-131e30.pages.cs.uni-duesseldorf.de/llms-full.txt` (397 KB, mit
-`URL:`-Zeile je Kapitel), abgerufen zur Laufzeit mit ETag, keine Kopie im Repo (Playbook §3.11). Der
-Worker prüft täglich. Passagen sind ein bis drei Absätze und zerschneiden keine Formeln, Listen oder
+`URL:`-Zeile je Kapitel), abgerufen zur Laufzeit mit ETag, keine Kopie im Repo (Playbook §3.11). Die
+Startseite, `readme` und die Abschnitte `Übung` und `Literatur` fallen weg (D12), Stand 2026-11-04
+bleiben 424 Passagen aus 30 Kapiteln. Der Worker prüft täglich. Passagen sind ein bis drei Absätze und zerschneiden keine Formeln, Listen oder
 Codeblöcke. Überschriften-Anker werden aus dem veröffentlichten HTML gelesen, nicht nachgebaut
 (MyST macht aus „Zurück zum Perzeptron“ `zur-ck-zum-perzeptron`). Der Hash je Passage erkennt
 Änderungen. Betroffene Antworten bekommen den Status `quelle_geändert` und erscheinen in der
@@ -209,28 +210,35 @@ Moderation.
 1. Hybride Suche im Worker: Embeddings plus BM25, Top 12 samt Nachbarpassagen, etwa 10k Tokens.
 2. Claude antwortet nur aus den Passagen. Die Frage wird als Daten übergeben, nicht als Anweisung.
    Rutscht eine Frage zu Übungen oder Organisatorischem durch, gibt es keine Antwort (D12).
-3. Ohne Beleg ein zweiter Anlauf mit den zwei besten ganzen Kapiteln. In der Messung lehnte das
-   lokale Modell zu Unrecht ab, obwohl die Inhalte im Skript stehen, das ist die Hauptgefahr.
-4. Prüfschritt: Trägt jedes Zitat seine Aussage? Eine gültige Passage kann die falsche sein.
+3. Ohne Beleg ein zweiter Anlauf mit den zwei besten ganzen Kapiteln. Das lokale Modell lehnte zu
+   Unrecht ab, obwohl die Inhalte im Skript stehen. Claude tut das selten: Bei 90 Antworten brauchte
+   nur Sonnet viermal den zweiten Anlauf, dreimal blieb es bei „kein Beleg“.
+4. Prüfschritt: Trägt jedes Zitat seine Aussage? Eine gültige Passage kann die falsche sein. Vorerst nur
+   ein Hinweis an die Moderation, kein Tor: Der erste Prüfer schlug bei 54 von 87 Antworten an, bei allen
+   Modellen gleich oft, oft wegen eigener Schlussfolgerungen (§19). Ob er taugt, zeigt der Abgleich
+   mit den Bewertungen aus dem Blindvergleich.
 5. Der Worker setzt das Zitat ein: ganze Passage, Kapitel, Link. Der PII-Check läuft auch hier.
 
 ### 7.3 Zitate
 
 Claude hat dafür eine fertige Funktion: Citations mit `citations: {enabled: true}` auf
-`document`-Blöcken. Mit eigenem Inhalt ist jede Passage ein Block, die Antwort verweist per
-`content_block_location` darauf. Das ist genau „Zitat per ID“, ohne eigenes Format. Citations
-verträgt sich nicht mit `output_config.format`, also bleibt die Antwort Text. Das passt, denn JSON
-zerstörte in der Messung LaTeX. In Phase 1 ist zu prüfen, ob das mit Opus 5.5 so trägt; Rückfall sind
-Passagen-IDs in Tags.
+`document`-Blöcken. Jede Passage ist ein eigenes Dokument mit eigenem Inhalt, die Antwort verweist
+per `document_index` darauf. Das ist genau „Zitat per ID“, ohne eigenes Format, und `cited_text` kostet
+keine Output-Tokens. Citations verträgt sich nicht mit `output_config.format`, also bleibt die Antwort
+Text und „kein Beleg“ ein Schlüsselwort. Das passt, denn JSON zerstörte in der Messung LaTeX. Geprüft
+am 2026-11-04 mit Opus, Sonnet und Haiku 5.5, auch im Batch. Eine Antwort ohne ein einziges Zitat
+zählt nicht als Antwort.
 
-Links: Überschriften-Anker plus Text-Fragment (`#anker:~:text=…`), das die Stelle markiert. Die
-Anker des Skripts sind stabil, solange die Überschrift bleibt; das prüft der tägliche Lauf. Ob
-Text-Fragmente auf den MyST-Seiten funktionieren, ist noch zu testen.
+Links: Überschriften-Anker plus Text-Fragment (`#anker:~:text=…`) aus den ersten Wörtern bis zur ersten
+Formel. Gemessen am veröffentlichten Skript: Der Browser springt zum Text, ohne Treffer bleibt der Anker
+als Rückfall. Die Anker sind stabil, solange die Überschrift bleibt; das prüft der tägliche Lauf.
 
 ### 7.4 Modell und Kosten
 
 Listenpreise laut mitgelieferter Claude-API-Doku, Stand 2026-10-06, vor dem Start prüfen. Annahme je
-Antwort: 10k Tokens rein, 2k raus samt Denken.
+Antwort: 10k Tokens rein, 2k raus samt Denken. Gemessen an 90 Antworten waren es rund 14k rein und 0,8k
+bis 1,4k raus, deutscher Text mit Formeln tokenisiert teurer als gedacht. Die Summen stimmen trotzdem:
+7,9 ct bei Opus, 3,6 ct bei Sonnet, 0,2 ct bei Haiku. Der Prüfschritt mit Sonnet kostet 0,8 ct je Antwort.
 
 | Modell | $/MTok rein/raus | je Antwort | am Deckel (20 am Tag) im Monat | mit Batch (−50 %) |
 |---|---|---|---|---|
@@ -245,7 +253,8 @@ Seed-Fragen in Phase 1 `[owner]`. Das ganze Skript in den Prompt zu legen kostet
 Schalter; bei wenigen Fragen am Tag sparen die zusätzlichen Zustände kaum etwas.
 
 Der Worker nutzt das offizielle SDK `@anthropic-ai/sdk`, einen eigenen Workspace mit eigenem Key und
-prüft `stop_reason` auf `refusal`.
+prüft `stop_reason` auf `refusal`. Im Betrieb gehört `fallbacks: "default"` dazu; im Blindvergleich ist es
+bewusst aus, damit kein anderes Modell unbemerkt einspringt.
 
 ## 8. PII-Checker
 
@@ -405,6 +414,10 @@ abgeschlossen, bis auf die Latenz auf einem echten Telefon.
 Blindvergleich der Modelle, Opus-Durchgang. Abnahme: 30 von dir geprüfte Antworten mit Zitat, falsche
 Ablehnungen benannt, Antwortmodell entschieden.
 
+Stand 2026-11-04: Korpus, Suche, Citations, Richter, 30 Seeds und 90 Antworten stehen, die Review-Seite
+läuft (`node tools/review.mjs`). Offen sind dein Blindvergleich, die Modellwahl und danach der
+Opus-Durchgang über die Antworten des gewählten Modells. Bisher 3,26 $, Deckel 5 $.
+
 **Phase 2: Öffentliche Lese-Site.** Hostname, Rolle im Server-Repo, Caddy-Block mit CSP, Rechtstexte,
 Suche, statische Seiten. Braucht noch keine Schreibpfade. Abnahme: Smoke-Test, Telefonbreite gemessen,
 keine fremden Anfragen.
@@ -457,6 +470,7 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 | JSON für Antworttexte | LaTeX bricht (`\t`, `\b` als Escape), §19. |
 | Ganzes Skript im Prompt | Rund 60 ct je Frage ungecacht bei Opus, lohnt erst bei Volumen. |
 | E-Mail-Benachrichtigung | Personenbezogenes Datum nur für Komfort. |
+| Transkripte an Claude senden | Sie sind privat und könnten Namen enthalten. Die 4090 erschließt die Fragen lokal, nur die sinngemäße Liste geht weiter. |
 | ILIAS-Namensliste im Checker | Veröffentlicht die Kursliste. |
 | `?corpus=` im alten Repo | Andere UI, Backend und Modell; dort gilt außerdem Pages. |
 
@@ -518,4 +532,20 @@ Die 13 verpassten Einzelpaare sind überwiegend solche, bei denen eine Seite nur
 fragt, und die Regel im Prompt verlangt genau das. Das Set enthält unbeabsichtigt echte Duplikate unter
 den Negativfragen; die Urteile dazu sind von Hand gelesen, nicht automatisch gezählt.
 
-Noch nicht gemessen: Claude als Antwortgeber, die Latenz auf einem echten Telefon.
+Suche über die 424 Passagen, gleiche 100 Anfragen, Kapitel in Top 3 / Top 5 / Top 12: Vektor 91 / 95 /
+99 %, BM25 80 / 87 / 94 %, hybrid 90 / 93 / 99 %. Das Set ist absichtlich lexikalisch fern, BM25 hilft
+hier also nicht. Es bleibt für exakte Bezeichner wie `zero_grad`, das ist aber nicht gemessen.
+
+Antworten, 30 Seeds mal 3 Modelle, Prompt-Version 1:
+
+| | Opus 5.5 | Sonnet 5.5 | Haiku 5.5 |
+|---|---|---|---|
+| Antworten mit Zitat | 30 von 30 | 27 von 30 | 30 von 30 |
+| Länge im Median, Zeichen | 1694 | 1350 | 1189 |
+| Zitate je Antwort | 4,3 | 4,0 | 3,3 |
+| Prüfhinweis schwer / leicht / keiner | 10 / 8 / 12 | 7 / 10 / 10 | 12 / 7 / 11 |
+
+Die Prüfhinweise sind eine Lesehilfe, kein Urteil: Der Prüfer sah nur die zitierten Passagen, die Schwere
+ordnete Haiku ein. Ob die Antworten gut sind, entscheidet der Blindvergleich.
+
+Noch nicht gemessen: Qualität der Antworten durch Menschen, die Latenz auf einem echten Telefon.

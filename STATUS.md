@@ -11,22 +11,28 @@ _Stand 2026-11-04._
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
   außerhalb des Repos auf `xtraspace`, die Token-IDs im Repo.
 
+- `lib/`, `tools/`, `test/`: Korpus aus dem Skript, hybride Suche, Antworten mit Citations, Richter,
+  Kostenbuch mit Deckel, Review-Seite. 44 Tests, alle grün (`npm test`).
+- `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
+  `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
+
 ## Was nicht existiert
 
-- Kein Anwendungscode, keine Rolle im Server-Repo, kein DNS-Eintrag, keine Rechtstexte.
+- Keine Webanwendung, keine Rolle im Server-Repo, kein DNS-Eintrag, keine Rechtstexte.
 - Kein Key für den VPS. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
 
 - Ob der Laptop-Key im Workspace `hainrich2` hängt und das Limit von 20 $ greift. Der Key zeigt nur
   eine Workspace-ID, das lässt sich von hier nicht unterscheiden.
-- Claude als Antwortgeber, Citations mit Opus 5.5.
+- Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
+- Ob der Prüfschritt etwas taugt: 54 von 87 Hinweisen, bei allen Modellen gleich oft.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
-- Text-Fragmente auf den MyST-Seiten.
+- Text-Fragmente nur in Chromium und nur an vier Links geprüft.
 - Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.
 - Der Abnahmewert für Duplikate in den Top 5 (85 %) ist nicht erreicht: 74 bis 80 %.
 
 ## Nächster Schritt
 
-Phase 1 aus dem Plan: Korpus, Antwort-Pipeline, Seeds. Phase 0 ist abgeschlossen, bis auf die Latenz
-auf einem echten Telefon.
+Blindvergleich durch den Eigentümer in der Review-Seite (`node tools/review.mjs`, Port 8770). Danach
+Modellwahl und Opus-Durchgang über die Antworten des gewählten Modells.

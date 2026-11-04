@@ -1,0 +1,212 @@
+[
+ {
+  "id": "s01",
+  "frage": "Ich bringe Parameter und Hyperparameter immer durcheinander. Ist die Lernrate jetzt ein Parameter oder nicht? Woran erkenne ich das allgemein?",
+  "kapitel": "was-ist-deep-learning",
+  "blick": "pruefung",
+  "hoersaal": true
+ },
+ {
+  "id": "s02",
+  "frage": "Why do we normalize vectors before comparing them? Doesn't that throw away the information in their length?",
+  "kapitel": "hintergrundwissen-lineare-algebra",
+  "blick": "international",
+  "hoersaal": false
+ },
+ {
+  "id": "s03",
+  "frage": "Gradient und Richtungsableitung verwechsle ich ständig. Ist das eine ein Vektor und das andere eine Zahl?",
+  "kapitel": "hintergrundwissen-analysis",
+  "blick": "pruefung",
+  "hoersaal": false
+ },
+ {
+  "id": "s04",
+  "frage": "Ist ein MLP einfach ein anderes Wort für neuronales Netz, oder gibt es neuronale Netze, die keine MLPs sind?",
+  "kapitel": "neuron-perzeptron",
+  "blick": "pruefung",
+  "hoersaal": true
+ },
+ {
+  "id": "s05",
+  "frage": "Woher weiß man bei der Perzeptron-Lernregel, dass das Update die Gewichte wirklich verbessert und nicht zufällig in die falsche Richtung schiebt?",
+  "kapitel": "perzeptron-trainieren",
+  "blick": "skeptisch",
+  "hoersaal": true
+ },
+ {
+  "id": "s06",
+  "frage": "Meine Hugging-Face-Pipeline läuft auf der CPU, obwohl eine GPU da ist. Wo muss ich das device angeben?",
+  "kapitel": "vortrainierte-modelle",
+  "blick": "praxis",
+  "hoersaal": false
+ },
+ {
+  "id": "s07",
+  "frage": "Haben Tensoren in PyTorch wirklich was mit Tensoren aus der Mathematik zu tun oder ist das nur ein schicker Name für mehrdimensionale Arrays?",
+  "kapitel": "tensoren",
+  "blick": "mathe",
+  "hoersaal": false
+ },
+ {
+  "id": "s08",
+  "frage": "Is softmax with two classes exactly the same thing as the logistic sigmoid, or am I missing something?",
+  "kapitel": "logistische-regression",
+  "blick": "international",
+  "hoersaal": false
+ },
+ {
+  "id": "s09",
+  "frage": "Warum modelliert man den Logarithmus der Odds linear und nicht direkt die Wahrscheinlichkeit?",
+  "kapitel": "logistische-regression",
+  "blick": "mathe",
+  "hoersaal": false
+ },
+ {
+  "id": "s10",
+  "frage": "Wie sieht das Training aus, wenn man nicht ein Beispiel, sondern einen ganzen Datensatz hat? Wird aus dem Produkt der Likelihoods dann eine Summe der Losses?",
+  "kapitel": "loss-funktionen-maximum-likelihood",
+  "blick": "mathe",
+  "hoersaal": true
+ },
+ {
+  "id": "s11",
+  "frage": "Mein Loss geht beim SGD manchmal von einem Mini-Batch zum nächsten hoch. Ist da was kaputt, oder ist das normal?",
+  "kapitel": "gradientenabstieg",
+  "blick": "praxis",
+  "hoersaal": true
+ },
+ {
+  "id": "s12",
+  "frage": "Warum rechnet man die Ableitungen rückwärts und nicht vorwärts durchs Netz? Mathematisch käme doch das Gleiche raus.",
+  "kapitel": "backpropagation",
+  "blick": "mathe",
+  "hoersaal": false
+ },
+ {
+  "id": "s13",
+  "frage": "Warum muss ich vor jedem Schritt optimizer.zero_grad() aufrufen? Was passiert, wenn ich es vergesse?",
+  "kapitel": "autograd-berechnungsgraph",
+  "blick": "praxis",
+  "hoersaal": false
+ },
+ {
+  "id": "s14",
+  "frage": "Wie merke ich überhaupt, dass bei mir ReLU-Neuronen „gestorben“ sind? Und hilft Leaky ReLU dann wirklich?",
+  "kapitel": "aktivierungsfunktionen",
+  "blick": "praxis",
+  "hoersaal": false
+ },
+ {
+  "id": "s15",
+  "frage": "Warum schafft ein einzelnes Neuron kein XOR, aber OR und AND schon?",
+  "kapitel": "netze-von-hand",
+  "blick": "anfaenger",
+  "hoersaal": false
+ },
+ {
+  "id": "s16",
+  "frage": "Wenn eine einzige versteckte Schicht laut Approximationstheorem schon reicht, warum baut man dann überhaupt tiefe Netze?",
+  "kapitel": "universelle-approximation",
+  "blick": "skeptisch",
+  "hoersaal": false
+ },
+ {
+  "id": "s17",
+  "frage": "Warum lernt ein Autoencoder nicht einfach die Identität? Das wäre doch die perfekte Rekonstruktion.",
+  "kapitel": "autoencoder",
+  "blick": "skeptisch",
+  "hoersaal": false
+ },
+ {
+  "id": "s18",
+  "frage": "Wozu braucht man beim VAE den Reparametrisierungstrick? Warum kann man nicht einfach durch das Sampling zurückpropagieren?",
+  "kapitel": "variational-autoencoder",
+  "blick": "mathe",
+  "hoersaal": false
+ },
+ {
+  "id": "s19",
+  "frage": "Wie bekomme ich aus vielen Token-Vektoren einen Vektor für das ganze Dokument? Warum soll Summieren besser sein als Aneinanderhängen?",
+  "kapitel": "word2vec",
+  "blick": "mathe",
+  "hoersaal": true
+ },
+ {
+  "id": "s20",
+  "frage": "Könnte man die word2vec-Idee auch auf Audio übertragen, also aus einer WAV-Datei Vektoren lernen? Was wären da die „Wörter“ und der „Kontext“?",
+  "kapitel": "representation-learning-graphen",
+  "blick": "praxis",
+  "hoersaal": true
+ },
+ {
+  "id": "s21",
+  "frage": "Orthogonale Matrizen würden das Problem verschwindender Gradienten ja auch lösen. Warum nimmt man in der Praxis trotzdem eher Skip Connections?",
+  "kapitel": "rnn",
+  "blick": "skeptisch",
+  "hoersaal": true
+ },
+ {
+  "id": "s22",
+  "frage": "BLEU zählt ja nur übereinstimmende n-Gramme. Wieso hat man sich so lange auf so ein simples Maß verlassen?",
+  "kapitel": "transformer",
+  "blick": "skeptisch",
+  "hoersaal": false
+ },
+ {
+  "id": "s23",
+  "frage": "Wie berechne ich die Ausgabegröße einer Conv2d-Schicht mit Padding und Stride? Bei mir passt die Größe vor dem Linear-Layer nie.",
+  "kapitel": "faltung-cnn",
+  "blick": "praxis",
+  "hoersaal": false
+ },
+ {
+  "id": "s24",
+  "frage": "Was macht die Temperatur bei der Softmax mathematisch? Teilt man einfach die Logits durch T?",
+  "kapitel": "llms-benutzen",
+  "blick": "mathe",
+  "hoersaal": true
+ },
+ {
+  "id": "s25",
+  "frage": "Muss der Generator im GAN auf einem Autoencoder-Decoder aufbauen, oder kann der komplett zufällig starten und lernt alles nur gegen den Diskriminator?",
+  "kapitel": "gans",
+  "blick": "skeptisch",
+  "hoersaal": true
+ },
+ {
+  "id": "s26",
+  "frage": "Wenn ich 0,5·Katze + 0,5·Hund dekodiere, was kommt dann raus? Warum gibt es keinen Token für so eine Mischung?",
+  "kapitel": "latente-raeume",
+  "blick": "mathe",
+  "hoersaal": true
+ },
+ {
+  "id": "s27",
+  "frage": "Wie würde man vorhersagen, ob eine neue E-Mail beantwortet wird, wenn man nur das alte Postfach hat? Woher kommen da die Labels?",
+  "kapitel": "anwendungsbeispiele",
+  "blick": "praxis",
+  "hoersaal": true
+ },
+ {
+  "id": "s28",
+  "frage": "Warum lernt der Schüler bei der Destillation besser aus den weichen Wahrscheinlichkeiten des Lehrers als aus den harten Labels?",
+  "kapitel": "destillation",
+  "blick": "mathe",
+  "hoersaal": true
+ },
+ {
+  "id": "s29",
+  "frage": "Ich lese öfter, dass normales SGD am Ende besser generalisiert als Adam. Woran kann das liegen?",
+  "kapitel": "optimierer",
+  "blick": "skeptisch",
+  "hoersaal": true
+ },
+ {
+  "id": "s30",
+  "frage": "Wo liegen diese Singularitäten eigentlich, in der Loss-Landschaft oder in der latenten Mannigfaltigkeit der Token-Embeddings? Ich bringe das durcheinander.",
+  "kapitel": "adversarial-attacks-polysemie",
+  "blick": "pruefung",
+  "hoersaal": true
+ }
+]
