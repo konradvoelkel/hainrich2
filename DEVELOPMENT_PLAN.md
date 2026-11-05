@@ -572,7 +572,7 @@ Betrieb mit echten Kosten auf der Seite Zahlen.
    im Repo). Das Limit von 20 $ greift für ihn (Konrad, 2026-11-04).
    Für den VPS sollte ein eigener Service-Account-Key in den Vault. Vorerst läuft dort derselbe Key wie auf dem Laptop (Konrad, 2026-11-05): Der Deckel
    des Worker zählt nur die Ausgaben des Servers, und wer den Key sperrt, trifft beide. Vor dem echten Start tauschen.
-6. ~~Frist für ungeprüfte Antworten.~~ Entschieden 2026-11-04: keine Frist (D10).
+6. ~~Frist für ungeprüfte Antworten.~~ Entschieden 2026-11-04: keine Frist (D10). Bestätigt 2026-11-05: Nach der Freigabe der Frage darf die Antwort weiter ungeprüft erscheinen, die Seite „Über hAInrich2“ sagt das so.
 7. ~~Format der Matrikelnummer.~~ Entfällt durch D16.
 
 ## 18. Verworfen

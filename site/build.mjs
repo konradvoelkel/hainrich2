@@ -143,6 +143,7 @@ const text = name => fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'ut
 if (!text('datenschutz').includes('## Eigene Beiträge')) throw new Error('datenschutz.md: Abschnitt „Eigene Beiträge“ nicht gefunden');
 const voting = args.stimmen ? text('datenschutz').replace('## Eigene Beiträge', `${text('datenschutz-stimmen')}## Eigene Beiträge`) : text('datenschutz');
 const privacy = args.fragen ? voting.replace(/## Eigene Beiträge[\s\S]*?(?=## Ihre Rechte)/, text('datenschutz-fragen')) : voting;
+write('ueber/index.html', textPage('ueber', fill(text('ueber')), site));
 write('impressum/index.html', textPage('impressum', fill(text('impressum')), site));
 write('datenschutz/index.html', textPage('datenschutz', fill(privacy), site));
 if (args.fragen) write('nutzungsbedingungen/index.html', textPage('nutzungsbedingungen', fill(text('nutzungsbedingungen')), site));

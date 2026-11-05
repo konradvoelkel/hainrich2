@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const FORUMS = ['/eidl/f/grundlagen/', '/eidl/f/lernen/', '/eidl/f/architekturen/', '/eidl/f/praxis/'];
-const PAGES = ['/eidl/', ...FORUMS, '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/impressum/', '/eidl/datenschutz/'];
+const PAGES = ['/eidl/', ...FORUMS, '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/ueber/', '/eidl/impressum/', '/eidl/datenschutz/'];
 const WIDTHS = [320, 375, 414, 768, 1200];
 const own = url => new URL(url).origin === new URL(process.env.SMOKE_URL ?? 'http://localhost:8772').origin;
 
@@ -121,3 +121,12 @@ for (const width of WIDTHS) {
     expect(wide).toEqual([]);
   });
 }
+
+test('die Seite „Über hAInrich2“ ist von überall unten erreichbar', async ({ page }) => {
+  await page.goto('/eidl/f/s01/');
+  await page.click('.fuss a:has-text("Über hAInrich2")');
+  await expect(page).toHaveURL(/\/eidl\/ueber\/$/);
+  await expect(page.locator('h1')).toHaveText('Über hAInrich2');
+  await expect(page.locator('.dokument h2')).toHaveCount(5);
+  await expect(page.locator('.dokument a[href*="heicad.hhu.de"]')).toHaveText('hAInrich');
+});
