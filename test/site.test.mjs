@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { excerpt, foreignSource, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { threadsOf, UNTERFOREN, unterforumOf } from '../lib/forum.js';
+import { excerpt, foreignSource, forumPage, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: false, ladegroesse: 'rund 25 MB' };
-const passage = { id: 'p1', page: 'kapitel', title: 'Kapitel', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
+const passage = { id: 'p1', page: 'kapitel', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
 const seed = { id: 's01', frage: 'Was <b>rechnet</b> ein Perzeptron?', kapitel: 'kapitel' };
 const row = { seed: 's01', model: 'm', status: 'ok', text: 'Es rechnet eine Summe.[1] Bei `x[1]` bleibt das, $a[1]$ auch, [2] gibt es nicht.', cited: [{ id: 'p1', hash: 'h1', text: 'vom Modell verändert' }], check: { hinweise: ['geheim'] }, input: 1 };
 const question = (overrides = {}) => publicQuestion(seed, { ...row, ...overrides }, [passage], '2026-11-04');
@@ -100,6 +101,48 @@ test('jede Seite trägt die Vorschaukarte, mit eigener Adresse und Alternativtex
 test('die Vorschaukarte hat wirklich die angekündigte Größe', () => {
   const card = fs.readFileSync(new URL('../site/brand/og-card.png', import.meta.url));
   assert.deepEqual([card.readUInt32BE(16), card.readUInt32BE(20)], [OG_CARD.width, OG_CARD.height]);
+});
+
+test('jedes Kapitel gehört zu genau einem Unterforum, ein unbekanntes fällt auf', () => {
+  const all = UNTERFOREN.flatMap(u => u.kapitel);
+  assert.equal(new Set(all).size, all.length);
+  assert.equal(unterforumOf('Backpropagation').slug, 'lernen');
+  assert.throws(() => unterforumOf('Gibt es nicht'), /Kapitel ohne Unterforum/);
+  assert.equal(new Set(UNTERFOREN.map(u => u.slug)).size, UNTERFOREN.length);
+  for (const { slug } of UNTERFOREN) assert.doesNotMatch(slug, /^s\d/, 'Fragen heißen s01, ein Unterforum darf nicht so heißen');
+});
+
+test('die Startseite zählt je Unterforum Themen und Geprüftes', () => {
+  const open = question();
+  const done = { ...question(), id: 's02', antworten: [{ ...question().antworten[0], status: 'geprüft' }] };
+  const html = indexPage([open, done], site);
+  assert.match(html, /href="f\/grundlagen\/">Grundlagen<\/a>[\s\S]*?<td data-label="Themen">2<\/td><td data-label="Geprüft">1<\/td>/);
+  assert.match(html, /href="f\/lernen\/">[\s\S]*?<td data-label="Themen">0<\/td><td data-label="Geprüft">0<\/td>/);
+  assert.equal(html.match(/<tr><th scope="row">/g).length, UNTERFOREN.length);
+  assert.equal(threadsOf(UNTERFOREN[0], [open, done]).length, 2);
+});
+
+test('das Unterforum listet seine Themen, Brotkrumen führen zurück', () => {
+  const forum = UNTERFOREN[0];
+  const html = forumPage(forum, [question()], site);
+  assert.match(html, /href="\.\.\/s01\/"/);
+  assert.doesNotMatch(html, /<b>rechnet/);
+  assert.match(html, /name="robots" content="noindex"/);
+  const thread = questionPage(question(), site);
+  assert.match(thread, /<a href="\.\.\/\.\.\/">Forum<\/a>/);
+  assert.match(thread, /<a href="\.\.\/grundlagen\/">Grundlagen<\/a>/);
+  assert.match(thread, /id="b1"[\s\S]*id="b2"/);
+  assert.match(thread, /src="\.\.\/\.\.\/logo\.svg"/);
+  assert.match(forumPage(UNTERFOREN[1], [question()], site), /<tbody>\s*<\/tbody>/, 'leeres Unterforum bleibt gültig');
+});
+
+test('die Sitemap nennt nur Unterforen mit Geprüftem', () => {
+  const done = { ...question(), antworten: [{ ...question().antworten[0], status: 'geprüft' }] };
+  const map = sitemap([done], site);
+  assert.match(map, /f\/grundlagen\//);
+  assert.doesNotMatch(map, /f\/lernen\//);
+  assert.doesNotMatch(sitemap([question()], site), /<url>/);
+  assert.doesNotMatch(sitemap([done], { ...site, vorschau: true }), /<url>/);
 });
 
 test('Vorschau-Banner nur in der Vorschau', () => {

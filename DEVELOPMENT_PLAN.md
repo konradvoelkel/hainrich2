@@ -39,6 +39,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D16 | Der Checker sperrt jede Zahl mit 6 bis 12 Ziffern. |
 | D17 | Kontakt im Impressum ist `mail@hai.konradvoelkel.com`, Zustellung als `hai@konradvoelkel.com` im Fastmail-Konto. Anschrift wie bei Laberampel. |
 | D18 | Das Forum ist deutsch wie das Skript. Englische Fragen sind kein Ziel: keine Seeds, kein Testset, kein Tuning dafür (Konrad, 2026-11-04). Was der Schreibpfad mit einer englischen Frage tut, bleibt für Phase 3 offen. |
+| D19 | Das Forum hat Unterforen, nach dem Inhaltsverzeichnis des Skripts: Grundlagen, Lernen und Training, Architekturen und Repräsentationen, Praxis und Anwendung (Konrad, 2026-11-05). Eine Frage gehört über ihr Kapitel zu genau einem; `Optimierer` zählt zum Training. Die Adressen liegen unter `f/`, das bedient Caddy schon aus `live/`. |
 
 ## 3. Invarianten
 
@@ -447,6 +448,9 @@ und Fehlversuche liegen nur im Arbeitsspeicher. Vorgaben, die Konrad umdrehen ka
 bearbeitet wird der Bestand von Opus 5.5; der Blindvergleich entscheidet dann nur noch das Modell für neue Antworten. Solange
 die Site Vorschau ist, bleibt auch Geprüftes `noindex`. Offen: Ende der Vorschau `[owner]`, neue Vektoren für bearbeitete
 Fragen, weiche Treffer des Checkers, alles zu Fragen von außen.
+
+Erste Moderation am 2026-11-05: 28 geprüft, 2 zurückgezogen, 14 bearbeitet. In 13 der 14 hat Konrad den Absatz gestrichen, der
+sagt, was offenbleibt, obwohl Prompt-Version 1 genau das verlangt. Für neue Antworten ist der Prompt also zu ändern `[owner]`.
 
 **Phase 4: Worker live.** Richter, Antworten, Budgetdeckel, Skriptstand-Prüfung. Abnahme: Eine Woche
 Betrieb mit echten Kosten im `usage`-Bericht.

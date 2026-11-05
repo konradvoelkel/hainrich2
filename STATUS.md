@@ -15,8 +15,10 @@ _Stand 2026-11-04._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 96 Unit-Tests, 13 Smoke-Tests und 9 Browser-Tests der Moderation grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 100 Unit-Tests, 13 Smoke-Tests und 9 Browser-Tests der Moderation grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
+- Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
+  auf dem Server.
 - `site/deploy.sh`: liefert den fertigen Baum per rsync in den Docroot.
 - `https://hai.konradvoelkel.com/eidl/` ist seit 2026-11-04 online, als Staging: der Vorschau-Baum mit den
   Opus-Platzhaltern, Banner und `noindex` auf allen 33 Seiten, leere Sitemap, Impressum und Datenschutz. Das ist
@@ -64,5 +66,6 @@ _Stand 2026-11-04._
 
 ## Nächster Schritt
 
-Konrad moderiert die 30 Seeds. Danach entscheidet er, wann die Vorschau endet; erst dann wird Geprüftes indexierbar. Der
-Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten, nicht die Seeds.
+Konrad hat am 2026-11-05 moderiert: 28 Antworten geprüft, s21 und s30 zurückgezogen, 14 Antworten bearbeitet. Als Nächstes ergänzt
+er das Skript (`research/2026-11-05-skriptluecken/`). Das Ende der Vorschau ist seine Entscheidung; erst dann wird Geprüftes
+indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

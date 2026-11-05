@@ -15,7 +15,7 @@ const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://
 const question = (id, text, antwort) => ({
   id,
   text,
-  kapitel: 'Kapitel',
+  kapitel: 'Tensoren',
   herkunft: 'beispiel',
   tag: '2026-11-04',
   antworten: [{ art: 'bot', status: 'ungeprüft', modell: 'test-modell', text: antwort, zitate: [{ titel: 'Titel', pfad: ['Abschnitt'], text: 'Wörtliches Zitat.', url: 'https://skript.test/a/' }] }],
@@ -140,7 +140,8 @@ test('die Frage lässt sich ändern, Startseite und Suche ziehen mit', async t =
   t.after(c.close);
   const cookie = await c.signIn();
   await c.form('/eidl/mod/f/s01/', { ...edit, frage: 'Was rechnet ein Neuron?' }, { cookie });
-  assert.match(c.read('index.html'), /Was rechnet ein Neuron\?/);
+  assert.match(c.read('f/grundlagen/index.html'), /Was rechnet ein Neuron\?/);
+  assert.match(c.read('f/s01/index.html'), /<h1>Was rechnet ein Neuron\?<\/h1>/);
   assert.equal(JSON.parse(c.read('daten/fragen.json'))[0].text, 'Was rechnet ein Neuron?');
 });
 
@@ -150,7 +151,8 @@ test('Zurückziehen nimmt die Seite weg, die Vektoren bleiben bei ihren Fragen, 
   const cookie = await c.signIn();
   await c.form('/eidl/mod/f/s01/', { aktion: 'zurueckziehen' }, { cookie });
   assert.ok(!fs.existsSync(c.file('f/s01/index.html')));
-  assert.ok(!c.read('index.html').includes('Was ist ein Neuron?'));
+  assert.ok(!c.read('f/grundlagen/index.html').includes('Was ist ein Neuron?'));
+  assert.match(c.read('index.html'), /Grundlagen<\/a>[\s\S]*?<td data-label="Themen">1<\/td>/, 'die Zahl auf der Startseite zieht mit');
   assert.deepEqual(JSON.parse(c.read('daten/fragen.json')).map(f => [f.id, f.vektor]), [['s02', [0, 1]]]);
   await c.form('/eidl/mod/f/s01/', { aktion: 'wiederherstellen' }, { cookie });
   assert.ok(fs.existsSync(c.file('f/s01/index.html')));
@@ -163,6 +165,10 @@ test('in der Vorschau bleibt auch Geprüftes noindex, erst danach ist es indexie
   await c.form('/eidl/mod/f/s01/', { ...edit, aktion: 'pruefen' }, { cookie });
   assert.equal(c.store.question('s01').antworten[0].status, 'geprüft');
   assert.match(c.read('f/s01/index.html'), /class="badge gut">geprüft/);
+  assert.match(c.read('f/grundlagen/index.html'), /class="badge gut">geprüft/);
+  assert.match(c.read('index.html'), /Grundlagen<\/a>[\s\S]*?<td data-label="Themen">2<\/td><td data-label="Geprüft">1<\/td>/);
+  const forum = c.file('f/grundlagen/index.html');
+  assert.equal(zlib.brotliDecompressSync(fs.readFileSync(`${forum}.br`)).toString(), c.read('f/grundlagen/index.html'));
   assert.match(c.read('f/s01/index.html'), /content="noindex"/);
   assert.ok(!c.read('sitemap.xml').includes('<url>'));
   c.store.setSite('vorschau', false);

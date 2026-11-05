@@ -98,9 +98,43 @@ pre { overflow-x: auto; }
 .fuss p { margin: 0 0 .5rem; }
 .fuss nav { display: flex; flex-wrap: wrap; gap: .2rem 1rem; }
 
-@media (max-width: 26rem) {
+/* Forum: Listen als Tabellen, Beiträge mit Autorenspalte */
+.liste { width: 100%; margin-top: .8rem; border: 1px solid var(--linie); border-collapse: separate; border-spacing: 0; border-radius: .5rem; overflow: hidden; background: var(--karte); }
+.liste thead th { padding: .45rem .7rem; background: var(--marke); color: var(--karte); font-size: .85rem; font-weight: 600; text-align: right; }
+.liste thead th:first-child { text-align: left; }
+.liste tbody th { padding: .65rem .7rem; font-weight: 400; text-align: left; }
+.liste tbody td { padding: .65rem .7rem; color: var(--leise); text-align: right; vertical-align: top; white-space: nowrap; }
+.liste tbody tr + tr > * { border-top: 1px solid var(--linie); }
+.liste tbody tr:hover > * { background: var(--flaeche); }
+.liste a { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.liste a:hover { text-decoration: underline; }
+.liste p { margin: .1rem 0 0; color: var(--leise); font-size: .88rem; }
+
+.beitrag { display: grid; grid-template-columns: 6rem minmax(0, 1fr); margin: .8rem 0; border: 1px solid var(--linie); border-radius: .5rem; overflow: hidden; background: var(--karte); }
+.autor { display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .8rem .4rem; background: var(--flaeche); font-size: .85rem; text-align: center; overflow-wrap: anywhere; }
+.autor img, .avatar { width: 3.5rem; height: 3.5rem; }
+.avatar { display: grid; place-items: center; border-radius: 50%; background: var(--karte); color: var(--marke); font-size: 1.6rem; font-weight: 700; }
+.inhalt { padding: .7rem 1rem 1rem; }
+.inhalt > header { display: flex; flex-wrap: wrap; gap: .3rem .55rem; align-items: center; margin-bottom: .5rem; }
+.inhalt > header .meta { margin: 0; }
+.nummer { margin-left: auto; color: var(--leise); font-size: .85rem; text-decoration: none; }
+.frage h1 { margin: 0; }
+.antwort { margin: .8rem 0; padding: 0; }
+
+@media (max-width: 34rem) {
   h1 { font-size: 1.25rem; }
-  .antwort { padding: .8rem; }
+  .beitrag { grid-template-columns: minmax(0, 1fr); }
+  .autor { flex-direction: row; justify-content: flex-start; gap: .5rem; padding: .4rem .7rem; }
+  .autor img, .avatar { width: 2rem; height: 2rem; }
+  .avatar { font-size: 1rem; }
+  /* Am Telefon passt die Tabelle nicht: Jede Zeile wird ein Block, die Zahlen stehen beschriftet darunter */
+  .liste thead { display: none; }
+  .liste tbody tr { display: block; padding: .6rem .7rem; }
+  .liste tbody tr + tr { border-top: 1px solid var(--linie); }
+  .liste tbody tr + tr > * { border-top: 0; }
+  .liste tbody th { display: block; padding: 0; }
+  .liste tbody td { display: inline-block; padding: .25rem .8rem 0 0; font-size: .88rem; }
+  .liste td[data-label]::before { content: attr(data-label) ": "; }
 }
 
 /* Moderation: Formulare ohne JavaScript, am Telefon bedienbar */

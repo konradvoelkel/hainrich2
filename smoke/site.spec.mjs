@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const PAGES = ['/eidl/', '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/impressum/', '/eidl/datenschutz/'];
+const FORUMS = ['/eidl/f/grundlagen/', '/eidl/f/lernen/', '/eidl/f/architekturen/', '/eidl/f/praxis/'];
+const PAGES = ['/eidl/', ...FORUMS, '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/impressum/', '/eidl/datenschutz/'];
 const WIDTHS = [320, 375, 414, 768, 1200];
 const own = url => new URL(url).origin === new URL(process.env.SMOKE_URL ?? 'http://localhost:8772').origin;
 
@@ -68,7 +69,7 @@ test('ohne WASM bleibt die Stichwortsuche', async ({ page }) => {
 test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link, noindex', async ({ page }) => {
   await page.goto('/eidl/f/s04/');
   await expect(page.locator('.bot')).toHaveText('Bot');
-  await expect(page.locator('.badge.offen')).toHaveText('ungeprüft');
+  await expect(page.locator('.antwort .badge')).toHaveText(/^(un)?geprüft$/);
   await expect(page.locator('.hinweis')).toContainText('Prüfen Sie das Zitat');
   await expect(page.locator('.zitate figure').first().locator('blockquote')).not.toBeEmpty();
   await expect(page.locator('.zitate figcaption a').first()).toHaveAttribute('href', /^https:\/\/eidl-skript/);
@@ -81,7 +82,13 @@ test('ohne JavaScript bleibt alles lesbar, das tote Suchfeld fehlt', async ({ br
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
   const page = await context.newPage();
   await page.goto('/eidl/');
-  await expect(page.locator('.fragen li')).toHaveCount(30);
+  await expect(page.locator('.foren tbody tr')).toHaveCount(4);
+  let threads = 0;
+  for (const forum of FORUMS) {
+    await page.goto(forum);
+    threads += await page.locator('.themen tbody tr').count();
+  }
+  expect(threads).toBe(process.env.SMOKE_URL ? await page.request.get('/eidl/daten/fragen.json').then(r => r.json()).then(f => f.length) : 30);
   await expect(page.locator('#suche')).toBeHidden();
   await page.goto('/eidl/f/s04/');
   await expect(page.locator('.katex').first()).toBeVisible();
@@ -105,7 +112,7 @@ for (const width of WIDTHS) {
   test(`kein seitliches Scrollen bei ${width} px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     const wide = [];
-    const urls = [...PAGES, ...Array.from({ length: 30 }, (_, i) => `/eidl/f/s${String(i + 1).padStart(2, '0')}/`)];
+    const urls = [...new Set([...PAGES, ...(await page.request.get('/eidl/daten/fragen.json').then(r => r.json())).map(f => `/eidl/f/${f.id}/`)])];
     for (const url of urls) {
       await page.goto(url);
       const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

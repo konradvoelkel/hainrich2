@@ -46,7 +46,7 @@ test('Bearbeiten und Prüfen erreichen die öffentliche Seite und die Suche', as
   await page.goto('/eidl/f/s02/');
   await expect(page.locator('h1')).toHaveText('Eine bearbeitete Frage zur Normalisierung?');
   await expect(page.locator('.antwort .badge')).toHaveText('geprüft');
-  await expect(page.locator('.antwort > div.text .katex')).toBeVisible();
+  await expect(page.locator('.antwort div.text .katex')).toBeVisible();
   await expect(page.locator('.antwort .hinweis')).toContainText('die Moderation hat sie bearbeitet');
   await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex');
 
@@ -65,7 +65,9 @@ test('Zurückziehen nimmt die Seite weg, Wiederherstellen bringt sie zurück', a
   await expect(page.locator('.gemeldet')).toContainText('Zurückgezogen');
   expect((await page.request.get('/eidl/f/s03/')).status()).toBe(404);
   await page.goto('/eidl/');
-  await expect(page.locator('.fragen li')).toHaveCount(3);
+  await expect(page.locator('.foren tbody tr')).toHaveCount(4);
+  const threads = await page.locator('.foren tbody td:nth-child(2)').allTextContents();
+  expect(threads.reduce((sum, n) => sum + +n, 0)).toBe(3);
   await page.goto('/eidl/mod/f/s03/');
   await page.click('button[value="wiederherstellen"]');
   expect((await page.request.get('/eidl/f/s03/')).status()).toBe(200);

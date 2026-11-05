@@ -8,7 +8,8 @@ import path from 'node:path';
 import { promisify, parseArgs } from 'node:util';
 import zlib from 'node:zlib';
 import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
-import { excerpt, foreignSource, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { UNTERFOREN } from '../lib/forum.js';
+import { excerpt, foreignSource, forumPage, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 import { quoteUrl } from '../lib/segment.js';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -124,6 +125,7 @@ const fill = text => text
   .replaceAll('__ANSCHRIFT__', `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
 
 write('index.html', indexPage(questions, site));
+for (const forum of UNTERFOREN) write(`f/${forum.slug}/index.html`, forumPage(forum, questions, site));
 write('daten/meta.json', JSON.stringify({ ladegroesse: site.ladegroesse }));
 for (const q of questions) write(`f/${q.id}/index.html`, questionPage(q, site));
 for (const name of ['impressum', 'datenschutz']) write(`${name}/index.html`, textPage(name, fill(fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'utf8')), site));
