@@ -223,7 +223,7 @@ test('Freigeben trägt Frage und Entwurf nach public.db, ohne Geheimnis und ohne
   assert.equal(question.antworten[0].zitate[0].text, 'Wörtliches Zitat.');
   assert.deepEqual(c.store.revisions(data.id), []);
   assert.equal(c.pending.get(data.id), null);
-  assert.deepEqual(await c.mine(data.id, data.geheimnis), { id: data.id, zustand: 'öffentlich', url: `f/${data.id}/` });
+  assert.deepEqual(await c.mine(data.id, data.geheimnis), { id: data.id, zustand: 'öffentlich', url: `f/${data.id}/`, html: FRAGE });
   assert.ok(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8').includes(FRAGE));
   assert.ok(fs.readFileSync(c.file('f/lernen/index.html'), 'utf8').includes(FRAGE));
 });
@@ -488,4 +488,13 @@ test('Ein spätes Ergebnis von Claude überschreibt die Moderation nicht, der Ve
   assert.equal(question.antworten.length, 1);
   assert.equal(question.antworten[0].text, OWN);
   assert.deepEqual(question.vektor, [0, 1, 0]);
+});
+
+test('„Meine Fragen“ bekommt den Fragetext gesetzt, vor und nach der Freigabe', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ frage: 'Was bedeutet $x^2$ hier genau?' });
+  assert.match((await c.mine(data.id, data.geheimnis)).html, /katex/);
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: 'Was bedeutet $x^2$ hier genau?', kapitel: KAPITEL, aktion: 'freigeben' }, await c.signIn());
+  assert.match((await c.mine(data.id, data.geheimnis)).html, /katex/);
 });

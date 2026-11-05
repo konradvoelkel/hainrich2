@@ -59,7 +59,7 @@ self.onmessage = async ({ data }) => {
     postMessage({
       act: 'treffer',
       nummer: data.nummer,
-      fragen: f.slice(0, TOP_FRAGEN).map(i => ({ id: fragen[i].id, text: fragen[i].text, kapitel: fragen[i].kapitel })),
+      fragen: f.slice(0, TOP_FRAGEN).map(i => ({ id: fragen[i].id, text: fragen[i].text, html: fragen[i].html, kapitel: fragen[i].kapitel })),
       skript: s.slice(0, TOP_SKRIPT).map(i => passagen[i]),
     });
   } catch (fehler) {

@@ -96,7 +96,10 @@ function stand(frage) {
 function zeile(eintrag, frage) {
   const li = document.createElement('li');
   li.className = 'meine-frage';
-  li.append(absatz('frage-text', frage.text ?? eintrag.text));
+  const kopf = absatz('frage-text', frage.text ?? eintrag.text);
+  /** fertig gesetzt vom Server, wie der Entwurf; ohne Antwort von dort bleibt die Kopie aus diesem Browser */
+  if (frage.html) kopf.innerHTML = frage.html;
+  li.append(kopf);
   if (frage.zustand === 'öffentlich') {
     const a = document.createElement('a');
     a.href = `../../${frage.url}`;

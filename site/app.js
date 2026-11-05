@@ -18,11 +18,13 @@ let warten = null;
 let modellDa = false;
 let stichworteDa = false;
 
-const zeile = (kopf, href, unten) => {
+/** `html` kommt fertig gesetzt vom Server, wie die Seiten selbst */
+const zeile = (kopf, href, unten, html) => {
   const li = document.createElement('li');
   const a = document.createElement('a');
   a.href = href;
-  a.textContent = kopf;
+  if (html) a.innerHTML = html;
+  else a.textContent = kopf;
   const p = document.createElement('p');
   p.textContent = unten;
   li.append(a, p);
@@ -30,7 +32,7 @@ const zeile = (kopf, href, unten) => {
 };
 
 function zeige({ fragen, skript }) {
-  listeFragen.replaceChildren(...fragen.map(f => zeile(f.text, `f/${f.id}/`, f.kapitel)));
+  listeFragen.replaceChildren(...fragen.map(f => zeile(f.text, `f/${f.id}/`, f.kapitel, f.html)));
   listeSkript.replaceChildren(...skript.map(p => zeile([p.titel, ...p.pfad.slice(-1)].join(' › '), p.url, p.ausschnitt)));
   treffer.hidden = !fragen.length && !skript.length;
 }

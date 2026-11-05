@@ -5,7 +5,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { createPublisher, publishAll } from '../lib/publish.js';
-import { forumPage, questionPage } from '../lib/site.js';
+import { forumPage, questionPage, searchEntry } from '../lib/site.js';
 import { createVoting } from '../lib/stimmen.js';
 import { openStore } from '../lib/store.js';
 import { UNTERFOREN } from '../lib/forum.js';
@@ -119,4 +119,15 @@ test('ohne Schalter gibt es weder Pfeile noch Skript', () => {
   assert.ok(!page.includes('stimme'));
   assert.ok(!page.includes('<script'));
   assert.ok(questionPage(seed('s01', 'Was ist ein Tensor?'), site).includes('stimmen.js'));
+});
+
+test('Formeln im Fragetext sind auf der Seite, in der Liste und in der Suche gesetzt', () => {
+  const forum = UNTERFOREN.find(u => u.kapitel.includes('Tensoren'));
+  const question = { ...seed('s01', 'Was ist $x^2$?'), vektor: [1, 0] };
+  assert.match(questionPage(question, site), /<h1>Was ist <span class="katex">/);
+  assert.match(forumPage(forum, [question], site), /<a href="..\/s01\/">Was ist <span class="katex">/);
+  assert.ok(!questionPage(question, site).includes('<h1>Was ist $x^2$'));
+  assert.match(searchEntry(question).html, /katex/);
+  assert.equal(searchEntry(question).text, 'Was ist $x^2$?');
+  assert.deepEqual(Object.keys(searchEntry(seed('s02', 'Ohne Formel?'), [0, 1])), ['id', 'text', 'kapitel', 'vektor']);
 });

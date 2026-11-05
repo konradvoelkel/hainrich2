@@ -15,7 +15,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 155 Unit-Tests, 13 Smoke-Tests und 19 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 160 Unit-Tests, 13 Smoke-Tests und 19 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -67,8 +67,8 @@ _Stand 2026-11-05._
 
 ## Nicht geprüft
 
-- Der Worker hat auf dem Server eine echte Frage bearbeitet (05.11.): beide Anläufe, `fallbacks` angenommen, Vektor gerechnet, Rückweg durch die Schlange, 14 ct, 166 MB. Sie endete in `kein_beleg`,
-  eine echte Antwort mit Zitat auf dem Server steht also noch aus. Prompt-Version 2 ist damit weiter nicht gemessen.
+- Der Worker hat auf dem Server zwei echte Fragen bearbeitet (05.11.), eine mit Antwort und vier Zitaten, eine mit `kein_beleg`: drei Anfragen, 23 ct, 166 MB. `fallbacks` ging mit Citations durch,
+  ein Ersatzmodell musste noch nicht einspringen. Prompt-Version 2 ist damit nicht gemessen, das war eine einzige Antwort.
 - `hainrich2-worker` kommt nachweislich nicht an `pending.db`, `hainrich2` nicht an den Key.
 - Die Rechtstexte zum Fragepfad und zum Abstimmen sind mein Entwurf, keine Rechtsberatung. Der Absatz zum Abstimmen steht seit 2026-11-05 auf der Site, ausgespielt auf Konrads
   Wort, ausdrücklich gelesen hat er ihn nicht.

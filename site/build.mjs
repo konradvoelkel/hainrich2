@@ -11,7 +11,7 @@ import { promisify, parseArgs } from 'node:util';
 import zlib from 'node:zlib';
 import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
 import { UNTERFOREN } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { excerpt, foreignSource, forumPage, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
 import { quoteUrl } from '../lib/segment.js';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -85,7 +85,7 @@ const questionVectors = [];
 for (const q of questions) questionVectors.push(round(await embedder.query(q.text)));
 
 /** Vektor am Eintrag: Zieht die Moderation eine Frage zurück, verrutscht nichts */
-write('daten/fragen.json', JSON.stringify(questions.map((q, i) => ({ id: q.id, text: q.text, kapitel: q.kapitel, vektor: questionVectors[i] }))));
+write('daten/fragen.json', JSON.stringify(questions.map((q, i) => searchEntry(q, questionVectors[i]))));
 write('daten/passagen.json', JSON.stringify(passages.map(p => ({ titel: p.title, pfad: p.path, text: p.text, url: quoteUrl(p), ausschnitt: excerpt(p.text) }))));
 write('daten/vektoren.json', JSON.stringify({ modell: MODEL_ID, passagen: passageVectors.map(round) }));
 

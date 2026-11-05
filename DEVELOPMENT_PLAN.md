@@ -344,6 +344,9 @@ wird danach geleert.
 
 Eigene Antworten durchlaufen dieselbe Freigabe wie Fragen.
 
+Fragen sind Klartext, gesetzt werden nur Formeln in Dollarzeichen: auf der Seite, in den Listen, in der Suche und unter „Meine Fragen“. Kein Markdown, ein Link aus einer Frage wird keiner. Die
+Moderation sieht die Quelle, ihre CSP erlaubt die Inline-Stile von KaTeX nicht.
+
 Die Moderation kann selbst antworten, wo Claude nichts Brauchbares geliefert hat: bei `kein_beleg`, nach einem Fehler oder ohne Einwilligung, bei der Freigabe oder später
 (Konrad, 2026-11-05). Die Antwort trägt `art = moderation`, gilt sofort als `geprüft`, hat kein Zitat und erscheint nicht als Bot (I4, I8). Sie ersetzt ein „kein Beleg“, der Verlauf behält das. Mit
 ihr entfällt der Auftrag an den Worker. Bleibt `kein_beleg` stehen, liegt die Frage in einer eigenen Gruppe, nicht bei den ungeprüften.

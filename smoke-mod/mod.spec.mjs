@@ -315,11 +315,12 @@ for (const width of [320, 375]) {
 test('Findet Claude nichts, antwortet die Moderation selbst, und die Antwort erscheint nicht als Bot', async ({ page, browser }) => {
   const problems = watch(page);
   await enterCode(page);
-  await page.fill('#fragetext', 'Wäre das mit Keras nicht einfacher?');
+  await page.fill('#fragetext', String.raw`Wäre das mit Keras nicht einfacher, etwa für $\sum_{i=1}^{n} \frac{x_i^2}{\sqrt{1+y_i^2}} + \lambda \lVert w \rVert_2^2 + \frac{1}{n}\sum_{j=1}^{m} z_j$?`);
   await page.check('#zustimmung');
   await page.check('#einwilligung');
   await page.click('#frage button.haupt');
   await expect(page.locator('.meine-frage .meta')).toContainText('nichts gefunden', { timeout: 15_000 });
+  await expect(page.locator('.meine-frage .frage-text .katex')).toBeVisible();
 
   const mod = await (await browser.newContext()).newPage();
   await signIn(mod);
@@ -337,5 +338,19 @@ test('Findet Claude nichts, antwortet die Moderation selbst, und die Antwort ers
   await expect(page.locator('.antwort .text em')).toHaveText('ich');
   await expect(page.locator('.antwort')).not.toContainText('Sprachmodell');
   await expect(page.locator('.zitate')).toHaveCount(0);
+  await expect(page.locator('h1 .katex-html')).toBeVisible();
+
+  await page.setViewportSize({ width: 320, height: 700 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Frageseite').toBe(true);
+  await page.goto('/eidl/f/grundlagen/');
+  await expect(page.locator('.liste a .katex')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'Liste').toBe(true);
+  await page.setViewportSize({ width: 1200, height: 800 });
+
+  await page.goto('/eidl/');
+  await page.locator('#suchfeld').focus();
+  await expect(page.locator('#suchstatus')).toContainText('Suche bereit', { timeout: 120_000 });
+  await page.locator('#suchfeld').fill('Keras');
+  await expect(page.locator('#treffer-fragen .katex').first()).toBeVisible();
   expect(problems).toEqual([]);
 });
