@@ -15,7 +15,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 148 Unit-Tests, 13 Smoke-Tests und 18 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 155 Unit-Tests, 13 Smoke-Tests und 19 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -40,12 +40,11 @@ _Stand 2026-11-05._
   Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Konrads Login funktioniert (2026-11-05). Code in `lib/store.js`, `lib/auth.js`,
   `lib/checker.js` (harte Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`.
 
-- Fragepfad (Plan D20), **gebaut, auf dem Server liegen Code und Units, aber er ist zu**: `/eidl/api/fragen` antwortet 503, `f/neu/` gibt es nicht, `hainrich2-worker.path` ist aus: Kurscode und Token (`lib/api.js`), `pending.db`
+- Fragepfad (Plan D20), **seit 2026-11-05 auf dem Server offen, zum Test durch Konrad**, auf der Vorschau unter `/eidl/f/neu/`: Kurscode und Token (`lib/api.js`), `pending.db`
   mit Fristen (`lib/pending.js`), Einwilligung und Freigabe (`lib/fragen.js`), Schlange in `/run` (`lib/spool.js`), Worker
   (`lib/draft.js`, `server/worker.mjs`), Seite `f/neu/` mit „Meine Fragen“ (`site/fragen.js`), Warteschlange unter `/eidl/mod/neu/`,
-  weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`) und ausgespielt. Entwürfe der Rechtstexte: `site/texte/datenschutz-fragen.md`,
-  `site/texte/nutzungsbedingungen.md`; `site/build.mjs --fragen` nimmt sie auf und bricht ab, solange die Platzhalter zu Anthropic
-  offen sind. Ohne Kurscode-Hash bleibt der Pfad beim Web-Prozess zu, ein Deploy allein öffnet also nichts.
+  weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`) und ausgespielt. Rechtstexte: `site/texte/datenschutz-fragen.md`,
+  `site/texte/nutzungsbedingungen.md`, live über `site/build.mjs --stimmen --fragen`. Jeder künftige Bau braucht beide Schalter. Ohne Kurscode-Hash im Vault bleibt der Pfad zu.
 
 - Abstimmen über Fragen (Plan D21), **seit 2026-11-05 live**: hoch oder runter ohne Anmeldung, auf der Frageseite und in den Listen der
   Unterforen, die Listen sortieren nach Punkten (`lib/stimmen.js`, `site/stimmen.js`, Tabelle `votes` in `public.db`). Eigener Schalter:
@@ -56,8 +55,7 @@ _Stand 2026-11-05._
 
 - Stimmen lassen sich nicht prüfen und die Moderation kann sie nicht zurücksetzen. Wer die Browserdaten löscht, stimmt noch einmal; nur die Grenze je Adresse
   bremst das.
-- Vor dem Start fehlen, alle bei Konrad: die Angaben zu Anthropic aus den Originaldokumenten (Plan §11.3), der Kurscode-Hash, ein Key für den
-  VPS. Keine Prüfung der Rechtstexte.
+- Vor dem echten Start fehlen, alle bei Konrad: seine Bestätigung der Angaben zu Anthropic (Plan §11.3), eine Prüfung der Rechtstexte, ein eigener Key für den VPS.
 - Keine Varianten, keine Votes, keine gelabelten Paare, keine eigenen Antworten, kein Richter: Duplikate entscheidet die Moderation
   von Hand. Kein Themen-Hinweis aus §8, kein Kurscode-Scan aus I7, keine Vornamenliste im Checker.
 - Bleibt eine freigegebene Frage wegen Deckel oder Ausfall ohne Antwort, gibt es keinen zweiten Versuch. Die Seite sagt dann „noch keine
@@ -69,11 +67,9 @@ _Stand 2026-11-05._
 
 ## Nicht geprüft
 
-- Der Worker hat nie die echte API gesehen: Geprüft ist er mit einer Attrappe, aus einer sauberen, schreibgeschützten Kopie der
-  Allowlist (0,4 s, 224 MB, richtige Beta-Kopfzeile und `fallbacks`). Ob `fallbacks: "default"` mit Citations durchgeht, zeigt erst ein
-  bezahlter Lauf.
-- Der Worker ist auf dem Server nie gelaufen. Die Rolle ist ausgespielt, `data/` ist 0700, und `hainrich2-worker` kommt nachweislich nicht an `public.db`. Ob Sandbox und
-  Rechte der Schlange im Lauf halten, zeigt erst der erste Auftrag.
+- Der Worker hat auf dem Server eine echte Frage bearbeitet (05.11.): beide Anläufe, `fallbacks` angenommen, Vektor gerechnet, Rückweg durch die Schlange, 14 ct, 166 MB. Sie endete in `kein_beleg`,
+  eine echte Antwort mit Zitat auf dem Server steht also noch aus. Prompt-Version 2 ist damit weiter nicht gemessen.
+- `hainrich2-worker` kommt nachweislich nicht an `pending.db`, `hainrich2` nicht an den Key.
 - Die Rechtstexte zum Fragepfad und zum Abstimmen sind mein Entwurf, keine Rechtsberatung. Der Absatz zum Abstimmen steht seit 2026-11-05 auf der Site, ausgespielt auf Konrads
   Wort, ausdrücklich gelesen hat er ihn nicht.
 - Prompt-Version 2: Kein echter Lauf hat bisher gezeigt, ob die Modelle sich daran halten. Alle vorhandenen Antworten stammen aus
@@ -94,7 +90,6 @@ _Stand 2026-11-05._
 
 ## Nächster Schritt
 
-Der Fragepfad wartet auf Konrad: Anthropic-Dokumente, Rechtstexte, Kurscode-Hash, Key, dann ein bezahlter Probelauf. Die Reihenfolge steht
-in `.claude/TODO.md`. Daneben: Konrad hat am 2026-11-05 moderiert, 28 Antworten geprüft, s21 und s30 zurückgezogen, 14 Antworten bearbeitet. Als Nächstes ergänzt
+Konrad testet den Fragepfad auf dem echten Host. Daneben: Konrad hat am 2026-11-05 moderiert, 28 Antworten geprüft, s21 und s30 zurückgezogen, 14 Antworten bearbeitet. Als Nächstes ergänzt
 er das Skript (`research/2026-11-05-skriptluecken/`). Das Ende der Vorschau ist seine Entscheidung; erst dann wird Geprüftes
 indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

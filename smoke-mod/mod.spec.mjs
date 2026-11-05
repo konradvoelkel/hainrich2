@@ -89,12 +89,14 @@ test('Cursortasten und Knopf blättern, im Textfeld bleibt die Taste beim Feld',
   await page.click('a[rel="next"]');
   await expect(page).toHaveURL(/\/f\/s02\/$/);
   await expect(page.locator('.blaettern .meta')).toHaveText('2 von 4');
+  /** die URL steht vor dem Skript: unter Last ging die Taste sonst ins Leere */
+  await page.waitForLoadState();
   await page.keyboard.press('ArrowRight');
   await expect(page).toHaveURL(/\/f\/s03\/$/);
-  /** die URL steht vor dem Skript: unter Last ging die nächste Taste sonst ins Leere */
   await page.waitForLoadState();
   await page.keyboard.press('ArrowLeft');
   await expect(page).toHaveURL(/\/f\/s02\/$/);
+  await page.waitForLoadState();
   await page.keyboard.press('Shift+ArrowRight');
   await page.keyboard.press('Control+ArrowRight');
   await expect(page).toHaveURL(/\/f\/s02\/$/);
@@ -150,9 +152,6 @@ for (const width of [320, 375, 768]) {
 async function enterCode(page) {
   await page.goto('/eidl/f/neu/');
   await expect(page.locator('#fragetext')).toBeHidden();
-  await page.fill('#kurscode', 'ein-falscher-code');
-  await page.click('#code button.haupt');
-  await expect(page.locator('#code .fehler')).toContainText('stimmt nicht');
   await page.fill('#kurscode', KURSCODE);
   await page.click('#code button.haupt');
   await expect(page.locator('#fragetext')).toBeVisible();
@@ -161,6 +160,10 @@ async function enterCode(page) {
 
 test('Mit Einwilligung kommt der Entwurf sofort und nur für die fragende Person, die Moderation gibt ihn frei', async ({ page, browser }) => {
   const problems = watch(page);
+  await page.goto('/eidl/f/neu/');
+  await page.fill('#kurscode', 'ein-falscher-code');
+  await page.click('#code button.haupt');
+  await expect(page.locator('#code .fehler')).toContainText('stimmt nicht');
   await enterCode(page);
   await expect(page.locator('#einwilligung')).not.toBeChecked();
   await page.fill('#fragetext', 'Was bedeutet Broadcasting bei Tensoren genau?');
@@ -273,7 +276,8 @@ test('In der Liste abstimmen sortiert sie um, und ein zweiter Browser zählt ext
   await page.goto(forum);
   const ids = await page.locator('.stimme').evaluateAll(boxes => boxes.map(b => b.dataset.id));
   expect(ids.length).toBeGreaterThan(1);
-  const last = ids.at(-1);
+  /** s03 hat aus dem Test davor schon Stimmen, und die Liste kann dessen Zwischenstand noch zeigen */
+  const last = ids.filter(id => id !== 's03').at(-1);
   const box = p => p.locator(`.stimme[data-id="${last}"]`);
   await box(page).locator('.hoch').click();
   await expect(box(page).locator('.punkte')).toHaveText('1');
@@ -307,3 +311,31 @@ for (const width of [320, 375]) {
     }
   });
 }
+
+test('Findet Claude nichts, antwortet die Moderation selbst, und die Antwort erscheint nicht als Bot', async ({ page, browser }) => {
+  const problems = watch(page);
+  await enterCode(page);
+  await page.fill('#fragetext', 'Wäre das mit Keras nicht einfacher?');
+  await page.check('#zustimmung');
+  await page.check('#einwilligung');
+  await page.click('#frage button.haupt');
+  await expect(page.locator('.meine-frage .meta')).toContainText('nichts gefunden', { timeout: 15_000 });
+
+  const mod = await (await browser.newContext()).newPage();
+  await signIn(mod);
+  await mod.click('a:has-text("mit Keras")');
+  await mod.selectOption('#kapitel', 'Tensoren');
+  await mod.fill('#antwort', 'Das ist Geschmackssache, *ich* nehme PyTorch.');
+  await mod.click('button[value="freigeben"]');
+  await expect(mod.locator('.gemeldet')).toContainText('Freigegeben');
+  await expect(mod.locator('#antwort')).toHaveValue('Das ist Geschmackssache, *ich* nehme PyTorch.');
+
+  await page.reload();
+  await page.click('.meine-frage a:has-text("Steht jetzt im Forum")');
+  await expect(page.locator('.antwort .autor strong')).toHaveText('Moderation');
+  await expect(page.locator('.antwort .badge')).toHaveText('geprüft');
+  await expect(page.locator('.antwort .text em')).toHaveText('ich');
+  await expect(page.locator('.antwort')).not.toContainText('Sprachmodell');
+  await expect(page.locator('.zitate')).toHaveCount(0);
+  expect(problems).toEqual([]);
+});

@@ -383,3 +383,109 @@ test('der Knopf erscheint erst, wenn der Fragepfad offen ist', () => {
   assert.match(robotsTxt(site), /Disallow: \/eidl\/api\//);
 });
 
+
+const OWN = 'Das ist Geschmackssache.';
+const noEvidence = { status: 'kein_beleg', modell: 'attrappe', vektor: [0, 1, 0] };
+
+test('Findet Claude nichts, kann die Moderation bei der Freigabe selbst antworten, ohne Auftrag für den Worker', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id, noEvidence);
+  const cookie = await c.signIn();
+  assert.match(await c.page(`/eidl/mod/neu/${data.id}/`, cookie), /Eigene Antwort der Moderation/);
+  assert.equal((await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: OWN, aktion: 'freigeben' }, cookie)).status, 303);
+  const [answer] = c.store.question(data.id).antworten;
+  assert.deepEqual([answer.art, answer.status, answer.text, answer.modell, answer.zitate], ['moderation', 'geprüft', OWN, null, []]);
+  assert.deepEqual(c.inbox(), []);
+  const html = fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8');
+  assert.match(html, /<strong>Moderation<\/strong>/);
+  assert.ok(html.includes(OWN));
+  for (const bot of ['class="bot"', 'Sprachmodell erzeugt (Claude', 'Originaltext aus dem Skript', 'beantwortet mit wörtlichem Zitat']) assert.ok(!html.includes(bot), bot);
+});
+
+test('Ohne Einwilligung und mit eigener Antwort geht die Frage nie an Claude', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: OWN, aktion: 'freigeben' }, await c.signIn());
+  assert.equal(c.store.question(data.id).antworten[0].art, 'moderation');
+  assert.deepEqual(c.inbox(), []);
+});
+
+test('Bleibt das Feld leer, gilt weiter „nichts gefunden“, und die Frage hängt nicht bei Ungeprüft', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id, noEvidence);
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: '', aktion: 'freigeben' }, cookie);
+  assert.equal(c.store.question(data.id).antworten[0].status, 'kein_beleg');
+  assert.deepEqual(c.inbox(), []);
+  const overview = await c.page('/eidl/mod/', cookie);
+  assert.match(overview, /Kein Beleg \(1\)/);
+});
+
+test('Auch nach der Freigabe lässt sich ein „kein Beleg“ durch eine eigene Antwort ersetzen, und der Verlauf behält das', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id, noEvidence);
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  const url = `/eidl/mod/f/${data.id}/`;
+  assert.match(await c.page(url, cookie), /Eigene Antwort der Moderation/);
+
+  assert.equal((await c.form(url, { frage: FRAGE, antwort: '', aktion: 'speichern' }, cookie)).status, 303);
+  assert.equal(c.store.question(data.id).antworten[0].status, 'kein_beleg');
+
+  assert.equal((await c.form(url, { frage: FRAGE, antwort: OWN, aktion: 'speichern' }, cookie)).status, 303);
+  const question = c.store.question(data.id);
+  assert.equal(question.antworten.length, 1);
+  assert.deepEqual([question.antworten[0].art, question.antworten[0].status], ['moderation', 'geprüft']);
+  assert.equal(c.store.revisions(data.id)[0].nachher, OWN);
+  assert.ok(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8').includes(OWN));
+
+  /** danach ist es eine normale Antwort: bearbeitbar, aber ohne „Zurück auf ungeprüft“ */
+  const page = await c.page(url, cookie);
+  assert.ok(!page.includes('Zurück auf ungeprüft'));
+  await c.form(url, { frage: FRAGE, antwort: `${OWN} Nachtrag.`, aktion: 'speichern' }, cookie);
+  assert.equal(c.store.question(data.id).antworten[0].text, `${OWN} Nachtrag.`);
+});
+
+test('Auch die eigene Antwort läuft durch den Checker, und Verweise auf Zitate gibt es dort nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  const cookie = await c.signIn();
+  const url = `/eidl/mod/neu/${data.id}/`;
+  assert.equal((await c.form(url, { frage: FRAGE, kapitel: KAPITEL, antwort: 'Schreiben Sie an jemand@example.test.', aktion: 'freigeben' }, cookie)).status, 422);
+  assert.equal((await c.form(url, { frage: FRAGE, kapitel: KAPITEL, antwort: 'Das steht in [1].', aktion: 'freigeben' }, cookie)).status, 422);
+  assert.equal(c.store.question(data.id), null);
+});
+
+test('Auch beim nachträglichen Antworten läuft der Checker', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  const url = `/eidl/mod/f/${data.id}/`;
+  assert.equal((await c.form(url, { frage: FRAGE, antwort: 'Schreiben Sie an jemand@example.test.', aktion: 'speichern' }, cookie)).status, 422);
+  assert.equal((await c.form(url, { frage: FRAGE, antwort: 'Das steht in [1].', aktion: 'speichern' }, cookie)).status, 422);
+  assert.deepEqual(c.store.question(data.id).antworten, []);
+});
+
+test('Ein spätes Ergebnis von Claude überschreibt die Moderation nicht, der Vektor kommt trotzdem an', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  await c.form(`/eidl/mod/f/${data.id}/`, { frage: FRAGE, antwort: OWN, aktion: 'speichern' }, cookie);
+  await c.deliver(data.id);
+  const question = c.store.question(data.id);
+  assert.equal(question.antworten.length, 1);
+  assert.equal(question.antworten[0].text, OWN);
+  assert.deepEqual(question.vektor, [0, 1, 0]);
+});

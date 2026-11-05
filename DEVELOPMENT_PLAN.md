@@ -146,7 +146,7 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
    Entwurf: Der Web-Prozess legt sie nach der Freigabe in die Schlange. Bis dahin steht dort „noch keine Antwort“.
 9. **Kein Beleg.** Nach einem zweiten Anlauf mit ganzen Kapiteln (§7.2) geht die Frage als
    `kein_beleg` an die Moderation und in den Lückenbericht. Öffentlich steht „Dazu habe ich im Skript
-   nichts gefunden“, nie „steht nicht im Skript“.
+   nichts gefunden“, nie „steht nicht im Skript“, außer die Moderation antwortet selbst (§9).
 10. **Prüfung.** Moderation setzt `geprüft` oder korrigiert. Erst dann ist die Seite indexierbar.
 
 Wartezeit: Ohne Einwilligung bestimmt die Freigabe durch Menschen die Antwortzeit, mit Einwilligung kommt der Entwurf in
@@ -344,6 +344,10 @@ wird danach geleert.
 
 Eigene Antworten durchlaufen dieselbe Freigabe wie Fragen.
 
+Die Moderation kann selbst antworten, wo Claude nichts Brauchbares geliefert hat: bei `kein_beleg`, nach einem Fehler oder ohne Einwilligung, bei der Freigabe oder später
+(Konrad, 2026-11-05). Die Antwort trägt `art = moderation`, gilt sofort als `geprüft`, hat kein Zitat und erscheint nicht als Bot (I4, I8). Sie ersetzt ein „kein Beleg“, der Verlauf behält das. Mit
+ihr entfällt der Auftrag an den Worker. Bleibt `kein_beleg` stehen, liegt die Frage in einer eigenen Gruppe, nicht bei den ungeprüften.
+
 ## 10. Kurscode, Token, Limits
 
 - `POST /api/token` prüft den Kurscode gegen den Hash und gibt ein signiertes, zufälliges Token aus,
@@ -412,11 +416,17 @@ Was daran hängt und nicht durch Technik zu lösen ist:
   halten die Wörter aus §8 den Entwurf zurück.
 - **Löschen.** Der Widerruf wirkt nur nach vorn: Was bei Anthropic liegt, löscht ein Klick hier nicht. Das steht im Text.
 
-Anthropic nennt für kommerzielle Kunden die Löschung von Ein- und Ausgaben binnen 30 Tagen, mit
-Ausnahmen, etwa bis zu 2 Jahren bei markierten Regelverstößen. Vertragspartner, Auftragsverarbeitung, Grundlage der
-Übermittlung in die USA und Trainingsausschluss sind vor dem Start aus den Originaldokumenten zu übernehmen `[owner]`; die
-Sekundärquellen widersprechen sich. Solange das fehlt, stehen in `site/texte/datenschutz-fragen.md` Platzhalter, und
-`site/build.mjs --fragen` bricht daran ab.
+Gelesen am 2026-11-05 auf Anthropics eigenen Seiten, von Konrad noch zu bestätigen `[owner]`:
+
+- **Vertragspartner** im EWR ist Anthropic Ireland, Limited (Commercial Terms, gültig ab 17.06.2025).
+- **Auftragsverarbeitung:** Das DPA ist Teil der Commercial Terms, eine eigene Unterschrift nennen die Seiten nicht. Anthropic ist Auftragsverarbeiter (DPA, gültig ab 24.02.2025).
+- **USA:** Die Daten liegen dort. Grundlage sind Standardvertragsklauseln, Modul 2 oder 3. Das Data Privacy Framework kommt in diesen Dokumenten nicht vor, eine
+  Zertifizierung ließ sich nicht prüfen, die Liste dazu war nicht lesbar. Der Text stützt sich deshalb nur auf die Klauseln.
+- **Training:** nicht auf API-Daten, außer bei ausdrücklich gemeldetem Feedback, das steht aber nur im Hilfeartikel (18.08.2026).
+- **Löschung:** binnen 30 Tagen; bei Verstößen gegen die Nutzungsrichtlinie bis zu 2 Jahre, Bewertungen bis zu 7 Jahre (Hilfeartikel, 01.07.2026).
+- **Offen:** Die Commercial Terms schließen die Nutzung durch Verbraucher aus. Ob Konrad als Privatperson mit eigenem Angebot darunterfällt, sagen sie nicht.
+
+`site/texte/datenschutz-fragen.md` trägt diese Angaben. Bricht `--fragen` an einem Platzhalter ab, fehlt noch eine.
 
 **Abstimmen (D21).** Lesen bleibt ohne Cookie und ohne `localStorage`. Beides entsteht nur beim Klick auf einen Pfeil, also auf ausdrücklichen Wunsch; ein
 Banner ist dafür nach meinem Verständnis wie in §11.4 nicht nötig. Die Stimmen liegen in `public.db` und damit in den Sicherungen. Das ist vertretbar, weil
@@ -514,7 +524,7 @@ Erste Moderation am 2026-11-05: 28 geprüft, 2 zurückgezogen, 14 bearbeitet. In
 sagt, was offenbleibt, obwohl Prompt-Version 1 genau das verlangt. Prompt-Version 2 lässt das weg (§7.2). Die vorhandenen
 Antworten stammen aus Version 1.
 
-Stand 2026-11-05, gebaut, Code und Units liegen auf dem Server, aber zu: Fragen mit Kurscode, Einwilligung, Entwurf nur für die fragende Person,
+Stand 2026-11-05, seit dem Vormittag auf dem Server offen, zum Test durch Konrad auf der Vorschau: Fragen mit Kurscode, Einwilligung, Entwurf nur für die fragende Person,
 „Meine Fragen“, Warteschlange in der Moderation, Fristen (D20). Ohne Kurscode-Hash bleibt der Fragepfad beim Web-Prozess aus, ohne
 Schlange gibt es keinen Entwurf, und `--fragen` schaltet Rechtstexte und Technik gemeinsam. Damit steht der Worker aus Phase 4
 schon, ohne Richter. Offen: `variants`, `votes`, `pairs`, eigene Antworten, Themen-Hinweis (§8), Kurscode-Scan aus I7.
@@ -549,7 +559,8 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 4. ~~Moderation.~~ Entschieden 2026-11-04 (D15).
 5. Anthropic-Konto: Der Laptop-Key läuft seit 2026-11-04 (`~/.config/hainrich2/anthropic.env`, nicht
    im Repo). Das Limit von 20 $ greift für ihn (Konrad, 2026-11-04).
-   Für den VPS kommt ein eigener Service-Account-Key in den Vault.
+   Für den VPS sollte ein eigener Service-Account-Key in den Vault. Vorerst läuft dort derselbe Key wie auf dem Laptop (Konrad, 2026-11-05): Der Deckel
+   des Worker zählt nur die Ausgaben des Servers, und wer den Key sperrt, trifft beide. Vor dem echten Start tauschen.
 6. ~~Frist für ungeprüfte Antworten.~~ Entschieden 2026-11-04: keine Frist (D10).
 7. ~~Format der Matrikelnummer.~~ Entfällt durch D16.
 

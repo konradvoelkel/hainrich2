@@ -18,7 +18,7 @@ Wenn Sie beim Absenden ausdrücklich einwilligen, geht Ihre Frage schon vor der 
 
 Rechtsgrundlage ist Ihre Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO. Sie können sie jederzeit widerrufen, indem Sie die Frage unter „Meine Fragen“ löschen. Der Widerruf wirkt für die Zukunft: Was schon an Anthropic gegangen ist, löscht er nicht.
 
-Empfänger ist __ANTHROPIC_EMPFAENGER__. Die Daten gehen in die USA; Grundlage der Übermittlung ist __ANTHROPIC_UEBERMITTLUNG__. Anthropic verarbeitet die Frage, um den Entwurf zu erzeugen, __ANTHROPIC_TRAINING__. Ein- und Ausgaben werden dort __ANTHROPIC_SPEICHERDAUER__.
+Empfänger ist die Anthropic Ireland, Limited, 6th Floor, South Bank House, Barrow Street, Dublin 4, Irland, die als Auftragsverarbeiter handelt. Die Daten gehen in die USA und werden dort gespeichert; Grundlage der Übermittlung sind die EU-Standardvertragsklauseln aus Anthropics Auftragsverarbeitungsvertrag. Anthropic verarbeitet die Frage, um den Entwurf zu erzeugen, und nutzt sie nach eigenen Angaben nicht zum Training seiner Modelle. Ein- und Ausgaben werden dort binnen 30 Tagen gelöscht. Verstößt eine Anfrage gegen Anthropics Nutzungsrichtlinie, bleiben sie bis zu zwei Jahre gespeichert, Bewertungen aus der Sicherheitsprüfung bis zu sieben Jahre; gesetzliche Pflichten können längere Fristen verlangen.
 
 Gesendet wird nur der Text Ihrer Frage zusammen mit Passagen aus dem Skript, nicht Ihre IP-Adresse. Schreiben Sie nichts Persönliches hinein, auch nicht über andere. Enthält die Frage etwas, das nach Namen oder Gesundheit aussieht, geht sie trotz Einwilligung nicht an Anthropic, sondern wartet auf die Moderation.
 

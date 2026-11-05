@@ -49,7 +49,12 @@ const spool = openSpool(path.join(dir, 'schlange'));
 const frageweg = createFragen({ store, pending, spool, publish });
 const passage = { id: 'p', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein wörtliches Zitat aus dem Skript.', page: 'tensoren', link: 'https://skript.test/tensoren#abschnitt' };
 const corpus = { embedder: { query: async () => fragen[0].vektor }, select: async () => [passage], chapters: async () => [passage] };
-const call = async () => ({ model: 'attrappe', stop_reason: 'end_turn', usage: {}, content: [{ type: 'text', text: 'Ein Entwurf mit Formel $c^2$.', citations: [{ document_index: 0 }] }] });
+const call = async request => ({
+  model: 'attrappe',
+  stop_reason: 'end_turn',
+  usage: {},
+  content: [/Keras/.test(request.messages[0].content.at(-1).text) ? { type: 'text', text: 'KEIN_BELEG' } : { type: 'text', text: 'Ein Entwurf mit Formel $c^2$.', citations: [{ document_index: 0 }] }],
+});
 const ledger = { entries: [], total: 0, limit: 1, addResponse() {} };
 setInterval(async () => {
   await runJobs({ spool, corpus, call, ledger, day: '2026-11-05', model: 'attrappe' });
