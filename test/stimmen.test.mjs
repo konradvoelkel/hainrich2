@@ -80,6 +80,15 @@ test('I11: In der Datenbank steht nur der Hash, keine Kennung und keine Adresse'
   for (const data of raw) for (const secret of [A, '127.0.0.1']) assert.ok(!data.includes(secret), secret);
 });
 
+test('Der Tageszähler zählt Stimmen als reine Summe, ohne Frage und ohne Kennung', async t => {
+  const c = await setup();
+  t.after(c.close);
+  await c.vote({ id: 's01', kennung: A, wert: 1 });
+  await c.vote({ id: 's02', kennung: B, wert: -1 });
+  assert.deepEqual(c.store.counters().map(({ art, anzahl }) => [art, anzahl]), [['stimme', 2]]);
+  assert.deepEqual(Object.keys(c.store.counters()[0]).sort(), ['anzahl', 'art', 'tag']);
+});
+
 test('Stimmen bündeln: viele Klicks, ein Schreiben, und die Summe steht in der Seite', async t => {
   const c = await setup();
   t.after(c.close);

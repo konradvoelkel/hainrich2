@@ -354,3 +354,16 @@ test('Findet Claude nichts, antwortet die Moderation selbst, und die Antwort ers
   await expect(page.locator('#treffer-fragen .katex').first()).toBeVisible();
   expect(problems).toEqual([]);
 });
+
+test('Die Zahlen sind für Admins da, auch schmal, und ohne Fehler unter der CSP', async ({ page }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await page.click('a:has-text("Zahlen")');
+  await expect(page.locator('h1')).toHaveText('Zahlen');
+  await expect(page.locator('.zahlen').first()).toContainText('0,08 $');
+  await expect(page.locator('.deckel progress').first()).toBeVisible();
+  await expect(page.locator('main')).toContainText('Abgegebene Stimmen');
+  await page.setViewportSize({ width: 320, height: 700 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(problems).toEqual([]);
+});

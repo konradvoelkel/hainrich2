@@ -188,3 +188,13 @@ pre { overflow-x: auto; }
   /* mit dem Finger treffbar */
   .pfeil { padding: .5rem .75rem; }
 }
+
+/* Zahlen für Admins. Schmal scrollt die Tabelle für sich, nicht die Seite */
+.breit { overflow-x: auto; margin: .5rem 0 1rem; }
+.zahlen { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; }
+.zahlen th, .zahlen td { padding: .3rem .5rem; border-bottom: 1px solid var(--linie); text-align: right; white-space: nowrap; }
+.zahlen th[scope="row"], .zahlen thead th:first-child { text-align: left; font-weight: 400; }
+.zahlen thead th { font-weight: 600; }
+.deckel { margin: .5rem 0; }
+.deckel label { display: block; }
+.deckel progress { display: block; width: 100%; margin-top: .2rem; accent-color: var(--marke); }

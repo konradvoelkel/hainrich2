@@ -444,6 +444,7 @@ test('Auch nach der Freigabe lässt sich ein „kein Beleg“ durch eine eigene 
   assert.equal(question.antworten.length, 1);
   assert.deepEqual([question.antworten[0].art, question.antworten[0].status], ['moderation', 'geprüft']);
   assert.equal(c.store.revisions(data.id)[0].nachher, OWN);
+  assert.equal(c.store.counters().find(k => k.art === 'moderationsantwort').anzahl, 1);
   assert.ok(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8').includes(OWN));
 
   /** danach ist es eine normale Antwort: bearbeitbar, aber ohne „Zurück auf ungeprüft“ */

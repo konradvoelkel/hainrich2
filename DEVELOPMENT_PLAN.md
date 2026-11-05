@@ -335,7 +335,7 @@ ungeprüfter Antworten; `kein_beleg`; `quelle_geändert`; Meldungen.
 **`public.db`:** `questions` (kanonischer Text, Status, Kapitel, Herkunft, Tag), `variants`,
 `answers` (Art `bot`, `moderation`, `nutzer`; Status; Modell; Prompt-Version; Skript-Stand),
 `citations` (Passage, Hash, Zitat, Link), `revisions` (vorher, nachher, Rolle, Zeit; jede Bearbeitung
-bleibt nachvollziehbar), `votes` (Frage, Hash einer Kennung, die der Browser je Frage würfelt, plus oder minus; ein Token gibt es dafür nicht, D21), `pairs`, `usage`, `moderators`.
+bleibt nachvollziehbar), `votes` (Frage, Hash einer Kennung, die der Browser je Frage würfelt, plus oder minus; ein Token gibt es dafür nicht, D21), `pairs`, `zaehler` (Tag, Art, Anzahl), `moderators`.
 Eine Spalte `corpus` steht überall, damit später weitere Skripte ohne Umbau passen.
 
 **`pending.db`:** `pending` (Text, Geheimnis-Hash, Tag, Zustimmungsversion, Einwilligung ja oder nein, Treffer, Zustand,
@@ -343,6 +343,11 @@ Entwurf samt Zitaten, Ablehnungsgrund). Mehr nicht, keine IP-Adresse und kein To
 wird danach geleert.
 
 Eigene Antworten durchlaufen dieselbe Freigabe wie Fragen.
+
+**Zahlen für Admins** unter `/mod/zahlen/`, nur Rolle `admin` (Konrad, 2026-11-05): Anfragen, Tokens und Kosten nach Zeitraum und Modell, Stand gegen die Deckel, Ergebnisse der Entwürfe,
+Bestand, Warteschlange, Stimmen, Verlauf von 14 Tagen. Die Kosten stehen allein im Kostenbuch des Worker, der Web-Prozess liest es nur, eine Kopie in `public.db` gibt es nicht. Was sonst passiert, zählen
+Tagessummen in `zaehler`, ohne Bezug zu Frage oder Person. Gezählt wird nur, was ohnehin ein Schreibzugriff ist (I10). Seitenaufrufe bräuchten ein Zugriffsprotokoll und einen anderen Satz im
+Datenschutz, das hat Konrad vorerst zurückgestellt. Die Seite zeigt die Sicht der App, die Rechnung steht in der Console.
 
 Fragen sind Klartext, gesetzt werden nur Formeln in Dollarzeichen: auf der Seite, in den Listen, in der Suche und unter „Meine Fragen“. Kein Markdown, ein Link aus einer Frage wird keiner. Die
 Moderation sieht die Quelle, ihre CSP erlaubt die Inline-Stile von KaTeX nicht.
@@ -537,7 +542,7 @@ Kurscode noch an Anthropic. Die Summe steht fest in den Seiten, Lesen bleibt sta
 geänderte Seiten gebündelt alle 15 Sekunden neu. Die Abstimmung selbst braucht JavaScript, weil die CSP Formulare verbietet.
 
 **Phase 4: Worker live.** Richter, Antworten, Budgetdeckel, Skriptstand-Prüfung. Abnahme: Eine Woche
-Betrieb mit echten Kosten im `usage`-Bericht.
+Betrieb mit echten Kosten auf der Seite Zahlen.
 
 **Phase 5: Skript-Anbindung.** Abschnitts-Link, Lückenbericht.
 

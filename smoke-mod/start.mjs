@@ -61,7 +61,11 @@ setInterval(async () => {
   await frageweg.collect();
 }, 300);
 
-const mod = createHandler({ store, live, publish, fragen: frageweg });
+const kosten = path.join(dir, 'kosten');
+fs.mkdirSync(kosten);
+const today = new Date().toISOString().slice(0, 10);
+fs.writeFileSync(path.join(kosten, `kosten-${today.slice(0, 7)}.json`), JSON.stringify([{ label: today, model: 'claude-opus-5-5', input: 16000, output: 900, dollars: 0.082 }]));
+const mod = createHandler({ store, live, publish, fragen: frageweg, kosten });
 const api = createApi({ fragen: frageweg, pending, store, hash: await hashPassphrase(KURSCODE) });
 const voting = createVoting({ store, publish });
 setInterval(() => voting.flush(), 300);

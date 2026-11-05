@@ -5,7 +5,7 @@
  * keine Entwürfe. Abstimmen ist ein eigener Schalter, `HAINRICH2_STIMMEN=1`, es hängt an nichts davon.
  *
  *   HAINRICH2_DB=<public.db> HAINRICH2_LIVE=<verzeichnis> [HAINRICH2_PENDING=<pending.db>] [HAINRICH2_KURSCODE=<datei>]
- *   [HAINRICH2_SCHLANGE=<verzeichnis>] [HAINRICH2_STIMMEN=1] [HAINRICH2_PORT=8773] node server/web.mjs
+ *   [HAINRICH2_SCHLANGE=<verzeichnis>] [HAINRICH2_STIMMEN=1] [HAINRICH2_KOSTEN=<verzeichnis>] [HAINRICH2_PORT=8773] node server/web.mjs
  */
 import fs from 'node:fs';
 import http from 'node:http';
@@ -18,7 +18,7 @@ import { openSpool } from '../lib/spool.js';
 import { createVoting, FLUSH_MS } from '../lib/stimmen.js';
 import { openStore } from '../lib/store.js';
 
-const { HAINRICH2_DB: db, HAINRICH2_LIVE: live, HAINRICH2_PENDING: pendingFile, HAINRICH2_KURSCODE: code, HAINRICH2_SCHLANGE: schlange, HAINRICH2_STIMMEN: stimmen, HAINRICH2_PORT: port = '8773' } = process.env;
+const { HAINRICH2_DB: db, HAINRICH2_LIVE: live, HAINRICH2_PENDING: pendingFile, HAINRICH2_KURSCODE: code, HAINRICH2_SCHLANGE: schlange, HAINRICH2_STIMMEN: stimmen, HAINRICH2_KOSTEN: kosten, HAINRICH2_PORT: port = '8773' } = process.env;
 if (!db || !live) throw new Error('HAINRICH2_DB und HAINRICH2_LIVE fehlen');
 
 const COLLECT_MS = 2000;
@@ -47,7 +47,7 @@ if (open) {
 }
 const voting = stimmen ? createVoting({ store, publish }) : null;
 if (voting) setInterval(safely(voting.flush), FLUSH_MS);
-const mod = createHandler({ store, live, base, publish, fragen });
+const mod = createHandler({ store, live, base, publish, fragen, kosten });
 const routeOf = ({ url }) => {
   if (voting && url === `${base}api/stimme`) return voting.handle;
   return url.startsWith(`${base}api/`) ? api : mod;

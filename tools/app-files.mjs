@@ -10,7 +10,7 @@ import path from 'node:path';
 const repo = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 const lock = JSON.parse(fs.readFileSync(path.join(repo, 'package-lock.json'), 'utf8')).packages;
 
-const LIB = ['answer', 'api', 'auth', 'budget', 'checker', 'corpus', 'draft', 'embedder', 'forum', 'fragen', 'http', 'mod', 'mod-pages', 'mod-tasten', 'model', 'pending', 'publish', 'render', 'search', 'segment', 'site', 'spool', 'stimmen', 'store'];
+const LIB = ['answer', 'api', 'auth', 'budget', 'checker', 'corpus', 'draft', 'embedder', 'forum', 'fragen', 'http', 'mod', 'mod-pages', 'mod-tasten', 'model', 'pending', 'publish', 'render', 'search', 'segment', 'site', 'spool', 'stimmen', 'store', 'zahlen'];
 const CODE = ['package.json', 'server/web.mjs', 'server/worker.mjs', 'tools/mod-account.mjs', ...LIB.map(n => `lib/${n}.js`)];
 const ORT_BIN = 'node_modules/onnxruntime-node/bin/napi-v6/linux/x64';
 const ORT = ['package.json', 'dist', 'lib', 'script'].map(n => `node_modules/onnxruntime-node/${n}`).concat(['libonnxruntime.so.1', 'libonnxruntime_providers_shared.so', 'onnxruntime_binding.node'].map(n => `${ORT_BIN}/${n}`));
