@@ -171,5 +171,11 @@ formFrage.addEventListener('submit', async event => {
   bereich.scrollIntoView();
 });
 
+/** aus der Suche mitgebracht; einmal abgeholt, liegt es nirgends mehr */
+try {
+  text.value = sessionStorage.getItem('eidl:frage') ?? '';
+  sessionStorage.removeItem('eidl:frage');
+} catch { /* dann eben leer */ }
+
 zeigeFormular();
 aktualisiere();

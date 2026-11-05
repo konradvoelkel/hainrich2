@@ -11,6 +11,7 @@ const status = document.getElementById('suchstatus');
 const treffer = document.getElementById('treffer');
 const listeFragen = document.getElementById('treffer-fragen');
 const listeSkript = document.getElementById('treffer-skript');
+const neueFrage = document.getElementById('neue-frage');
 
 let worker = null;
 let letzte = 0;
@@ -31,15 +32,29 @@ const zeile = (kopf, href, unten, html) => {
   return li;
 };
 
+/**
+ * Das Angebot, die getippte Frage zu stellen. Es hängt an keinem Kosinus: Ein Schwellwert trennt Duplikate nicht (Plan §19), also entscheidet
+ * der Klick. Nur wer wörtlich eine vorhandene Frage tippt, braucht es nicht.
+ */
+const gleich = text => text.toLowerCase().replace(/[^\p{L}\p{N}$]+/gu, ' ').trim();
+
+function bieteAn(fragen = []) {
+  if (!neueFrage) return;
+  const anfrage = feld.value.trim();
+  neueFrage.hidden = anfrage.length < +neueFrage.dataset.mindestens || fragen.some(f => gleich(f.text) === gleich(anfrage));
+}
+
 function zeige({ fragen, skript }) {
   listeFragen.replaceChildren(...fragen.map(f => zeile(f.text, `f/${f.id}/`, f.kapitel, f.html)));
   listeSkript.replaceChildren(...skript.map(p => zeile([p.titel, ...p.pfad.slice(-1)].join(' › '), p.url, p.ausschnitt)));
   treffer.hidden = !fragen.length && !skript.length;
+  bieteAn(fragen);
 }
 
 function suche() {
   const anfrage = feld.value.trim();
   letzte += 1;
+  bieteAn();
   if (!anfrage) { treffer.hidden = true; return; }
   if (stichworteDa) worker.postMessage({ act: 'suche', anfrage, nummer: letzte });
 }
@@ -80,6 +95,13 @@ function start() {
     }
   };
 }
+
+/** nicht in die Adresse: Was hier steht, verlässt den Browser erst mit dem Absenden */
+neueFrage?.querySelector('a').addEventListener('click', () => {
+  try {
+    sessionStorage.setItem('eidl:frage', feld.value.trim());
+  } catch { /* dann bleibt das Feld dort leer */ }
+});
 
 bereich.hidden = false;
 feld.addEventListener('focus', start, { once: true });

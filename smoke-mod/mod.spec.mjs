@@ -367,3 +367,39 @@ test('Die Zahlen sind für Admins da, auch schmal, und ohne Fehler unter der CSP
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(problems).toEqual([]);
 });
+
+test('Aus der Suche in die Frage: Der Text kommt mit, ohne Adresse und ohne Anfrage', async ({ page }) => {
+  const problems = watch(page);
+  const eigene = 'Warum heißt der Gradient eigentlich Gradient?';
+  const sent = [];
+  page.on('request', r => sent.push(`${r.method()} ${r.url()} ${r.postData() ?? ''}`));
+  await page.goto('/eidl/');
+  await page.locator('#suchfeld').focus();
+  await expect(page.locator('#suchstatus')).toContainText('Suche bereit', { timeout: 120_000 });
+  const angebot = page.locator('#neue-frage');
+  await expect(angebot).toBeHidden();
+
+  await page.locator('#suchfeld').fill('kurz');
+  await expect(page.locator('#treffer-fragen li').first()).toBeVisible();
+  await expect(angebot).toBeHidden();
+
+  await page.locator('#suchfeld').fill(eigene);
+  await expect(angebot).toBeVisible();
+
+  /** wörtlich eine vorhandene Frage: kein Angebot, auch nicht mit anderer Schreibweise. Vom sichtbaren Zustand aus, sonst prüft das nichts */
+  const vorhanden = await page.locator('#treffer-fragen a').first().textContent();
+  await page.locator('#suchfeld').fill(`  ${vorhanden.toUpperCase()}  `);
+  await expect(angebot).toBeHidden();
+
+  await page.locator('#suchfeld').fill(eigene);
+  await expect(angebot).toBeVisible();
+  await angebot.locator('a').click();
+  await expect(page).toHaveURL(/\/eidl\/f\/neu\/$/);
+  await expect(page.locator('#fragetext')).toHaveValue(eigene);
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0);
+  expect(sent.filter(s => s.includes('Gradient%20eigentlich') || s.includes(eigene))).toEqual([]);
+
+  await page.reload();
+  await expect(page.locator('#fragetext')).toHaveValue('');
+  expect(problems).toEqual([]);
+});

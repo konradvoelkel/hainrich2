@@ -122,7 +122,10 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
 2. **Treffer.** Klick auf „Das ist meine Frage“ zeigt sofort die vorhandene Antwort. Der Wortlaut
    geht als Variante in die Moderation und ist ein gelabeltes Paar (`gleich`).
 3. **Neue Frage.** Klick auf „Nein, neue Frage“ verlangt Kurscode-Token, Zustimmung und den
-   PII-Check (§8). Die abgelehnten Kandidaten werden als Paare `verschieden` mitgeschickt.
+   PII-Check (§8). Die abgelehnten Kandidaten werden als Paare `verschieden` mitgeschickt. Gebaut ist bisher: Unter den Treffern steht
+   „Diese Frage stellen“, der getippte Text kommt über `sessionStorage` ins Formular, nicht über die Adresse, und verlässt den Browser erst
+   beim Absenden. Das Angebot steht immer, auch neben einem sehr ähnlichen Treffer, denn kein Kosinus trennt das (§6.3, §19). Es fehlt nur bei unter
+   zehn Zeichen und wenn der Text wörtlich eine vorhandene Frage ist (Konrad wollte es bei einem „mega heißen Kandidaten“ weglassen, 2026-11-05).
 4. **`pending`.** Der Text liegt in `pending.db`, dazu der Hash eines Geheimnisses, das nur im
    Browser der fragenden Person liegt. Nur diese Person sieht die Frage. Während des Wartens zeigt
    der Client die passenden Skriptstellen. Sie kann die Frage bis zur Entscheidung selbst löschen,
@@ -578,6 +581,7 @@ Betrieb mit echten Kosten auf der Seite Zahlen.
 |---|---|
 | GitLab Pages mit Pipeline-Trigger | Kein POST-Ziel für ein Forum, rund 20 s Job je Klick, Votes unmöglich. |
 | 4090 als Backend im Betrieb | D1. Für Offline-Arbeit bleibt sie verfügbar, wird aber nicht gebraucht. |
+| Text in der Adresse von „Diese Frage stellen“ | Er ginge beim Klick an den Server; der Datenschutz sagt, was man tippt, verlässt den Browser nicht. |
 | Schwellwert auf Kosinus | §19: trennt nicht, selbst mit e5-large. Ein falscher Merge zeigt still eine falsche Antwort. |
 | `paraphrase-multilingual-MiniLM` | 135 MB, Skript-Suche 69 % statt 92 %, Duplikate schlechter als e5-small. |
 | Ungeschnittenes e5-small | Gleiche Qualität bei 135 statt 29,4 MB. |

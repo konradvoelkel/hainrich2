@@ -378,6 +378,8 @@ test('die Einwilligung ist nicht vorbelegt, und ohne Schlange gibt es sie gar ni
 
 test('der Knopf erscheint erst, wenn der Fragepfad offen ist', () => {
   assert.ok(!indexPage([], site).includes('f/neu/'));
+  assert.ok(!indexPage([], site).includes('id="neue-frage"'));
+  assert.match(indexPage([], { ...site, fragen: true }), /id="neue-frage" data-mindestens="10" hidden/);
   assert.match(indexPage([], site), /noch nicht stellen/);
   assert.ok(indexPage([], { ...site, fragen: true }).includes('f/neu/'));
   assert.match(robotsTxt(site), /Disallow: \/eidl\/api\//);
