@@ -40,14 +40,14 @@ _Stand 2026-11-05._
   Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Konrads Login funktioniert (2026-11-05). Code in `lib/store.js`, `lib/auth.js`,
   `lib/checker.js` (harte Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`.
 
-- Fragepfad (Plan D20), **gebaut, nichts davon ist auf dem Server und nichts committet**: Kurscode und Token (`lib/api.js`), `pending.db`
+- Fragepfad (Plan D20), **gebaut, nichts davon ist auf dem Server**: Kurscode und Token (`lib/api.js`), `pending.db`
   mit Fristen (`lib/pending.js`), Einwilligung und Freigabe (`lib/fragen.js`), Schlange in `/run` (`lib/spool.js`), Worker
   (`lib/draft.js`, `server/worker.mjs`), Seite `f/neu/` mit „Meine Fragen“ (`site/fragen.js`), Warteschlange unter `/eidl/mod/neu/`,
-  weiche Checker-Treffer. Rolle im Server-Repo erweitert, dort uncommittet. Entwürfe der Rechtstexte: `site/texte/datenschutz-fragen.md`,
+  weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`), nicht ausgespielt. Entwürfe der Rechtstexte: `site/texte/datenschutz-fragen.md`,
   `site/texte/nutzungsbedingungen.md`; `site/build.mjs --fragen` nimmt sie auf und bricht ab, solange die Platzhalter zu Anthropic
   offen sind. Ohne Kurscode-Hash bleibt der Pfad beim Web-Prozess zu, ein Deploy allein öffnet also nichts.
 
-- Abstimmen über Fragen (Plan D21), **gebaut, nicht committet, nicht auf dem Server**: hoch oder runter ohne Anmeldung, auf der Frageseite und in den Listen der
+- Abstimmen über Fragen (Plan D21), **gebaut, nicht auf dem Server**: hoch oder runter ohne Anmeldung, auf der Frageseite und in den Listen der
   Unterforen, die Listen sortieren nach Punkten (`lib/stimmen.js`, `site/stimmen.js`, Tabelle `votes` in `public.db`). Eigener Schalter:
   `hainrich2_stimmen` im Server-Repo und `site/build.mjs --stimmen` für den Absatz in `site/texte/datenschutz-stimmen.md`.
 
