@@ -11,7 +11,7 @@ import { promisify, parseArgs } from 'node:util';
 import zlib from 'node:zlib';
 import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
 import { UNTERFOREN } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
+import { excerpt, foreignSource, forumPage, indexPage, MODERATION, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
 import { quoteUrl } from '../lib/segment.js';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -63,7 +63,7 @@ const copy = (from, name) => {
 const dep = (...p) => path.join(repo, 'node_modules', ...p);
 
 for (const name of ['style.css', 'app.js', 'fragen.js', 'stimmen.js', 'such-worker.js']) copy(path.join(here, name), name);
-for (const name of ['logo.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', OG_CARD.file]) copy(path.join(here, 'brand', name), name);
+for (const name of ['logo.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', MODERATION.bild, OG_CARD.file]) copy(path.join(here, 'brand', name), name);
 /** Browser und Crawler fragen an der Wurzel des Hosts danach, egal was die Seite nennt */
 fs.copyFileSync(path.join(here, 'brand/favicon.ico'), path.join(staging, 'favicon.ico'));
 for (const name of ['search.js', 'rank.js', 'model.js']) copy(path.join(repo, 'lib', name), name);
@@ -143,7 +143,7 @@ const text = name => fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'ut
 if (!text('datenschutz').includes('## Eigene Beiträge')) throw new Error('datenschutz.md: Abschnitt „Eigene Beiträge“ nicht gefunden');
 const voting = args.stimmen ? text('datenschutz').replace('## Eigene Beiträge', `${text('datenschutz-stimmen')}## Eigene Beiträge`) : text('datenschutz');
 const privacy = args.fragen ? voting.replace(/## Eigene Beiträge[\s\S]*?(?=## Ihre Rechte)/, text('datenschutz-fragen')) : voting;
-write('ueber/index.html', textPage('ueber', fill(text('ueber')), site));
+write('ueber/index.html', textPage('ueber', fill(text('ueber')), site, { robots: 'index,follow', description: 'Ein Forum zum Skript „Einführung in Deep Learning“: Ein Sprachmodell antwortet mit Zitat, eine Moderation prüft, alle können lesen. Ein Prototyp.' }));
 write('impressum/index.html', textPage('impressum', fill(text('impressum')), site));
 write('datenschutz/index.html', textPage('datenschutz', fill(privacy), site));
 if (args.fragen) write('nutzungsbedingungen/index.html', textPage('nutzungsbedingungen', fill(text('nutzungsbedingungen')), site));

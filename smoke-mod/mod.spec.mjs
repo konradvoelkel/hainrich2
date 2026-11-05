@@ -333,7 +333,8 @@ test('Findet Claude nichts, antwortet die Moderation selbst, und die Antwort ers
 
   await page.reload();
   await page.click('.meine-frage a:has-text("Steht jetzt im Forum")');
-  await expect(page.locator('.antwort .autor strong')).toHaveText('Moderation');
+  await expect(page.locator('.antwort .autor strong')).toHaveText('Konrad Völkel');
+  await expect(page.locator('.antwort .autor img')).toHaveJSProperty('naturalWidth', 150);
   await expect(page.locator('.antwort .badge')).toHaveText('geprüft');
   await expect(page.locator('.antwort .text em')).toHaveText('ich');
   await expect(page.locator('.antwort')).not.toContainText('Sprachmodell');

@@ -76,7 +76,7 @@ h2 { font-size: 1.05rem; line-height: 1.35; margin: 1.4rem 0 .4rem; }
 
 .antwort { margin: 1.2rem 0; padding: 1rem; border: 1px solid var(--linie); border-radius: .5rem; background: var(--karte); }
 .antwort > header { display: flex; flex-wrap: wrap; gap: .3rem .55rem; align-items: center; margin-bottom: .5rem; }
-.bot { padding: .02rem .45rem; border-radius: .3rem; background: var(--marke); color: var(--karte); font-size: .8rem; font-weight: 700; }
+.bot, .rolle { padding: .02rem .45rem; border-radius: .3rem; background: var(--marke); color: var(--karte); font-size: .8rem; font-weight: 700; }
 .text > :first-child { margin-top: 0; }
 .hinweis { margin: .8rem 0 0; color: var(--leise); font-size: .9rem; }
 .marke-zitat { font-size: .85em; text-decoration: none; }
@@ -113,6 +113,8 @@ pre { overflow-x: auto; }
 .beitrag { display: grid; grid-template-columns: 6rem minmax(0, 1fr); margin: .8rem 0; border: 1px solid var(--linie); border-radius: .5rem; overflow: hidden; background: var(--karte); }
 .autor { display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .8rem .4rem; background: var(--flaeche); font-size: .85rem; text-align: center; overflow-wrap: anywhere; }
 .autor img, .avatar { width: 3.5rem; height: 3.5rem; }
+.gesicht { border-radius: 50%; }
+.rolle { padding: .02rem .3rem; font-size: .72rem; overflow-wrap: normal; }
 .avatar { display: grid; place-items: center; border-radius: 50%; background: var(--karte); color: var(--marke); font-size: 1.6rem; font-weight: 700; }
 .inhalt { padding: .7rem 1rem 1rem; }
 .inhalt > header { display: flex; flex-wrap: wrap; gap: .3rem .55rem; align-items: center; margin-bottom: .5rem; }
@@ -160,6 +162,8 @@ pre { overflow-x: auto; }
 .mod pre { overflow-x: auto; padding: .5rem; border: 1px solid var(--linie); border-radius: .4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 .verlauf, .zitatliste { padding-left: 1.2rem; }
 
+.einstieg p { margin: 0 0 1rem; }
+.titelzeile h2 { margin: .2rem 0 .6rem; font-size: 1.2rem; }
 .titelzeile { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; }
 .knopf.fragen { border-color: var(--marke); background: var(--marke); color: var(--grund); }
 .formular select { width: 100%; padding: .55rem .7rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; }

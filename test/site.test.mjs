@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { threadsOf, UNTERFOREN, unterforumOf } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { excerpt, foreignSource, forumPage, indexPage, MODERATION, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: false, ladegroesse: 'rund 25 MB' };
 const passage = { id: 'p1', page: 'kapitel', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
@@ -141,8 +141,70 @@ test('die Sitemap nennt nur Unterforen mit Geprüftem', () => {
   const map = sitemap([done], site);
   assert.match(map, /f\/grundlagen\//);
   assert.doesNotMatch(map, /f\/lernen\//);
+  assert.match(map, /<loc>https:\/\/example\.test\/eidl\/<\/loc>/);
+  assert.match(map, /<loc>https:\/\/example\.test\/eidl\/ueber\/<\/loc>/);
   assert.doesNotMatch(sitemap([question()], site), /<url>/);
   assert.doesNotMatch(sitemap([done], { ...site, vorschau: true }), /<url>/);
+});
+
+test('Bot, Nutzer und Moderation tragen ihre Namen, an einer Beispielfrage steht keiner', () => {
+  const bot = questionPage(question(), site);
+  assert.match(bot, /<strong>hAInrich2<\/strong><span class="bot">Bot</);
+  assert.match(bot, /<strong>Frage<\/strong>/);
+  assert.doesNotMatch(bot, /Anonymer Nutzer/);
+  const html = questionPage({ ...question(), herkunft: 'nutzer', antworten: [{ art: 'moderation', status: 'geprüft', text: 'Selbst geschrieben.', zitate: [] }] }, site);
+  assert.match(html, /<strong>Anonymer Nutzer<\/strong>/);
+  assert.match(html, /<a href="https:\/\/www\.konradvoelkel\.com" rel="noopener">Konrad Völkel<\/a>/);
+  assert.match(html, /<img class="gesicht" src="\.\.\/\.\.\/moderation-konrad\.jpg"/);
+  assert.ok(fs.existsSync(new URL(`../site/brand/${MODERATION.bild}`, import.meta.url)));
+  assert.doesNotMatch(html, /class="bot"/);
+});
+
+const titleOf = html => html.match(/<title>(.*?)<\/title>/)[1];
+const descriptionOf = html => html.match(/name="description" content="(.*?)"/)[1];
+
+test('der Titel bleibt kurz und ohne Formel, die volle Frage steht in der H1', () => {
+  const text = 'Ich bringe Parameter und Hyperparameter immer durcheinander. Ist $x$ jetzt ein Parameter, und woran erkenne ich das allgemein?';
+  const html = questionPage({ ...question(), text }, site);
+  assert.ok(titleOf(html).length <= 65, titleOf(html));
+  assert.match(titleOf(html), /^Ich bringe .* … \| hAInrich2$/);
+  assert.match(html, /<h1>Ich bringe[\s\S]*allgemein\?<\/h1>/);
+  assert.equal(titleOf(questionPage({ ...question(), text: 'Was ist $x$?' }, site)), 'Was ist x? | hAInrich2');
+  assert.equal(titleOf(questionPage({ ...question(), text: 'Was ist $\\frac{a}{b}$?' }, site)), 'Was ist …? | hAInrich2');
+});
+
+test('die Beschreibung ist der Anfang der Antwort, sonst das Kapitel', () => {
+  const text = `Mit \`zero_grad()\` und **Gradienten**: $x$ bleibt, $\\frac{a}{b}$ nicht.[1] ${'Noch mehr Text. '.repeat(30)}`;
+  const answer = { ...question().antworten[0], text };
+  const description = descriptionOf(questionPage({ ...question(), antworten: [answer] }, site));
+  assert.match(description, /^Mit zero_grad\(\) und Gradienten: x bleibt, … nicht\. Noch mehr/);
+  assert.ok(description.length <= 155, description);
+  const whole = { ...answer, text: `Der erste Satz ist lang genug, um für sich zu stehen. Dann folgt $\\frac{a}{b}$ und mehr.` };
+  assert.equal(descriptionOf(questionPage({ ...question(), antworten: [whole] }, site)), 'Der erste Satz ist lang genug, um für sich zu stehen.');
+  const none = descriptionOf(questionPage({ ...question({ status: 'kein_beleg' }), kapitel: 'Was ist Deep Learning?' }, site));
+  assert.equal(none, 'Frage zum Kapitel „Was ist Deep Learning?“ im Skript „Einführung in Deep Learning“.');
+});
+
+test('die Startseite nennt das Skript in ihrer einzigen H1 und führt zur Idee', () => {
+  const html = indexPage([question()], site);
+  assert.equal(html.match(/<h1>/g).length, 1);
+  assert.match(html, /<h1>Fragen und Antworten zum Skript „Einführung in Deep Learning“<\/h1>/);
+  assert.match(html, /<a href="ueber\/">Mehr über die Idee<\/a>/);
+  assert.doesNotMatch(html, /<span>Fragen und Antworten/, 'die Kopfzeile wiederholt die H1 nicht');
+  assert.match(forumPage(UNTERFOREN[0], [], site), /<span>Fragen und Antworten/);
+  assert.ok(titleOf(html).length <= 65, titleOf(html));
+});
+
+test('die Seite „Über hAInrich2“ darf in den Index, die Rechtstexte nicht', () => {
+  const source = '# Über hAInrich2\n\nText';
+  const html = textPage('ueber', source, site, { robots: 'index,follow', description: 'Worum es geht.' });
+  assert.equal(titleOf(html), 'Über hAInrich2');
+  assert.equal(descriptionOf(html), 'Worum es geht.');
+  assert.match(html, /name="robots" content="index,follow"/);
+  assert.match(textPage('ueber', source, { ...site, vorschau: true }, { robots: 'index,follow' }), /name="robots" content="noindex"/);
+  const legal = textPage('impressum', '# Impressum', site);
+  assert.match(legal, /name="robots" content="noindex"/);
+  assert.equal(titleOf(legal), 'Impressum | hAInrich2');
 });
 
 test('Vorschau-Banner nur in der Vorschau', () => {
@@ -154,6 +216,7 @@ test('Ausschnitt ohne Markdown und Formeln', () => {
   const text = excerpt('Ein **Wort** mit $x^2$ und [Link](http://a.test).');
   assert.equal(text, 'Ein Wort mit … und Link.');
   assert.ok(excerpt('wort '.repeat(100), 50).length <= 52);
+  assert.equal(excerpt('Ein _kursives_ Wort, zero_grad und a > b'), 'Ein kursives Wort, zero_grad und a > b');
 });
 
 test('robots.txt sperrt das Modell und nennt die Sitemap', () => {

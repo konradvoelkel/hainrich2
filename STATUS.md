@@ -18,7 +18,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 39 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 168 Unit-Tests, 14 Smoke-Tests und 21 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 173 Unit-Tests, 14 Smoke-Tests und 21 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -49,6 +49,7 @@ _Stand 2026-11-05._
   weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`) und ausgespielt. Rechtstexte: `site/texte/datenschutz-fragen.md`,
   `site/texte/nutzungsbedingungen.md`, live über `site/build.mjs --stimmen --fragen`. Jeder künftige Bau braucht beide Schalter. Ohne Kurscode-Hash im Vault bleibt der Pfad zu.
 
+- Beiträge tragen Namen (Plan D22): Bot hAInrich2, „Anonymer Nutzer“, Konrad Völkel mit Foto und Link. Dazu kurze Titel, Beschreibungen aus der Antwort, H1 mit Skriptname, Über-Seite und Startseite in der Sitemap (`research/2026-11-06-seo-audit/`). **Seit 2026-11-06 live**, Smoke gegen den echten Host grün.
 - Seite „Über hAInrich2“ (`site/texte/ueber.md`), unten auf jeder Seite verlinkt: Herkunft des Namens, die Idee, FAQ-Wiki, Prototyp. **Seit 2026-11-05 live**, Smoke gegen den echten Host grün.
 - Unter den Suchtreffern steht seit 2026-11-05 „Diese Frage stellen“, auf dem echten Host geprüft: Der getippte Text kommt über `sessionStorage` ins Formular, nicht über die Adresse.
 - Zahlen für Admins unter `/eidl/mod/zahlen/` (`lib/zahlen.js`, Tabelle `zaehler`), **seit 2026-11-05 live**: Claude-Kosten aus dem Kostenbuch des Worker, Stand gegen die Deckel, Ergebnisse,
