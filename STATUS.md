@@ -40,16 +40,17 @@ _Stand 2026-11-05._
   Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Konrads Login funktioniert (2026-11-05). Code in `lib/store.js`, `lib/auth.js`,
   `lib/checker.js` (harte Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`.
 
-- Fragepfad (Plan D20), **gebaut, nichts davon ist auf dem Server**: Kurscode und Token (`lib/api.js`), `pending.db`
+- Fragepfad (Plan D20), **gebaut, auf dem Server liegen Code und Units, aber er ist zu**: `/eidl/api/fragen` antwortet 503, `f/neu/` gibt es nicht, `hainrich2-worker.path` ist aus: Kurscode und Token (`lib/api.js`), `pending.db`
   mit Fristen (`lib/pending.js`), Einwilligung und Freigabe (`lib/fragen.js`), Schlange in `/run` (`lib/spool.js`), Worker
   (`lib/draft.js`, `server/worker.mjs`), Seite `f/neu/` mit „Meine Fragen“ (`site/fragen.js`), Warteschlange unter `/eidl/mod/neu/`,
-  weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`), nicht ausgespielt. Entwürfe der Rechtstexte: `site/texte/datenschutz-fragen.md`,
+  weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`) und ausgespielt. Entwürfe der Rechtstexte: `site/texte/datenschutz-fragen.md`,
   `site/texte/nutzungsbedingungen.md`; `site/build.mjs --fragen` nimmt sie auf und bricht ab, solange die Platzhalter zu Anthropic
   offen sind. Ohne Kurscode-Hash bleibt der Pfad beim Web-Prozess zu, ein Deploy allein öffnet also nichts.
 
-- Abstimmen über Fragen (Plan D21), **gebaut, nicht auf dem Server**: hoch oder runter ohne Anmeldung, auf der Frageseite und in den Listen der
+- Abstimmen über Fragen (Plan D21), **seit 2026-11-05 live**: hoch oder runter ohne Anmeldung, auf der Frageseite und in den Listen der
   Unterforen, die Listen sortieren nach Punkten (`lib/stimmen.js`, `site/stimmen.js`, Tabelle `votes` in `public.db`). Eigener Schalter:
-  `hainrich2_stimmen` im Server-Repo und `site/build.mjs --stimmen` für den Absatz in `site/texte/datenschutz-stimmen.md`.
+  `hainrich2_stimmen` im Server-Repo und `site/build.mjs --stimmen` für den Absatz in `site/texte/datenschutz-stimmen.md`. Jeder künftige Bau braucht
+  `--stimmen`, sonst verschwindet der Absatz aus der Erklärung. Auf dem echten Host in Chromium geprüft: Stimme, Rücknahme, keine Konsolenfehler, fremde Herkunft 403.
 
 ## Was nicht existiert
 
@@ -71,8 +72,10 @@ _Stand 2026-11-05._
 - Der Worker hat nie die echte API gesehen: Geprüft ist er mit einer Attrappe, aus einer sauberen, schreibgeschützten Kopie der
   Allowlist (0,4 s, 224 MB, richtige Beta-Kopfzeile und `fallbacks`). Ob `fallbacks: "default"` mit Citations durchgeht, zeigt erst ein
   bezahlter Lauf.
-- Die neuen Units, `tmpfiles` und die Rechte der Schlange sind nur durch `make check` gegangen, nicht auf dem Server und nicht in der VM.
-- Die Rechtstexte zum Fragepfad und zum Abstimmen sind mein Entwurf, keine Rechtsberatung. Niemand hat sie gelesen.
+- Der Worker ist auf dem Server nie gelaufen. Die Rolle ist ausgespielt, `data/` ist 0700, und `hainrich2-worker` kommt nachweislich nicht an `public.db`. Ob Sandbox und
+  Rechte der Schlange im Lauf halten, zeigt erst der erste Auftrag.
+- Die Rechtstexte zum Fragepfad und zum Abstimmen sind mein Entwurf, keine Rechtsberatung. Der Absatz zum Abstimmen steht seit 2026-11-05 auf der Site, ausgespielt auf Konrads
+  Wort, ausdrücklich gelesen hat er ihn nicht.
 - Prompt-Version 2: Kein echter Lauf hat bisher gezeigt, ob die Modelle sich daran halten. Alle vorhandenen Antworten stammen aus
   Version 1.
 - Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
@@ -91,7 +94,7 @@ _Stand 2026-11-05._
 
 ## Nächster Schritt
 
-Abstimmen kann als Erstes live, es fehlt nur Konrads Okay zum Absatz und zum Ausspielen. Der Fragepfad wartet auf Konrad: Anthropic-Dokumente, Rechtstexte, Kurscode-Hash, Key, dann ein bezahlter Probelauf. Die Reihenfolge steht
+Der Fragepfad wartet auf Konrad: Anthropic-Dokumente, Rechtstexte, Kurscode-Hash, Key, dann ein bezahlter Probelauf. Die Reihenfolge steht
 in `.claude/TODO.md`. Daneben: Konrad hat am 2026-11-05 moderiert, 28 Antworten geprüft, s21 und s30 zurückgezogen, 14 Antworten bearbeitet. Als Nächstes ergänzt
 er das Skript (`research/2026-11-05-skriptluecken/`). Das Ende der Vorschau ist seine Entscheidung; erst dann wird Geprüftes
 indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

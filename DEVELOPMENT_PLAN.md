@@ -514,12 +514,12 @@ Erste Moderation am 2026-11-05: 28 geprüft, 2 zurückgezogen, 14 bearbeitet. In
 sagt, was offenbleibt, obwohl Prompt-Version 1 genau das verlangt. Prompt-Version 2 lässt das weg (§7.2). Die vorhandenen
 Antworten stammen aus Version 1.
 
-Stand 2026-11-05, gebaut, aber nicht ausgespielt: Fragen mit Kurscode, Einwilligung, Entwurf nur für die fragende Person,
+Stand 2026-11-05, gebaut, Code und Units liegen auf dem Server, aber zu: Fragen mit Kurscode, Einwilligung, Entwurf nur für die fragende Person,
 „Meine Fragen“, Warteschlange in der Moderation, Fristen (D20). Ohne Kurscode-Hash bleibt der Fragepfad beim Web-Prozess aus, ohne
 Schlange gibt es keinen Entwurf, und `--fragen` schaltet Rechtstexte und Technik gemeinsam. Damit steht der Worker aus Phase 4
 schon, ohne Richter. Offen: `variants`, `votes`, `pairs`, eigene Antworten, Themen-Hinweis (§8), Kurscode-Scan aus I7.
 
-Stand 2026-11-05, ebenfalls gebaut und nicht ausgespielt: Abstimmen über Fragen (D21), mit eigenem Schalter, denn es hängt weder am
+Stand 2026-11-05, seit dem Vormittag live: Abstimmen über Fragen (D21), mit eigenem Schalter, denn es hängt weder am
 Kurscode noch an Anthropic. Die Summe steht fest in den Seiten, Lesen bleibt statisch und ohne JavaScript; der Web-Prozess schreibt
 geänderte Seiten gebündelt alle 15 Sekunden neu. Die Abstimmung selbst braucht JavaScript, weil die CSP Formulare verbietet.
 
