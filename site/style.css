@@ -142,13 +142,14 @@ pre { overflow-x: auto; }
 .mod .kopf form { margin-left: auto; }
 .mod h1 { margin: 1rem 0 .3rem; }
 .formular { display: grid; gap: .35rem; margin: 1rem 0; }
+.formular[hidden] { display: none; }
 .formular label { margin-top: .7rem; font-weight: 600; }
 .formular input, .formular textarea { width: 100%; padding: .55rem .7rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; }
 .formular textarea { resize: vertical; line-height: 1.5; hyphens: manual; }
 .formular input:focus, .formular textarea:focus { outline: 2px solid var(--marke); outline-offset: 1px; }
 .knoepfe { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
-.mod button { padding: .5rem .8rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; cursor: pointer; }
-.mod button.haupt { border-color: var(--marke); background: var(--marke); color: var(--grund); }
+.mod button, .formular button { padding: .5rem .8rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; cursor: pointer; }
+.mod button.haupt, .formular button.haupt { border-color: var(--marke); background: var(--marke); color: var(--grund); }
 .blaettern { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .5rem; margin: .6rem 0; }
 .blaettern .knopf { justify-self: start; }
 .blaettern .knopf[rel="next"] { justify-self: end; border-color: var(--marke); background: var(--marke); color: var(--grund); }
@@ -158,3 +159,32 @@ pre { overflow-x: auto; }
 .gemeldet { background: var(--gut-grund); color: var(--gut); }
 .mod pre { overflow-x: auto; padding: .5rem; border: 1px solid var(--linie); border-radius: .4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 .verlauf, .zitatliste { padding-left: 1.2rem; }
+
+.titelzeile { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; }
+.knopf.fragen { border-color: var(--marke); background: var(--marke); color: var(--grund); }
+.formular select { width: 100%; padding: .55rem .7rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; }
+.formular .haken { display: grid; grid-template-columns: auto 1fr; gap: .6rem; align-items: start; font-weight: 400; }
+.formular .haken input { width: auto; margin-top: .3rem; }
+.formular button { justify-self: start; }
+.meine { padding: 0; list-style: none; }
+.meine-frage { margin: 1rem 0; padding: .8rem 1rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); }
+.meine-frage .frage-text { margin: 0 0 .3rem; font-weight: 600; white-space: pre-wrap; }
+.meine-frage .knopf { margin-top: .6rem; font: inherit; cursor: pointer; }
+.meine-frage > a { display: block; }
+
+/* Abstimmen: Pfeile wie im Kopf eines Beitrags. Ohne JavaScript bleibt nur die Summe */
+.stimme { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 2.2rem; font-variant-numeric: tabular-nums; }
+.autor .stimme { margin-top: .3rem; }
+.punkte { font-weight: 700; color: var(--tinte); font-size: .95rem; }
+.pfeil { padding: .2rem .5rem; border: 0; background: none; color: var(--leise); font: inherit; line-height: 1; cursor: pointer; border-radius: .3rem; }
+.pfeil[hidden] { display: none; }
+.pfeil:hover { background: var(--flaeche); color: var(--marke); }
+.pfeil:focus-visible { outline: 2px solid var(--marke); outline-offset: 1px; }
+.pfeil.an { color: var(--marke); }
+.thema { display: flex; gap: .6rem; align-items: flex-start; }
+.thema > div:last-child { min-width: 0; }
+@media (max-width: 34rem) {
+  .autor .stimme { flex-direction: row; gap: .2rem; margin: 0 0 0 auto; }
+  /* mit dem Finger treffbar */
+  .pfeil { padding: .5rem .75rem; }
+}

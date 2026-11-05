@@ -1,6 +1,6 @@
 # hAInrich2: Entwicklungsplan
 
-_Stand 2026-11-04. Gebaut sind Phase 0, Phase 1 bis zum Blindvergleich und der lokale Teil von Phase 2,
+_Stand 2026-11-05. Gebaut sind Phase 0, Phase 1 bis zum Blindvergleich, Phase 2 und die Moderation, der Fragepfad liegt lokal,
 was fehlt, steht in §15 und `STATUS.md`. Die Abschnittsnummern bleiben stabil,
 Entscheidungen tragen ihr Datum. Was der Eigentümer tun oder entscheiden muss, ist mit `[owner]`
 markiert._
@@ -9,8 +9,8 @@ markiert._
 
 Ein Frage-Antwort-Forum zum Skript „Einführung in Deep Learning“. Studierende fragen, ein klar
 gekennzeichneter Bot antwortet aus dem Skript, jede Antwort trägt das wörtliche Originalzitat mit
-Link. Wiederholte Fragen bekommen die vorhandene Antwort. Alle können lesen, mit Kurscode kann man
-fragen, abstimmen und selbst antworten. Moderation schaltet frei, korrigiert und legt kanonische
+Link. Wiederholte Fragen bekommen die vorhandene Antwort. Alle können lesen und über Fragen abstimmen, mit Kurscode kann man
+fragen und selbst antworten. Moderation schaltet frei, korrigiert und legt kanonische
 Fragen fest.
 
 Der Name ist Absicht: Das ist die Schleife aus `docs/hainrich-2-proposal.md` im hAInrich-Repo
@@ -25,7 +25,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D2 | Neues Repo `hainrich2`. Verantwortlich ist Konrad Völkel mit eigenem Impressum, nicht die HHU. |
 | D3 | Lesen ist öffentlich und statisch. Fragen stellen geht nur mit dem Kurscode aus ILIAS. |
 | D4 | Neue Fragen sieht zunächst nur, wer sie gestellt hat, bis Moderation sie freischaltet. |
-| D5 | Vor dem Fragen wird klar offengelegt und bestätigt, dass Fragen öffentlich werden. Die Weiterverarbeitung öffentlicher Fragen durch ein Sprachmodell in den USA braucht keine eigene Einwilligung, wird aber transparent gemacht. |
+| D5 | Vor dem Fragen wird klar offengelegt und bestätigt, dass Fragen nach der Freigabe öffentlich werden. Die Weiterverarbeitung freigegebener Fragen durch ein Sprachmodell in den USA braucht keine eigene Einwilligung, wird aber transparent gemacht. Vor der Freigabe geht eine Frage nur mit ausdrücklicher Einwilligung an das Modell (D20). Neu gefasst von Konrad, 2026-11-05. |
 | D6 | Personenbezogene Daten sind laut Nutzungsbedingungen verboten. Ein Checker reagiert auf Matrikelnummern, Namen und Ähnliches und sperrt die Veröffentlichung. Der öffentliche Bestand gilt als nicht personenbezogen und braucht keine Löschfrist (Einschränkung in §11.2). |
 | D7 | Client-Modell: Ziel 30 MB, bis 135 MB erlaubt, wenn die Messung es verlangt. |
 | D8 | Das Forum läuft durch, keine Trennung nach Durchgängen. |
@@ -39,6 +39,8 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D16 | Der Checker sperrt jede Zahl mit 6 bis 12 Ziffern. |
 | D17 | Kontakt im Impressum ist `mail@hai.konradvoelkel.com`, Zustellung als `hai@konradvoelkel.com` im Fastmail-Konto. Anschrift wie bei Laberampel. |
 | D18 | Das Forum ist deutsch wie das Skript. Englische Fragen sind kein Ziel: keine Seeds, kein Testset, kein Tuning dafür (Konrad, 2026-11-04). Was der Schreibpfad mit einer englischen Frage tut, bleibt für Phase 3 offen. |
+| D20 | Wer mit Kurscode fragt, kann beim Absenden einwilligen, dass die Frage sofort an Claude geht und einen Entwurf bekommt. Frage und Entwurf sieht nur die fragende Person, bis die Moderation entscheidet. Ohne Einwilligung wartet die Frage auf die Freigabe und wird erst danach beantwortet. Beide Wege sind gleichwertig, die Einwilligung ist nicht vorbelegt und bis zur Entscheidung widerrufbar (Konrad, 2026-11-05). |
+| D21 | Über Fragen dürfen alle abstimmen, auch ohne Kurscode: hoch oder runter, die Summe steht an der Frage, Listen sortieren danach (Konrad, 2026-11-05). Weil niemand angemeldet ist, ist eine Stimme nicht überprüfbar: Wer die Browserdaten löscht, stimmt noch einmal. Deshalb entscheidet die Summe nichts, sie sortiert nur. Sie blendet nichts aus und ändert keine Kosten. |
 | D19 | Das Forum hat Unterforen, nach dem Inhaltsverzeichnis des Skripts: Grundlagen, Lernen und Training, Architekturen und Repräsentationen, Praxis und Anwendung (Konrad, 2026-11-05). Eine Frage gehört über ihr Kapitel zu genau einem; `Optimierer` zählt zum Training. Die Adressen liegen unter `f/`, das bedient Caddy schon aus `live/`. |
 
 ## 3. Invarianten
@@ -48,16 +50,17 @@ Test (§16).
 
 | Nr | Invariante | Durchgesetzt durch |
 |---|---|---|
-| I1 | Unfreigegebener Text erreicht nie die Claude API. | Getrennte Datenbanken; der Worker hat per `InaccessiblePaths` keinen Zugriff auf `pending.db`. |
+| I1 | Text ohne Freigabe und ohne Einwilligung erreicht nie die Claude API. | Der Worker hat per `InaccessiblePaths` keinen Zugriff auf `pending.db` und sieht nur die Schlange. Dort hinein legt der Web-Prozess nur nach Einwilligung ohne Treffer des Checkers (§8) oder nach der Freigabe. |
 | I2 | Nichts wird ohne Freigabe öffentlich. | Snapshots entstehen ausschließlich aus `public.db`. |
 | I3 | Kein öffentlicher Datensatz führt zu einer fragenden Person. | Beim Freigeben wandert nur der Text; öffentliche Zeitstempel nur auf den Tag genau. |
 | I4 | Zitate stammen aus dem Korpus, nie aus Modelltext. | Das Modell verweist auf Passagen, eingesetzt wird der Originaltext. |
-| I5 | Der Web-Prozess hat keinen API-Key. | `LoadCredential` nur in der Worker-Unit. |
+| I5 | Der Web-Prozess hat keinen API-Key. | `LoadCredential` nur in der Worker-Unit, die unter einem eigenen Benutzer läuft. |
 | I6 | Ausgaben haben zwei harte Deckel. | Budgetzähler im Worker plus Ausgabenlimit des Workspace in der Console. |
 | I7 | Der Kurscode steht nie im Repo, in der Memory oder im Client. | Nur ein scrypt-Hash im Ansible-Vault. Zeichenketten-Scan im Build. |
 | I8 | Der Bot ist überall als Bot erkennbar. | Fester Teil der Antwort-Vorlage. |
 | I9 | Nur `geprüft` ist indexierbar. | `noindex` als Vorgabe, Sitemap nur aus geprüften Antworten. |
 | I10 | Jeder Schreibzugriff kommt von einem ausdrücklichen Klick. | Keine stille Telemetrie, kein Zählpixel, kein Zugriffsprotokoll. |
+| I11 | Stimmen führen zu niemandem, auch nicht zueinander. | Der Browser würfelt je Frage eine eigene Kennung, der Server speichert nur deren Hash und keine Adresse. Öffentlich ist nur die Summe. |
 
 ## 4. Architektur
 
@@ -67,13 +70,17 @@ Browser --GET--> statische Seiten, JSON-Snapshots, Modell, WASM
 Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt beide Datenbanken
                                  |
                  pending.db  <---+---> public.db
-                 kein Backup             Backup per restic
-                                           ^
-                                           |  nur freigegebene Texte
-                            hainrich2-worker  Timer, API-Key, kein Zugriff auf pending.db
-                                           |
-                                           v
-                                       Claude API
+                 kein Backup     |       Backup per restic
+                                 |
+                                 v  nur Eingewilligtes und Freigegebenes
+                 /run/hainrich2/schlange      im Arbeitsspeicher, in keinem Backup
+                                 |
+                                 v
+                 hainrich2-worker  startet, sobald etwas in der Schlange liegt
+                                   API-Key, eigener Benutzer, kein Zugriff auf data/
+                                 |
+                                 v
+                             Claude API
 ```
 
 - **`hainrich2-web`:** Node 24 aus der Rolle `node`, `node:http` und `node:sqlite`, keine
@@ -82,9 +89,13 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
   in ein eigenes Verzeichnis, Caddy bedient diese Pfade von dort. Im Docroot würde das `--delete` von `site/deploy.sh` jede
   Bearbeitung überschreiben. Der Vektor einer Frage steht in `fragen.json` am Eintrag, sonst verrutscht die Suche, sobald
   eine Frage zurückgezogen wird.
-- **`hainrich2-worker`:** `systemd`-Timer mit Oneshot-Unit, kein Daemon. Läuft etwa alle fünf
-  Minuten, tut nur etwas, wenn Arbeit da ist, und lädt das Embedding-Modell nur dann. Im Leerlauf
-  kostet er also keinen Speicher.
+- **`hainrich2-worker`:** Oneshot-Unit, kein Daemon. Eine `.path`-Unit mit `DirectoryNotEmpty=` startet ihn, sobald eine
+  Datei in der Schlange liegt, das ist schnell genug für „sofort“ und kostet im Leerlauf keinen Speicher. Das Embedding-Modell
+  lädt er nur dann. Jeder Auftrag endet mit einem Ergebnis, auch bei Fehler und Deckel: Die Datei verschwindet, also läuft
+  er nicht im Kreis, und Eingewilligtes bleibt nicht liegen.
+- **Schlange:** `eingang/` und `ausgang/` in `/run/hainrich2/schlange`, je Auftrag eine JSON-Datei. `/run` liegt im
+  Arbeitsspeicher und nicht unter `restic_paths`. Ein Neustart des Servers verliert Aufträge; der Web-Prozess merkt das und
+  lässt die Frage auf die Moderation warten.
 - **Lesen:** Jede Änderung am öffentlichen Bestand schreibt Snapshots atomar per `rename`:
   `questions.json`, `vectors.json`, eine statische HTML-Seite je Frage, `sitemap.xml`. Markdown und
   KaTeX werden beim Veröffentlichen gerendert, auch die Mathematik braucht zum Lesen also kein
@@ -114,22 +125,32 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
    PII-Check (§8). Die abgelehnten Kandidaten werden als Paare `verschieden` mitgeschickt.
 4. **`pending`.** Der Text liegt in `pending.db`, dazu der Hash eines Geheimnisses, das nur im
    Browser der fragenden Person liegt. Nur diese Person sieht die Frage. Während des Wartens zeigt
-   der Client die passenden Skriptstellen.
-5. **Moderation.** Freigeben, bearbeiten, einer Frage als Variante zuordnen oder ablehnen.
+   der Client die passenden Skriptstellen. Sie kann die Frage bis zur Entscheidung selbst löschen,
+   das ist auch der Widerruf der Einwilligung.
+4a. **Entwurf, nur mit Einwilligung (D20).** Ohne Treffer des Checkers legt der Web-Prozess die Frage in die Schlange, der
+   Worker beantwortet sie wie in §7.2, das Ergebnis landet in `pending.db` und nur die fragende Person sieht es, in „Meine
+   Fragen“ mit Hinweis auf Bot und fehlende Prüfung. Bei weichen Treffern geht nichts hinaus, die Frage wartet. Ist der Deckel
+   erreicht oder fällt die API aus, wartet sie ebenso, und die Oberfläche sagt das.
+5. **Moderation.** Freigeben, bearbeiten, einer Frage als Variante zuordnen oder ablehnen. Liegt ein Entwurf vor, entscheidet
+   sie über beides und kann ihn bearbeiten oder gleich als geprüft markieren.
    Ablehnen löscht den Text sofort; nur der Grund bleibt 7 Tage für die fragende Person sichtbar.
    Fragen zu Übungsaufgaben oder Organisatorischem werden abgelehnt (D12), dafür gibt es einen
    Standardgrund.
-6. **Freigabe.** Der Text wandert ohne Geheimnis-Hash nach `public.db`. Ab hier gibt es serverseitig
-   keine Verbindung zur Person. „Meine Fragen“ lebt nur im Browser (`localStorage`).
+6. **Freigabe.** Der Text wandert ohne Geheimnis-Hash nach `public.db`, ein Entwurf als Antwort mit. Der Text vor der Freigabe
+   bleibt nicht als Revision erhalten, sonst läge ein gestrichener Name in `public.db` und im Backup. Ab hier gibt es serverseitig
+   keine Verbindung zur Person. „Meine Fragen“ lebt nur im Browser (`localStorage`). Die Frage behält ihre zufällige Kennung,
+   so findet der Browser sie wieder, ohne dass der Server etwas verknüpft.
 7. **Richter.** Der Worker holt die 20 ähnlichsten Fragen, ein Modell entscheidet über Duplikate
    (§6.4). Bei Duplikat wird die Frage Variante und die vorhandene Antwort gilt.
-8. **Antwort.** Sonst entsteht eine Bot-Antwort mit Zitat, sichtbar mit Badge `ungeprüft`, `noindex`.
+8. **Antwort.** Sonst entsteht eine Bot-Antwort mit Zitat, sichtbar mit Badge `ungeprüft`, `noindex`. Das gilt für Fragen ohne
+   Entwurf: Der Web-Prozess legt sie nach der Freigabe in die Schlange. Bis dahin steht dort „noch keine Antwort“.
 9. **Kein Beleg.** Nach einem zweiten Anlauf mit ganzen Kapiteln (§7.2) geht die Frage als
    `kein_beleg` an die Moderation und in den Lückenbericht. Öffentlich steht „Dazu habe ich im Skript
    nichts gefunden“, nie „steht nicht im Skript“.
 10. **Prüfung.** Moderation setzt `geprüft` oder korrigiert. Erst dann ist die Seite indexierbar.
 
-Wartezeit: Die Freigabe durch Menschen bestimmt die Antwortzeit. Das sagt die Oberfläche offen.
+Wartezeit: Ohne Einwilligung bestimmt die Freigabe durch Menschen die Antwortzeit, mit Einwilligung kommt der Entwurf in
+rund einer Minute. Das sagt die Oberfläche offen.
 Benachrichtigung gibt es nur als „Meine Fragen“, weil eine E-Mail-Adresse genau das wäre, was wir
 nicht speichern wollen.
 
@@ -222,6 +243,9 @@ Moderation.
 3. Ohne Beleg ein zweiter Anlauf mit den zwei besten ganzen Kapiteln. Das lokale Modell lehnte zu
    Unrecht ab, obwohl die Inhalte im Skript stehen. Claude tut das selten: Bei 90 Antworten brauchte
    nur Sonnet viermal den zweiten Anlauf, dreimal blieb es bei „kein Beleg“.
+   Teilantworten zählen nicht auf, was fehlt, und behaupten nie, etwas stehe nicht im Skript (Konrad, 2026-11-05): Das Modell
+   sieht rund 27 von 442 Passagen, und bei 5 von 23 Fragen waren solche Aussagen falsch. Es schreibt stattdessen das Steuerwort
+   `TEILANTWORT`. Das wird nie angezeigt und fließt als `partial` in den Lückenbericht.
 4. Prüfschritt: Trägt jedes Zitat seine Aussage? Eine gültige Passage kann die falsche sein. Vorerst nur
    ein Hinweis an die Moderation, kein Tor: Der erste Prüfer schlug bei 54 von 87 Antworten an, bei allen
    Modellen gleich oft, oft wegen eigener Schlussfolgerungen (§19). Ob er taugt, zeigt der Abgleich
@@ -263,7 +287,12 @@ Schalter; bei wenigen Fragen am Tag sparen die zusätzlichen Zustände kaum etwa
 
 Der Worker nutzt das offizielle SDK `@anthropic-ai/sdk`, einen eigenen Workspace mit eigenem Key und
 prüft `stop_reason` auf `refusal`. Im Betrieb gehört `fallbacks: "default"` dazu; im Blindvergleich ist es
-bewusst aus, damit kein anderes Modell unbemerkt einspringt.
+bewusst aus, damit kein anderes Modell unbemerkt einspringt. Entwürfe laufen einzeln, nicht im Batch: Batch verträgt sich
+nicht mit `fallbacks` und wäre nicht sofort.
+
+Seit D20 kostet eine Frage Geld, bevor ein Mensch sie gesehen hat. Deshalb zählt der Worker selbst: höchstens 20 Anfragen am
+Tag und 15 $ im Monat, darüber bleibt die Frage ohne Entwurf. Das liegt mit Abstand unter den 20 $ aus D14, das Limit in der
+Console bleibt der zweite Deckel (I6). Beide Werte sind Vorgaben, die Konrad ändern kann.
 
 ## 8. PII-Checker
 
@@ -277,7 +306,9 @@ vertretbar, „1 Mio.“ statt „1000000“ ist zumutbar.
 **Weiche Treffer** (Absenden geht, Moderation muss sie ausdrücklich abhaken, bevor sie freigeben
 kann): „ich heiße“, „mein Name“, „Herr“, „Frau“, „Prof.“ mit Eigenname, Grußformeln, Treffer in einer
 öffentlichen Vornamenliste, Paare großgeschriebener Wörter außerhalb des Skriptvokabulars,
-Gesundheitswörter wie „Attest“, „krank“, „Nachteilsausgleich“ (Art. 9 DSGVO).
+Gesundheitswörter wie „Attest“, „krank“, „Nachteilsausgleich“ (Art. 9 DSGVO). Ein weicher Treffer hält
+auch den Entwurf zurück: Die Frage geht trotz Einwilligung nicht an Claude, bis die Moderation sie
+freigibt. Gebaut sind die Regeln ohne Vornamenliste und ohne Wortpaare.
 
 Namen sind per Regel nicht zuverlässig zu fangen. Das Sicherheitsnetz dafür ist die Moderation, der
 Checker lenkt nur ihren Blick. **Die Teilnehmerliste aus ILIAS kommt nicht in den Checker:** im
@@ -299,29 +330,35 @@ legt ein CLI auf dem VPS an, Passphrasen als scrypt-Hash, Sitzung als `HttpOnly`
 
 **Oberfläche `/mod/`,** auch auf dem Telefon bedienbar: Warteschlange neuer Fragen mit markierten
 Treffern und den ähnlichsten Fragen, die der Browser der Moderation selbst berechnet; Warteschlange
-ungeprüfter Antworten nach Votes; `kein_beleg`; `quelle_geändert`; Meldungen.
+ungeprüfter Antworten; `kein_beleg`; `quelle_geändert`; Meldungen.
 
 **`public.db`:** `questions` (kanonischer Text, Status, Kapitel, Herkunft, Tag), `variants`,
 `answers` (Art `bot`, `moderation`, `nutzer`; Status; Modell; Prompt-Version; Skript-Stand),
 `citations` (Passage, Hash, Zitat, Link), `revisions` (vorher, nachher, Rolle, Zeit; jede Bearbeitung
-bleibt nachvollziehbar), `votes` (nur HMAC aus Token und Eintrag), `pairs`, `usage`, `moderators`.
+bleibt nachvollziehbar), `votes` (Frage, Hash einer Kennung, die der Browser je Frage würfelt, plus oder minus; ein Token gibt es dafür nicht, D21), `pairs`, `usage`, `moderators`.
 Eine Spalte `corpus` steht überall, damit später weitere Skripte ohne Umbau passen.
 
-**`pending.db`:** `pending` (Text, Art, Geheimnis-Hash, Treffer, Zeit). Mehr nicht.
+**`pending.db`:** `pending` (Text, Geheimnis-Hash, Tag, Zustimmungsversion, Einwilligung ja oder nein, Treffer, Zustand,
+Entwurf samt Zitaten, Ablehnungsgrund). Mehr nicht, keine IP-Adresse und kein Token. Gelöscht wird mit `secure_delete`, das WAL
+wird danach geleert.
 
 Eigene Antworten durchlaufen dieselbe Freigabe wie Fragen.
 
 ## 10. Kurscode, Token, Limits
 
 - `POST /api/token` prüft den Kurscode gegen den Hash und gibt ein signiertes, zufälliges Token aus,
-  das im `localStorage` liegt. Der Server speichert dazu nichts. Es gibt keine Nutzerkonten.
-- Fehlversuche und Ausgabe werden je IP begrenzt, nur im Arbeitsspeicher.
+  das im `localStorage` liegt. Der Server speichert dazu nichts. Es gibt keine Nutzerkonten. Der Schlüssel zum Signieren hängt
+  am Hash des Codes.
+- Fehlversuche und Ausgabe werden je IP begrenzt, nur im Arbeitsspeicher: 5 Fehlversuche in 15 Minuten, 5 Tokens und 6 Fragen
+  in der Stunde je Adresse.
 - Grenzen als Vorgabe: 2 neue Fragen pro Stunde je Token, höchstens 100 offene Fragen insgesamt,
-  20 Antworten am Tag im Worker. Was über dem Tagesdeckel liegt, wartet, sortiert nach Votes.
-- Die Grenze je Nutzer ist weich: Alle teilen einen Code, wer ihn neu eingibt, bekommt ein neues
-  Token. Das ist vertretbar, weil Missbrauch nur in der Moderationsschlange landet. Er wird weder
-  öffentlich noch kostet er API-Geld. Das ist der eigentliche Schutz, nicht das Limit.
-- Der Code wird zum Semesterwechsel gewechselt, alte Tokens laufen über eine Epochenzahl aus.
+  20 Anfragen am Tag im Worker (§7.4). Was über dem Tagesdeckel liegt, wartet auf die Moderation.
+- Die Grenze je Nutzer ist weich: Alle teilen einen Code, wer ihn neu eingibt, bekommt ein neues Token. Seit D20 kostet Missbrauch
+  deshalb Geld, bis zum Deckel des Worker: im schlimmsten Fall rund 1,60 $ am Tag und 15 $ im Monat. Öffentlich wird er
+  weiter nicht. Der eigentliche Schutz ist der Deckel, nicht das Limit.
+- Abstimmen braucht kein Token (D21). Je Adresse gehen 200 Stimmen in der Stunde, insgesamt 5000, nur im Arbeitsspeicher. Hoch angesetzt, weil ein Hörsaal
+  hinter einer Adresse sitzt. Das bremst Skripte, verhindert aber keine Manipulation.
+- Der Code wird zum Semesterwechsel gewechselt. Mit dem Hash ändert sich der Schlüssel, alte Tokens gelten dann nicht mehr.
 
 ## 11. Datenschutz und Recht
 
@@ -329,11 +366,18 @@ Keine Rechtsberatung. Kein Ersatz für eine Prüfung der fertigen Texte.
 
 ### 11.1 Offenlegung
 
-Die Zustimmung steht direkt am Absenden, mit Versionsnummer je Frage. Entwurf:
+Die Zustimmung steht direkt am Absenden, mit Versionsnummer je Frage. Die Texte stehen in `lib/fragen.js`. Pflicht, Version 1:
 
 > Meine Frage wird nach Prüfung durch die Moderation dauerhaft öffentlich sichtbar. Danach verarbeitet
 > ein Sprachmodell von Anthropic (USA) sie, um eine Antwort zu erzeugen. Ich gebe keine Namen,
 > Matrikelnummern oder anderen personenbezogenen Daten ein.
+
+Freiwillig, nicht vorbelegt (D20):
+
+> Ich willige ein, dass meine Frage schon vor der Prüfung an Anthropic (USA) geht, damit ich sofort einen Entwurf bekomme. Frage
+> und Entwurf sehe bis zur Entscheidung der Moderation nur ich. Ohne Einwilligung bekomme ich die Antwort nach der Freigabe.
+> Ich kann die Einwilligung widerrufen, indem ich die Frage unter „Meine Fragen“ lösche; was schon gesendet ist, bleibt davon
+> unberührt.
 
 Dazu auf jeder Antwort: Bot-Kennzeichnung (Art. 50 Abs. 1 AI Act gilt seit dem 2. August 2026),
 Status und der Satz „Prüfen Sie das Zitat“. Seeds tragen „Beispielfrage“.
@@ -353,13 +397,30 @@ Satz. Ein durchgerutschter Name bleibt in Sicherungen von `public.db` bis zu sec
 
 ### 11.3 Was D5 trägt
 
-„Keine eigene Einwilligung für die USA“ hält, solange nur freigegebener Text die API erreicht. Das ist
-I1, und deshalb darf vor der Freigabe auch kein Claude-Aufruf laufen, nicht einmal der Richter.
+„Keine eigene Einwilligung für die USA“ hält für freigegebenen Text, den die Moderation gelesen hat. Vor der Freigabe trägt
+diese Begründung nicht: Dort können personenbezogene Daten stehen, die erst die Moderation entfernt (§11.2). Deshalb gilt
+seit D20 ein zweiter Weg mit eigener Grundlage, der ausdrücklichen Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO, und I1 hält
+alles andere draußen. Der Richter läuft weiter erst nach der Freigabe, für ihn gibt es keine Einwilligung.
+
+Was daran hängt und nicht durch Technik zu lösen ist:
+
+- **Freiwilligkeit.** Konrad ist Prüfer der Fragenden. Eine Einwilligung trägt nur, wenn Nein nichts kostet. Darum beantwortet
+  auch der Weg ohne Einwilligung jede Frage, und nichts an der Oberfläche drängt zum Ja.
+- **Reichweite.** Sie deckt, was die Person selbst eingibt. Ein Dritter, den sie in der Frage nennt, hat nicht eingewilligt.
+  Dagegen stehen nur das Verbot, Checker und Hinweis. Ein Rest bleibt, Namen fängt keine Regel (§8).
+- **Art. 9.** Gesundheitsangaben bräuchten eine ausdrückliche Einwilligung gerade dafür. Der Text deckt das nicht ab, deshalb
+  halten die Wörter aus §8 den Entwurf zurück.
+- **Löschen.** Der Widerruf wirkt nur nach vorn: Was bei Anthropic liegt, löscht ein Klick hier nicht. Das steht im Text.
 
 Anthropic nennt für kommerzielle Kunden die Löschung von Ein- und Ausgaben binnen 30 Tagen, mit
-Ausnahmen, etwa bis zu 2 Jahren bei markierten Regelverstößen. Vertragspartner, Auftragsverarbeitung
-und Trainingsausschluss sind vor dem Start aus den Originaldokumenten zu übernehmen `[owner]`; die
-Sekundärquellen widersprechen sich.
+Ausnahmen, etwa bis zu 2 Jahren bei markierten Regelverstößen. Vertragspartner, Auftragsverarbeitung, Grundlage der
+Übermittlung in die USA und Trainingsausschluss sind vor dem Start aus den Originaldokumenten zu übernehmen `[owner]`; die
+Sekundärquellen widersprechen sich. Solange das fehlt, stehen in `site/texte/datenschutz-fragen.md` Platzhalter, und
+`site/build.mjs --fragen` bricht daran ab.
+
+**Abstimmen (D21).** Lesen bleibt ohne Cookie und ohne `localStorage`. Beides entsteht nur beim Klick auf einen Pfeil, also auf ausdrücklichen Wunsch; ein
+Banner ist dafür nach meinem Verständnis wie in §11.4 nicht nötig. Die Stimmen liegen in `public.db` und damit in den Sicherungen. Das ist vertretbar, weil
+der Hash einer zufälligen Kennung zu niemandem führt (I11). Der Absatz dazu steht in `site/texte/datenschutz-stimmen.md`, `--stimmen` nimmt ihn auf.
 
 ### 11.4 Prüfliste für die Rechtstexte `[owner]`
 
@@ -450,7 +511,17 @@ die Site Vorschau ist, bleibt auch Geprüftes `noindex`. Offen: Ende der Vorscha
 Fragen, weiche Treffer des Checkers, alles zu Fragen von außen.
 
 Erste Moderation am 2026-11-05: 28 geprüft, 2 zurückgezogen, 14 bearbeitet. In 13 der 14 hat Konrad den Absatz gestrichen, der
-sagt, was offenbleibt, obwohl Prompt-Version 1 genau das verlangt. Für neue Antworten ist der Prompt also zu ändern `[owner]`.
+sagt, was offenbleibt, obwohl Prompt-Version 1 genau das verlangt. Prompt-Version 2 lässt das weg (§7.2). Die vorhandenen
+Antworten stammen aus Version 1.
+
+Stand 2026-11-05, gebaut, aber nicht ausgespielt: Fragen mit Kurscode, Einwilligung, Entwurf nur für die fragende Person,
+„Meine Fragen“, Warteschlange in der Moderation, Fristen (D20). Ohne Kurscode-Hash bleibt der Fragepfad beim Web-Prozess aus, ohne
+Schlange gibt es keinen Entwurf, und `--fragen` schaltet Rechtstexte und Technik gemeinsam. Damit steht der Worker aus Phase 4
+schon, ohne Richter. Offen: `variants`, `votes`, `pairs`, eigene Antworten, Themen-Hinweis (§8), Kurscode-Scan aus I7.
+
+Stand 2026-11-05, ebenfalls gebaut und nicht ausgespielt: Abstimmen über Fragen (D21), mit eigenem Schalter, denn es hängt weder am
+Kurscode noch an Anthropic. Die Summe steht fest in den Seiten, Lesen bleibt statisch und ohne JavaScript; der Web-Prozess schreibt
+geänderte Seiten gebündelt alle 15 Sekunden neu. Die Abstimmung selbst braucht JavaScript, weil die CSP Formulare verbietet.
 
 **Phase 4: Worker live.** Richter, Antworten, Budgetdeckel, Skriptstand-Prüfung. Abnahme: Eine Woche
 Betrieb mit echten Kosten im `usage`-Bericht.
@@ -492,8 +563,15 @@ Betrieb mit echten Kosten im `usage`-Bericht.
 | `paraphrase-multilingual-MiniLM` | 135 MB, Skript-Suche 69 % statt 92 %, Duplikate schlechter als e5-small. |
 | Ungeschnittenes e5-small | Gleiche Qualität bei 135 statt 29,4 MB. |
 | WASM-Threads mit COOP und COEP | 11 statt 31 ms, unnötig; zusätzliche Header und Isolationsregeln für nichts. |
-| Richter vor der Freigabe | Würde ungeprüften Text in die USA senden, bricht I1. |
-| Vektoren vom Client übernehmen | Beliebig fälschbar; der Worker rechnet selbst. |
+| Richter vor der Freigabe | Würde Text ohne Einwilligung in die USA senden, bricht I1. Mit Einwilligung bringt er der fragenden Person nichts, was der Entwurf nicht auch bringt. |
+| Stimmen nur mit Kurscode | War der Plan bis D21. Konrad will, dass alle abstimmen. |
+| Doppelte Stimmen über einen Hash der IP-Adresse verhindern | Personenbezogen, wäre I11 los, und ein Hörsaal teilt sich eine Adresse. |
+| Cookie für Abstimmende | „Wer hier liest, bekommt keine Cookies“ soll stehen bleiben. Die Kennung entsteht erst beim Klick. |
+| Eine Kennung je Browser statt je Frage | Der Server könnte alle Stimmen einer Person verbinden. Je Frage kostet das nichts. |
+| Summen per `fetch` nachladen | Eine Anfrage je Seitenaufruf, und ohne JavaScript stünde keine Zahl da. |
+| Schlange in einer eigenen SQLite-Datei | Läge unter `/srv` und im Backup; Dateien in `/run` brauchen im Worker gar keine Datenbank. |
+| Entwurf für alle ohne Einwilligung | Bricht §11.3: Ungeprüfter Text in die USA, ohne Grundlage. |
+| Vektoren vom Client übernehmen | Beliebig fälschbar; der Worker rechnet selbst, auch für den Entwurf. |
 | JSON für Antworttexte | LaTeX bricht (`\t`, `\b` als Escape), §19. |
 | Ganzes Skript im Prompt | Rund 60 ct je Frage ungecacht bei Opus, lohnt erst bei Volumen. |
 | E-Mail-Benachrichtigung | Personenbezogenes Datum nur für Komfort. |

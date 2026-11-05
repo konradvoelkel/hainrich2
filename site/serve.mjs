@@ -23,7 +23,7 @@ const TYPES = {
 http.createServer((req, res) => {
   const { pathname } = new URL(req.url, 'http://x');
   if (pathname === '/' || pathname === '/eidl') { res.writeHead(301, { Location: '/eidl/' }); res.end(); return; }
-  if (MOD && /^\/eidl\/mod(\/|$)/.test(pathname)) {
+  if (MOD && /^\/eidl\/(?:mod|api)(\/|$)/.test(pathname)) {
     req.pipe(http.request(`${MOD}${req.url}`, { method: req.method, headers: req.headers }, up => {
       res.writeHead(up.statusCode, { ...up.headers, ...HOST_HEADERS });
       up.pipe(res);

@@ -1,19 +1,55 @@
 #!/usr/bin/env node
 /**
  * Startet den Web-Prozess: nur auf 127.0.0.1, davor steht Caddy. Beim Start schreibt er alle Seiten neu, damit `live/` nach
- * einem Update zum Code passt.
+ * einem Update zum Code passt. Ohne `HAINRICH2_KURSCODE` (Datei mit dem Hash) bleibt der Fragepfad zu, ohne `HAINRICH2_SCHLANGE` gibt es
+ * keine Entwürfe. Abstimmen ist ein eigener Schalter, `HAINRICH2_STIMMEN=1`, es hängt an nichts davon.
  *
- *   HAINRICH2_DB=<public.db> HAINRICH2_LIVE=<verzeichnis> [HAINRICH2_PORT=8773] node server/web.mjs
+ *   HAINRICH2_DB=<public.db> HAINRICH2_LIVE=<verzeichnis> [HAINRICH2_PENDING=<pending.db>] [HAINRICH2_KURSCODE=<datei>]
+ *   [HAINRICH2_SCHLANGE=<verzeichnis>] [HAINRICH2_STIMMEN=1] [HAINRICH2_PORT=8773] node server/web.mjs
  */
+import fs from 'node:fs';
 import http from 'node:http';
+import { closedApi, createApi } from '../lib/api.js';
+import { createFragen } from '../lib/fragen.js';
 import { createHandler } from '../lib/mod.js';
-import { publishAll } from '../lib/publish.js';
+import { openPending } from '../lib/pending.js';
+import { createPublisher, publishAll } from '../lib/publish.js';
+import { openSpool } from '../lib/spool.js';
+import { createVoting, FLUSH_MS } from '../lib/stimmen.js';
 import { openStore } from '../lib/store.js';
 
-const { HAINRICH2_DB: db, HAINRICH2_LIVE: live, HAINRICH2_PORT: port = '8773' } = process.env;
+const { HAINRICH2_DB: db, HAINRICH2_LIVE: live, HAINRICH2_PENDING: pendingFile, HAINRICH2_KURSCODE: code, HAINRICH2_SCHLANGE: schlange, HAINRICH2_STIMMEN: stimmen, HAINRICH2_PORT: port = '8773' } = process.env;
 if (!db || !live) throw new Error('HAINRICH2_DB und HAINRICH2_LIVE fehlen');
+
+const COLLECT_MS = 2000;
+const SWEEP_MS = 3600_000;
 
 const store = openStore(db);
 if (store.empty()) throw new Error(`${db} ist leer, erst tools/import-public.mjs`);
+const open = !!(pendingFile && code);
+store.setSite('fragen', open);
+store.setSite('entwurf', open && !!schlange);
+store.setSite('stimmen', !!stimmen);
 await publishAll(live, store);
-http.createServer(createHandler({ store, live, base: store.site().base })).listen(+port, '127.0.0.1', () => console.log(`127.0.0.1:${port}`));
+
+const publish = createPublisher(live, store);
+const base = store.site().base;
+const safely = work => () => Promise.resolve().then(work).catch(error => console.error(error));
+let api = closedApi;
+let fragen = null;
+if (open) {
+  const pending = openPending(pendingFile);
+  fragen = createFragen({ store, pending, spool: schlange ? openSpool(schlange) : null, publish });
+  api = createApi({ fragen, pending, store, hash: fs.readFileSync(code, 'utf8').trim(), base });
+  setInterval(safely(fragen.collect), COLLECT_MS);
+  setInterval(safely(fragen.sweep), SWEEP_MS);
+  fragen.sweep();
+}
+const voting = stimmen ? createVoting({ store, publish }) : null;
+if (voting) setInterval(safely(voting.flush), FLUSH_MS);
+const mod = createHandler({ store, live, base, publish, fragen });
+const routeOf = ({ url }) => {
+  if (voting && url === `${base}api/stimme`) return voting.handle;
+  return url.startsWith(`${base}api/`) ? api : mod;
+};
+http.createServer((req, res) => routeOf(req)(req, res)).listen(+port, '127.0.0.1', () => console.log(`127.0.0.1:${port}`));

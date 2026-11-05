@@ -1,6 +1,6 @@
 # Status
 
-_Stand 2026-11-04._
+_Stand 2026-11-05._
 
 ## Was existiert
 
@@ -15,7 +15,7 @@ _Stand 2026-11-04._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 33 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 100 Unit-Tests, 13 Smoke-Tests und 9 Browser-Tests der Moderation grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 148 Unit-Tests, 13 Smoke-Tests und 18 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -40,22 +40,47 @@ _Stand 2026-11-04._
   Öffentliche, `live/` hält die Seiten, restic sichert die Datenbank. Konrads Login funktioniert (2026-11-05). Code in `lib/store.js`, `lib/auth.js`,
   `lib/checker.js` (harte Regeln), `lib/publish.js`, `lib/mod.js`, `lib/mod-pages.js`, `server/web.mjs`.
 
+- Fragepfad (Plan D20), **gebaut, nichts davon ist auf dem Server und nichts committet**: Kurscode und Token (`lib/api.js`), `pending.db`
+  mit Fristen (`lib/pending.js`), Einwilligung und Freigabe (`lib/fragen.js`), Schlange in `/run` (`lib/spool.js`), Worker
+  (`lib/draft.js`, `server/worker.mjs`), Seite `f/neu/` mit „Meine Fragen“ (`site/fragen.js`), Warteschlange unter `/eidl/mod/neu/`,
+  weiche Checker-Treffer. Rolle im Server-Repo erweitert, dort uncommittet. Entwürfe der Rechtstexte: `site/texte/datenschutz-fragen.md`,
+  `site/texte/nutzungsbedingungen.md`; `site/build.mjs --fragen` nimmt sie auf und bricht ab, solange die Platzhalter zu Anthropic
+  offen sind. Ohne Kurscode-Hash bleibt der Pfad beim Web-Prozess zu, ein Deploy allein öffnet also nichts.
+
+- Abstimmen über Fragen (Plan D21), **gebaut, nicht committet, nicht auf dem Server**: hoch oder runter ohne Anmeldung, auf der Frageseite und in den Listen der
+  Unterforen, die Listen sortieren nach Punkten (`lib/stimmen.js`, `site/stimmen.js`, Tabelle `votes` in `public.db`). Eigener Schalter:
+  `hainrich2_stimmen` im Server-Repo und `site/build.mjs --stimmen` für den Absatz in `site/texte/datenschutz-stimmen.md`.
+
 ## Was nicht existiert
 
-- Keine Fragen von außen: kein Kurscode, kein `pending.db`, keine Zustimmung, keine weichen Checker-Treffer.
+- Stimmen lassen sich nicht prüfen und die Moderation kann sie nicht zurücksetzen. Wer die Browserdaten löscht, stimmt noch einmal; nur die Grenze je Adresse
+  bremst das.
+- Vor dem Start fehlen, alle bei Konrad: die Angaben zu Anthropic aus den Originaldokumenten (Plan §11.3), der Kurscode-Hash, ein Key für den
+  VPS. Keine Prüfung der Rechtstexte.
+- Keine Varianten, keine Votes, keine gelabelten Paare, keine eigenen Antworten, kein Richter: Duplikate entscheidet die Moderation
+  von Hand. Kein Themen-Hinweis aus §8, kein Kurscode-Scan aus I7, keine Vornamenliste im Checker.
+- Bleibt eine freigegebene Frage wegen Deckel oder Ausfall ohne Antwort, gibt es keinen zweiten Versuch. Die Seite sagt dann „noch keine
+  Antwort“.
+- Was D18 offenließ, gilt so: Eine englische Frage bekommt einen Entwurf in ihrer Sprache, die Moderation entscheidet.
 - Bearbeitete Fragen behalten ihren alten Vektor, bis die Moderation ihn neu rechnen kann. Die Stichwortsuche sieht den
   neuen Text, die semantische Suche den alten.
-- Keine Nutzungsbedingungen, die braucht erst Phase 3. Kein Web-Manifest, es bräuchte `manifest-src` in der CSP.
-- Kein Key für den VPS. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
+- Kein Web-Manifest, es bräuchte `manifest-src` in der CSP. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
 
+- Der Worker hat nie die echte API gesehen: Geprüft ist er mit einer Attrappe, aus einer sauberen, schreibgeschützten Kopie der
+  Allowlist (0,4 s, 224 MB, richtige Beta-Kopfzeile und `fallbacks`). Ob `fallbacks: "default"` mit Citations durchgeht, zeigt erst ein
+  bezahlter Lauf.
+- Die neuen Units, `tmpfiles` und die Rechte der Schlange sind nur durch `make check` gegangen, nicht auf dem Server und nicht in der VM.
+- Die Rechtstexte zum Fragepfad und zum Abstimmen sind mein Entwurf, keine Rechtsberatung. Niemand hat sie gelesen.
+- Prompt-Version 2: Kein echter Lauf hat bisher gezeigt, ob die Modelle sich daran halten. Alle vorhandenen Antworten stammen aus
+  Version 1.
 - Die Qualität der 90 Antworten. Bisher hat sie kein Mensch bewertet.
 - 81 der 90 Antworten stammen noch aus der Suche mit `k = 60`, nur s02, s08 und s12 sind neu. Bei den übrigen
   wäre die Auswahl heute meist etwas anders; ihre Zitate betrifft das nicht.
 - Ob der Prüfschritt etwas taugt: 58 von 87 Hinweisen, bei allen Modellen ähnlich oft.
-- Impressum und Datenschutz hat Konrad am 2026-11-05 freigegeben, mit dem Absatz zur Moderation. Für Fragen von außen
-  ändert sich der Text wieder.
+- Impressum und Datenschutz hat Konrad am 2026-11-05 freigegeben, mit dem Absatz zur Moderation. Die Fassung für Fragen von außen
+  liegt getrennt daneben und ist nicht freigegeben.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
 - Smoke-Test nur in Chromium, nicht in Firefox und Safari.
@@ -66,6 +91,7 @@ _Stand 2026-11-04._
 
 ## Nächster Schritt
 
-Konrad hat am 2026-11-05 moderiert: 28 Antworten geprüft, s21 und s30 zurückgezogen, 14 Antworten bearbeitet. Als Nächstes ergänzt
+Abstimmen kann als Erstes live, es fehlt nur Konrads Okay zum Absatz und zum Ausspielen. Der Fragepfad wartet auf Konrad: Anthropic-Dokumente, Rechtstexte, Kurscode-Hash, Key, dann ein bezahlter Probelauf. Die Reihenfolge steht
+in `.claude/TODO.md`. Daneben: Konrad hat am 2026-11-05 moderiert, 28 Antworten geprüft, s21 und s30 zurückgezogen, 14 Antworten bearbeitet. Als Nächstes ergänzt
 er das Skript (`research/2026-11-05-skriptluecken/`). Das Ende der Vorschau ist seine Entscheidung; erst dann wird Geprüftes
 indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

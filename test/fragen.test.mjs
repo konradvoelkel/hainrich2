@@ -1,0 +1,385 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import http from 'node:http';
+import os from 'node:os';
+import path from 'node:path';
+import { createApi } from '../lib/api.js';
+import { checkToken, hashPassphrase, issueToken, tokenKey } from '../lib/auth.js';
+import { hardHits, softHits } from '../lib/checker.js';
+import { createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
+import { createHandler } from '../lib/mod.js';
+import { openPending } from '../lib/pending.js';
+import { createPublisher, publishAll } from '../lib/publish.js';
+import { openSpool } from '../lib/spool.js';
+import { askPage, indexPage, robotsTxt } from '../lib/site.js';
+import { openStore } from '../lib/store.js';
+
+const CODE = 'nur-fuer-den-test';
+const PASSPHRASE = 'passphrase-fuer-den-test';
+const FRAGE = 'Warum ist Backpropagation effizient?';
+const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: true, ladegroesse: 'rund 1 MB' };
+const zitat = { titel: 'Backpropagation', pfad: ['Das Muster'], text: 'Wörtliches Zitat.', url: 'https://skript.test/a/' };
+const seed = { id: 's01', text: 'Was ist ein Neuron?', kapitel: 'Tensoren', herkunft: 'beispiel', tag: '2026-11-04', antworten: [] };
+const KAPITEL = 'Backpropagation';
+
+async function setup({ spooling = true, now = Date.now } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-'));
+  const live = path.join(dir, 'live');
+  const store = openStore(path.join(dir, 'public.db'));
+  store.importQuestions([seed], [[1, 0, 0]], { ...site, fragen: true, entwurf: spooling });
+  store.saveModerator('konrad', 'admin', await hashPassphrase(PASSPHRASE));
+  await publishAll(live, store);
+  const pending = openPending(path.join(dir, 'pending.db'), { now });
+  const spool = spooling ? openSpool(path.join(dir, 'schlange')) : null;
+  const publish = createPublisher(live, store);
+  const fragen = createFragen({ store, pending, spool, publish, now });
+  const hash = await hashPassphrase(CODE);
+  const api = createApi({ fragen, pending, store, hash, now });
+  const mod = createHandler({ store, live, publish, fragen });
+  const server = http.createServer((req, res) => (req.url.startsWith('/eidl/api/') ? api : mod)(req, res));
+  await new Promise(done => server.listen(0, '127.0.0.1', done));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const post = async (name, body, { token, from = origin } = {}) => {
+    const res = await fetch(`${origin}/eidl/api/${name}`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json', Origin: from, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    return { status: res.status, data: await res.json() };
+  };
+  const token = async () => (await post('token', { kurscode: CODE })).data.token;
+  const ask = async (fields = {}, auth) => post('fragen', { frage: FRAGE, zustimmung: ZUSTIMMUNG.version, ...fields }, { token: auth ?? await token() });
+  const form = (url, fields, cookie) => fetch(`${origin}${url}`, {
+    method: 'POST',
+    redirect: 'manual',
+    body: new URLSearchParams(fields),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: origin, ...(cookie ? { Cookie: cookie } : {}) },
+  });
+  const signIn = async () => (await form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE })).headers.get('set-cookie').split(';')[0];
+  const page = async (url, cookie) => (await fetch(`${origin}${url}`, { headers: { Cookie: cookie } })).text();
+  const inbox = () => (spool ? spool.jobs().map(j => j.entry) : []);
+  /** was ein Worker abliefern würde, ohne Worker */
+  const deliver = (id, result = { status: 'ok', modell: 'attrappe', text: 'Antwort.[1]', zitate: [zitat], kapitel: KAPITEL, vektor: [0, 1, 0] }) => {
+    const job = spool.jobs().find(j => j.entry.id === id);
+    spool.finish(job.file, { id, ...result });
+    return fragen.collect();
+  };
+  const mine = async (id, geheimnis) => (await post('meine', { fragen: [{ id, geheimnis }] })).data.fragen[0];
+  const file = name => path.join(live, 'eidl', name);
+  return { dir, store, pending, spool, fragen, post, token, ask, form, signIn, page, inbox, deliver, mine, file, close: () => server.close() };
+}
+
+test('der Kurscode gibt ein Token aus, ein falscher nicht, und ohne Token gibt es keine Frage', async t => {
+  const c = await setup();
+  t.after(c.close);
+  assert.equal((await c.post('token', { kurscode: 'falsch' })).status, 401);
+  assert.equal((await c.ask({}, 'erfunden.signatur')).status, 401);
+  assert.equal(c.pending.count(), 0);
+  assert.equal((await c.ask()).status, 201);
+});
+
+test('nach fünf falschen Codes hilft auch der richtige nicht mehr', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (let i = 0; i < 5; i++) await c.post('token', { kurscode: 'falsch' });
+  assert.equal((await c.post('token', { kurscode: CODE })).status, 429);
+});
+
+test('eine fremde Seite kann nichts einreichen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  assert.equal((await c.post('token', { kurscode: CODE }, { from: 'https://fremd.test' })).status, 403);
+});
+
+test('I1: Ohne Einwilligung erreicht die Frage die Schlange nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { status, data } = await c.ask({ einwilligung: false });
+  assert.equal(status, 201);
+  assert.deepEqual(c.inbox(), []);
+  assert.equal(c.pending.get(data.id).einwilligung, false);
+  assert.equal(c.pending.get(data.id).zustand, 'wartet');
+});
+
+test('I1: Nur ein echtes true ist eine Einwilligung', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (const einwilligung of ['true', 1, 'ja', {}]) assert.equal((await c.ask({ einwilligung })).status, 201);
+  assert.equal(c.pending.count(), 4);
+  assert.deepEqual(c.inbox(), []);
+});
+
+test('I1: Harte Treffer werden gar nicht erst gespeichert, auch mit Einwilligung', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { status, data } = await c.ask({ frage: 'Meine Matrikelnummer ist 1234567, warum ist das so?', einwilligung: true });
+  assert.equal(status, 422);
+  assert.ok(data.treffer.length);
+  assert.equal(c.pending.count(), 0);
+  assert.deepEqual(c.inbox(), []);
+});
+
+test('I1: Weiche Treffer halten den Entwurf zurück, die Frage wartet auf die Moderation', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (const frage of ['Ich heiße Anna und verstehe Tensoren nicht.', 'Hat Herr Völkel das in der Vorlesung erklärt?', 'Ich habe ein Attest, wie geht Backpropagation?']) {
+    const { status, data } = await c.ask({ frage, einwilligung: true });
+    assert.equal(status, 201);
+    assert.equal(data.entwurf, false);
+    assert.equal(data.zurueckgehalten, true);
+  }
+  assert.deepEqual(c.inbox(), []);
+});
+
+test('mit Einwilligung geht genau der Text in die Schlange, ohne Geheimnis und ohne Token', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: FRAGE }]);
+  assert.equal(c.pending.get(data.id).zustand, 'entwurf');
+});
+
+test('ohne Schlange ist die Einwilligung gegenstandslos, die Frage kommt trotzdem an', async t => {
+  const c = await setup({ spooling: false });
+  t.after(c.close);
+  const { status, data } = await c.ask({ einwilligung: true });
+  assert.equal(status, 201);
+  assert.equal(c.pending.get(data.id).zustand, 'wartet');
+});
+
+test('Frage und Entwurf sieht nur, wer das Geheimnis hat, und öffentlich steht nichts davon', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  assert.equal((await c.mine(data.id, data.geheimnis)).zustand, 'entwurf');
+  await c.deliver(data.id);
+  const own = await c.mine(data.id, data.geheimnis);
+  assert.equal(own.text, FRAGE);
+  assert.match(own.entwurf.html, /Entwurf/);
+  assert.match(own.entwurf.html, /Sprachmodell/);
+  assert.match(own.entwurf.html, /Wörtliches Zitat/);
+  assert.deepEqual(await c.mine(data.id, 'falsch'), { id: data.id, zustand: 'weg' });
+
+  assert.equal(fs.existsSync(c.file(`f/${data.id}/index.html`)), false);
+  for (const name of ['index.html', 'daten/fragen.json', 'sitemap.xml', 'f/lernen/index.html']) assert.ok(!fs.readFileSync(c.file(name), 'utf8').includes(FRAGE), name);
+  assert.equal(c.store.question(data.id), null);
+});
+
+test('Scheitert der Entwurf, wartet die Frage ohne Text von Claude auf die Moderation', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (const status of ['fehler', 'deckel', 'verweigert']) {
+    const { data } = await c.ask({ einwilligung: true });
+    await c.deliver(data.id, { status });
+    const own = await c.mine(data.id, data.geheimnis);
+    assert.equal(own.zustand, 'wartet');
+    assert.equal(own.entwurf.html, '');
+  }
+});
+
+test('Geht der Auftrag verloren, hängt die Frage nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  fs.rmSync(path.join(c.dir, 'schlange/eingang', `${data.id}.json`));
+  await c.fragen.collect();
+  assert.equal(c.pending.get(data.id).zustand, 'wartet');
+});
+
+test('Löschen ist der Widerruf: Text weg, Auftrag weg, ein spätes Ergebnis verfällt', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  assert.equal((await c.post('loeschen', { id: data.id, geheimnis: 'falsch' })).status, 404);
+  assert.equal(c.pending.count(), 1);
+  assert.equal((await c.post('loeschen', { id: data.id, geheimnis: data.geheimnis })).status, 200);
+  assert.equal(c.pending.get(data.id), null);
+  assert.deepEqual(c.inbox(), []);
+  c.spool.finish(path.join(c.dir, 'nichts'), { id: data.id, status: 'ok', text: 'Zu spät.', zitate: [zitat] });
+  await c.fragen.collect();
+  assert.equal(c.store.question(data.id), null);
+  assert.deepEqual(c.spool.results(), []);
+});
+
+test('Freigeben trägt Frage und Entwurf nach public.db, ohne Geheimnis und ohne Revision', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id);
+  const cookie = await c.signIn();
+  const overview = await c.page('/eidl/mod/', cookie);
+  assert.match(overview, /Neue Fragen \(1\)/);
+  assert.match(await c.page(`/eidl/mod/neu/${data.id}/`, cookie), /nicht öffentlich/);
+
+  const res = await c.form(`/eidl/mod/neu/${data.id}/`, { frage: `${FRAGE} `, kapitel: KAPITEL, antwort: 'Bearbeitet.[1]', aktion: 'pruefen' }, cookie);
+  assert.equal(res.status, 303);
+  const question = c.store.question(data.id);
+  assert.equal(question.herkunft, 'forum');
+  assert.deepEqual(question.vektor, [0, 1, 0]);
+  assert.equal(question.antworten[0].status, 'geprüft');
+  assert.equal(question.antworten[0].text, 'Bearbeitet.[1]');
+  assert.equal(question.antworten[0].bearbeitet, true);
+  assert.equal(question.antworten[0].zitate[0].text, 'Wörtliches Zitat.');
+  assert.deepEqual(c.store.revisions(data.id), []);
+  assert.equal(c.pending.get(data.id), null);
+  assert.deepEqual(await c.mine(data.id, data.geheimnis), { id: data.id, zustand: 'öffentlich', url: `f/${data.id}/` });
+  assert.ok(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8').includes(FRAGE));
+  assert.ok(fs.readFileSync(c.file('f/lernen/index.html'), 'utf8').includes(FRAGE));
+});
+
+test('I1: Erst die Freigabe bringt eine Frage ohne Einwilligung in die Schlange, und die Antwort erscheint ungeprüft', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  const cookie = await c.signIn();
+  assert.deepEqual(c.inbox(), []);
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: 'Warum ist das Verfahren effizient?', kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: 'Warum ist das Verfahren effizient?' }]);
+  assert.deepEqual(c.store.question(data.id).vektor, [0, 0, 0]);
+  assert.match(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8'), /noch keine Antwort/);
+
+  await c.deliver(data.id);
+  const question = c.store.question(data.id);
+  assert.deepEqual(question.vektor, [0, 1, 0]);
+  assert.equal(question.antworten[0].status, 'ungeprüft');
+  assert.match(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8'), /Wörtliches Zitat/);
+});
+
+test('der Checker läuft auch auf der Antwort nach der Freigabe', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, await c.signIn());
+  await c.deliver(data.id, { status: 'ok', modell: 'attrappe', text: 'Schreiben Sie an jemand@example.test.[1]', zitate: [zitat], vektor: [0, 1, 0] });
+  assert.deepEqual(c.store.question(data.id).antworten, []);
+});
+
+test('die Moderation kann nichts freigeben, was der Checker sperrt, und weiche Treffer muss sie bestätigen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ frage: 'Hat Frau Beispiel dazu etwas geschrieben, bitte?', einwilligung: true });
+  const cookie = await c.signIn();
+  const url = `/eidl/mod/neu/${data.id}/`;
+  assert.equal((await c.form(url, { frage: 'Frage mit 1234567 als Zahl?', kapitel: KAPITEL, aktion: 'freigeben', gesehen: '1' }, cookie)).status, 422);
+  assert.equal((await c.form(url, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, cookie)).status, 422);
+  assert.equal((await c.form(url, { frage: FRAGE, kapitel: 'Erfunden', aktion: 'freigeben', gesehen: '1' }, cookie)).status, 422);
+  assert.equal(c.store.question(data.id), null);
+  assert.equal((await c.form(url, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben', gesehen: '1' }, cookie)).status, 303);
+  assert.equal(c.store.question(data.id).text, FRAGE);
+});
+
+test('ohne Anmeldung lässt sich nichts freigeben', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' });
+  assert.equal(c.store.question(data.id), null);
+});
+
+test('Ablehnen löscht den Text sofort, der Grund bleibt für die fragende Person', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id);
+  const res = await c.form(`/eidl/mod/neu/${data.id}/`, { aktion: 'ablehnen', grund: 'uebung' }, await c.signIn());
+  assert.equal(res.status, 303);
+  const row = c.pending.get(data.id);
+  assert.equal(row.text, null);
+  assert.equal(row.entwurf, null);
+  assert.deepEqual(await c.mine(data.id, data.geheimnis), { id: data.id, zustand: 'abgelehnt', grund: GRUENDE.uebung });
+  c.pending.close();
+  assert.ok(!fs.readFileSync(path.join(c.dir, 'pending.db')).includes(FRAGE), 'der Text steht nicht mehr in der Datei');
+  assert.ok(!fs.existsSync(path.join(c.dir, 'pending.db-wal')) || !fs.readFileSync(path.join(c.dir, 'pending.db-wal')).includes(FRAGE));
+});
+
+test('Fristen: Unbearbeitetes verschwindet nach 28 Tagen, der Grund einer Ablehnung nach 7', async t => {
+  let time = Date.parse('2026-11-05T12:00:00Z');
+  const day = 86_400_000;
+  const c = await setup({ now: () => time });
+  t.after(c.close);
+  const offen = (await c.ask()).data;
+  const abgelehnt = (await c.ask()).data;
+  c.fragen.reject(abgelehnt.id, GRUENDE.sonst);
+  time += 7 * day;
+  assert.equal(c.fragen.sweep(), 0);
+  time += day;
+  assert.equal(c.fragen.sweep(), 1);
+  assert.equal(c.pending.get(abgelehnt.id), null);
+  time += 20 * day;
+  assert.equal(c.fragen.sweep(), 0);
+  time += day;
+  assert.equal(c.fragen.sweep(), 1);
+  assert.equal(c.pending.get(offen.id), null);
+});
+
+test('zwei Fragen in der Stunde je Token', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const token = await c.token();
+  assert.equal((await c.ask({}, token)).status, 201);
+  assert.equal((await c.ask({}, token)).status, 201);
+  assert.equal((await c.ask({}, token)).status, 429);
+});
+
+test('ohne die aktuelle Zustimmung gibt es keine Frage', async t => {
+  const c = await setup();
+  t.after(c.close);
+  assert.equal((await c.ask({ zustimmung: 0 })).status, 400);
+  assert.equal((await c.post('fragen', { frage: FRAGE }, { token: await c.token() })).status, 400);
+  assert.equal(c.pending.count(), 0);
+});
+
+test('die Datenbank hält keine IP-Adresse und kein Token fest', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const token = await c.token();
+  const { data } = await c.ask({ einwilligung: true }, token);
+  c.pending.close();
+  const raw = fs.readFileSync(path.join(c.dir, 'pending.db'));
+  assert.ok(raw.includes(FRAGE), 'die Datei ist die richtige');
+  for (const secret of [token, data.geheimnis, '127.0.0.1']) assert.ok(!raw.includes(secret), secret);
+});
+
+test('der Web-Prozess kennt das SDK nicht, der Worker keine Datenbank', () => {
+  const read = name => fs.readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
+  for (const name of ['server/web.mjs', 'lib/api.js', 'lib/mod.js', 'lib/fragen.js', 'lib/spool.js', 'lib/pending.js']) assert.ok(!/anthropic-ai|ANTHROPIC/.test(read(name)), name);
+  for (const name of ['server/worker.mjs', 'lib/draft.js', 'lib/spool.js', 'lib/corpus.js']) assert.ok(!/sqlite|pending\.js|store\.js/.test(read(name)), name);
+});
+
+test('ein neuer Kurscode macht alte Tokens ungültig', async () => {
+  const [alt, neu] = await Promise.all([hashPassphrase('alter-code'), hashPassphrase('neuer-code')]);
+  const token = issueToken(tokenKey(alt));
+  assert.ok(checkToken(tokenKey(alt), token));
+  assert.ok(!checkToken(tokenKey(neu), token));
+  assert.ok(!checkToken(tokenKey(alt), `${token}x`));
+  assert.ok(!checkToken(tokenKey(alt), ''));
+});
+
+test('keine Beispielfrage schlägt im Checker an, sie gingen sonst nie sofort an Claude', () => {
+  const seeds = JSON.parse(fs.readFileSync(new URL('../seeds/fragen.json', import.meta.url), 'utf8'));
+  assert.ok(seeds.length >= 30);
+  for (const { frage } of seeds) assert.deepEqual([...hardHits(frage), ...softHits(frage)], [], frage);
+});
+
+test('weiche Regeln: Personen schlagen an, Fachwörter nicht', () => {
+  for (const text of ['Mein Name ist Anna.', 'Laut Prof. Völkel gilt das nicht.', 'Mit freundlichen Grüßen', 'Ich bin krank und brauche einen Nachteilsausgleich.']) assert.ok(softHits(text).length, text);
+  for (const text of ['Warum heißt das Herrschaft der Gradienten?', 'Was ist ein Frauenhofer-Filter?', 'Wie grüßt ein Agent die Umgebung?']) assert.deepEqual(softHits(text), [], text);
+});
+
+test('die Einwilligung ist nicht vorbelegt, und ohne Schlange gibt es sie gar nicht', () => {
+  const page = askPage({ ...site, fragen: true, entwurf: true });
+  assert.match(page, /<input type="checkbox" id="einwilligung">/);
+  assert.match(page, /<input type="checkbox" id="zustimmung" required>/);
+  assert.ok(page.includes(ZUSTIMMUNG.entwurf));
+  assert.ok(!askPage({ ...site, fragen: true, entwurf: false }).includes('einwilligung'));
+  assert.match(page, /noindex/);
+});
+
+test('der Knopf erscheint erst, wenn der Fragepfad offen ist', () => {
+  assert.ok(!indexPage([], site).includes('f/neu/'));
+  assert.match(indexPage([], site), /noch nicht stellen/);
+  assert.ok(indexPage([], { ...site, fragen: true }).includes('f/neu/'));
+  assert.match(robotsTxt(site), /Disallow: \/eidl\/api\//);
+});
+

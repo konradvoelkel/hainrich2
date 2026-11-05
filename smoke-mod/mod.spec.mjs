@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { PASSPHRASE } from './konstanten.mjs';
+import { KURSCODE, PASSPHRASE } from './konstanten.mjs';
 
 /** alles, was im echten Browser anders ist als in den Unit-Tests: Origin, Cookie, CSP */
 const watch = page => {
@@ -91,6 +91,8 @@ test('Cursortasten und Knopf blättern, im Textfeld bleibt die Taste beim Feld',
   await expect(page.locator('.blaettern .meta')).toHaveText('2 von 4');
   await page.keyboard.press('ArrowRight');
   await expect(page).toHaveURL(/\/f\/s03\/$/);
+  /** die URL steht vor dem Skript: unter Last ging die nächste Taste sonst ins Leere */
+  await page.waitForLoadState();
   await page.keyboard.press('ArrowLeft');
   await expect(page).toHaveURL(/\/f\/s02\/$/);
   await page.keyboard.press('Shift+ArrowRight');
@@ -141,5 +143,167 @@ for (const width of [320, 375, 768]) {
       if (over > 0) wide.push(`${url} +${over}`);
     }
     expect(wide).toEqual([]);
+  });
+}
+
+/** alles, was nur im Browser sichtbar wird: CSP, localStorage, die Karte mit Formel, und dass Lesende nichts davon sehen */
+async function enterCode(page) {
+  await page.goto('/eidl/f/neu/');
+  await expect(page.locator('#fragetext')).toBeHidden();
+  await page.fill('#kurscode', 'ein-falscher-code');
+  await page.click('#code button.haupt');
+  await expect(page.locator('#code .fehler')).toContainText('stimmt nicht');
+  await page.fill('#kurscode', KURSCODE);
+  await page.click('#code button.haupt');
+  await expect(page.locator('#fragetext')).toBeVisible();
+  await expect(page.locator('#kurscode')).toBeHidden();
+}
+
+test('Mit Einwilligung kommt der Entwurf sofort und nur für die fragende Person, die Moderation gibt ihn frei', async ({ page, browser }) => {
+  const problems = watch(page);
+  await enterCode(page);
+  await expect(page.locator('#einwilligung')).not.toBeChecked();
+  await page.fill('#fragetext', 'Was bedeutet Broadcasting bei Tensoren genau?');
+  await page.check('#zustimmung');
+  await page.check('#einwilligung');
+  await page.click('#frage button.haupt');
+  await expect(page.locator('.meine-frage .antwort .badge')).toHaveText('Entwurf', { timeout: 15_000 });
+  await expect(page.locator('.meine-frage .antwort .katex')).toBeVisible();
+  await expect(page.locator('.meine-frage .hinweis')).toContainText('nur Sie sehen ihn');
+
+  await page.reload();
+  await expect(page.locator('.meine-frage .frage-text')).toHaveText('Was bedeutet Broadcasting bei Tensoren genau?');
+  await expect(page.locator('.meine-frage .antwort .badge')).toHaveText('Entwurf');
+  await expect(page.locator('#fragetext')).toBeVisible();
+
+  /** ein anderer Browser: kein Geheimnis, keine Frage */
+  const stranger = await (await browser.newContext()).newPage();
+  await stranger.goto('/eidl/');
+  await expect(stranger.locator('main')).not.toContainText('Broadcasting bei Tensoren genau');
+  const list = await stranger.request.get('/eidl/daten/fragen.json');
+  expect(await list.text()).not.toContain('Broadcasting bei Tensoren genau');
+
+  const mod = await (await browser.newContext()).newPage();
+  await signIn(mod);
+  await mod.click('a:has-text("Broadcasting bei Tensoren")');
+  await expect(mod.locator('h1')).toContainText('Neue Frage');
+  await expect(mod.locator('#kapitel')).toHaveValue('Tensoren');
+  await mod.click('button[value="pruefen"]');
+  await expect(mod.locator('.gemeldet')).toContainText('Freigegeben');
+
+  await page.reload();
+  await page.click('.meine-frage a:has-text("Steht jetzt im Forum")');
+  await expect(page.locator('h1')).toHaveText('Was bedeutet Broadcasting bei Tensoren genau?');
+  await expect(page.locator('.antwort .badge')).toHaveText('geprüft');
+  await expect(page.locator('.antwort .katex')).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
+test('Ohne Einwilligung wartet die Frage, und löschen lässt sie sich selbst', async ({ page }) => {
+  const problems = watch(page);
+  await enterCode(page);
+  await page.fill('#fragetext', 'Eine Frage ohne Einwilligung zum Thema Tensoren?');
+  await page.check('#zustimmung');
+  await page.click('#frage button.haupt');
+  await expect(page.locator('.meine-frage .meta')).toContainText('Wartet auf die Moderation');
+  await page.waitForTimeout(1000);
+  await expect(page.locator('.meine-frage .antwort')).toHaveCount(0);
+
+  page.once('dialog', dialog => dialog.accept());
+  await page.click('.meine-frage button:has-text("Frage löschen")');
+  await expect(page.locator('#meine')).toBeHidden();
+  expect(problems).toEqual([]);
+});
+
+test('Der Checker sperrt im Browser sichtbar', async ({ page }) => {
+  const problems = watch(page);
+  await enterCode(page);
+  await page.fill('#fragetext', 'Meine Matrikelnummer ist 1234567, geht das?');
+  await page.check('#zustimmung');
+  await page.click('#frage button.haupt');
+  await expect(page.locator('#frage .fehler')).toContainText('nicht gespeichert');
+  await expect(page.locator('#meine')).toBeHidden();
+  expect(problems).toEqual([]);
+});
+
+test('Auf der Fragen-Seite scrollt nichts seitlich', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await enterCode(page);
+  await page.fill('#fragetext', 'Eine Frage für die Telefonbreite, zum Thema Tensoren?');
+  await page.check('#zustimmung');
+  await page.check('#einwilligung');
+  await page.click('#frage button.haupt');
+  await expect(page.locator('.meine-frage .antwort .badge')).toHaveText('Entwurf', { timeout: 15_000 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('Abstimmen geht ohne Anmeldung, lässt sich ändern und übersteht das Neuladen', async ({ page }) => {
+  const problems = watch(page);
+  const posts = [];
+  page.on('request', r => { if (r.method() === 'POST') posts.push(r.url()); });
+  await page.goto('/eidl/f/s03/');
+  const box = page.locator('.stimme');
+  await expect(box.locator('.punkte')).toHaveText('0');
+  expect(await page.evaluate(() => localStorage.length)).toBe(0);
+  expect(posts).toEqual([]);
+
+  await box.locator('.hoch').click();
+  await expect(box.locator('.punkte')).toHaveText('1');
+  await expect(box.locator('.hoch')).toHaveAttribute('aria-pressed', 'true');
+  await box.locator('.runter').click();
+  await expect(box.locator('.punkte')).toHaveText('-1');
+  await box.locator('.runter').click();
+  await expect(box.locator('.punkte')).toHaveText('0');
+  await box.locator('.hoch').click();
+  await expect(box.locator('.punkte')).toHaveText('1');
+  expect(posts.length).toBe(4);
+
+  /** erst nach dem Bündeln steht die Zahl in der Seite */
+  await expect.poll(async () => (await page.request.get('/eidl/f/s03/')).text()).toContain('<span class="punkte" title="Punkte">1</span>');
+  await page.reload();
+  await expect(box.locator('.punkte')).toHaveText('1');
+  await expect(box.locator('.hoch')).toHaveAttribute('aria-pressed', 'true');
+  expect((await page.context().cookies()).length).toBe(0);
+  expect(problems).toEqual([]);
+});
+
+test('In der Liste abstimmen sortiert sie um, und ein zweiter Browser zählt extra', async ({ page, browser }) => {
+  const problems = watch(page);
+  const forum = '/eidl/f/grundlagen/';
+  await page.goto(forum);
+  const ids = await page.locator('.stimme').evaluateAll(boxes => boxes.map(b => b.dataset.id));
+  expect(ids.length).toBeGreaterThan(1);
+  const last = ids.at(-1);
+  const box = p => p.locator(`.stimme[data-id="${last}"]`);
+  await box(page).locator('.hoch').click();
+  await expect(box(page).locator('.punkte')).toHaveText('1');
+  const other = await (await browser.newContext()).newPage();
+  await other.goto(forum);
+  await box(other).locator('.hoch').click();
+  await expect(box(other).locator('.punkte')).toHaveText('2');
+
+  await expect.poll(async () => {
+    await page.goto(forum);
+    return page.locator('.stimme').first().getAttribute('data-id');
+  }, { timeout: 10_000 }).toBe(last);
+  await expect(box(page).locator('.hoch')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator(`.stimme[data-id="${ids[0]}"] .hoch`)).toHaveAttribute('aria-pressed', 'false');
+  expect(problems).toEqual([]);
+});
+
+test('Ohne JavaScript steht die Summe da, Pfeile gibt es nicht', async ({ browser }) => {
+  const page = await (await browser.newContext({ javaScriptEnabled: false })).newPage();
+  await page.goto('/eidl/f/s01/');
+  await expect(page.locator('.punkte')).toBeVisible();
+  await expect(page.locator('.pfeil').first()).toBeHidden();
+});
+
+for (const width of [320, 375]) {
+  test(`mit Pfeilen kein seitliches Scrollen bei ${width} px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 700 });
+    for (const url of ['/eidl/f/s01/', '/eidl/f/grundlagen/', '/eidl/f/lernen/']) {
+      await page.goto(url);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), url).toBe(true);
+    }
   });
 }

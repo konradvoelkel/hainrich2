@@ -92,6 +92,7 @@ const rows = [...final.values()].map(({ job, answer, usage, attempt }) => ({
   cited: answer.cited.map(p => ({ id: p.id, page: p.page, title: p.title, path: p.path, link: p.link, hash: p.hash, text: p.text })),
   input: usage.input_tokens,
   output: usage.output_tokens,
+  partial: answer.partial ?? false,
   promptVersion: PROMPT_VERSION,
 }));
 const fresh = new Map(rows.map(r => [`${r.seed}-${r.key}`, r]));

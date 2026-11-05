@@ -59,14 +59,21 @@ Echte API-Läufe brauchen den Key in einer Subshell und laufen durch `lib/budget
 ( set -a; . ~/.config/hainrich2/anthropic.env; set +a; node tools/try-answers.mjs <arbeitsverzeichnis> claude-opus-5-5 -- "Frage" )
 ```
 
+Den Hash zum Kurscode für den Vault macht Konrad selbst, die Eingabe ist verdeckt:
+
+```bash
+node tools/kurscode-hash.mjs
+```
+
 Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
 
 ## Was beißt
 
 1. **Der Kurscode steht nirgends in diesem Repo, in keiner Memory und keinem Client-Bundle.** Nur ein
    Hash im Vault des Server-Repos.
-2. **Unfreigegebener Text erreicht nie die Claude API.** Jede Abkürzung bricht die Grundlage der
-   Datenschutz-Entscheidung (Plan §3 I1, §11.3). Auch der Richter läuft erst nach der Freigabe.
+2. **Text ohne Freigabe und ohne Einwilligung erreicht nie die Claude API.** Der einzige Weg vor der Freigabe ist die
+   ausdrückliche Einwilligung beim Absenden, ohne Treffer des Checkers (Plan D20, §3 I1, §11.3). Jede andere Abkürzung bricht die
+   Grundlage der Datenschutz-Entscheidung. Der Richter läuft erst nach der Freigabe.
 3. **Kosinus entscheidet nichts.** Embeddings liefern Kandidaten; entscheiden dürfen nur ein Klick,
    die Moderation oder der Richter (Plan §19).
 4. **Der VPS gehört `~/files/work/server`.** Hier liegen keine Playbooks. DNS, Caddy, Units und jeder
@@ -80,5 +87,8 @@ Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
    nur noch Assets, Frageseiten kommen aus `live/`. Nie eine lokale `public.db` über die auf dem Server legen.
 9. **`site/serve.mjs` muss Caddy nachahmen, auch bei den Kopfzeilen.** `no-referrer` macht `Origin` zu `null`; ohne diese
    Kopfzeile blieb der Browser-Test mit dem Fehler grün.
-10. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
+10. **Die Rechtstexte zum Fragepfad liegen getrennt.** `site/texte/datenschutz.md` ist die freigegebene Fassung, `--fragen` tauscht einen
+    Abschnitt gegen `datenschutz-fragen.md`. Wer den Fragepfad ändert, prüft beide; ein neuer Zustimmungstext erhöht
+    `ZUSTIMMUNG.version` in `lib/fragen.js`.
+11. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
    `/media/konrad/xtraspace/hainrich2/`, nicht im Repo.

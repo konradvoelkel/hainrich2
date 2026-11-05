@@ -1,6 +1,8 @@
 /**
- * Baut die öffentliche Site: node site/build.mjs --modell <id> [--release] [--ziel <verzeichnis>].
- * Allowlist statt Kopie des Repos (Playbook §3.10). Ohne --release trägt jede Seite ein Vorschau-Banner.
+ * Baut die öffentliche Site: node site/build.mjs --modell <id> [--release] [--stimmen] [--fragen] [--ziel <verzeichnis>].
+ * Allowlist statt Kopie des Repos (Playbook §3.10). Ohne --release trägt jede Seite ein Vorschau-Banner. --fragen nimmt die Rechtstexte
+ * für den Fragepfad auf, --stimmen den Absatz zum Abstimmen. Text und Technik gehen am selben Tag live, also gehört jeder der beiden
+ * Schalter zu seinem Gegenstück auf dem Server: Kurscode-Hash und `hainrich2_stimmen`.
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -17,6 +19,8 @@ const repo = path.dirname(here);
 const { values: args } = parseArgs({ options: {
   modell: { type: 'string' },
   release: { type: 'boolean', default: false },
+  fragen: { type: 'boolean', default: false },
+  stimmen: { type: 'boolean', default: false },
   ziel: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/site' },
   daten: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/work/phase1' },
 } });
@@ -58,7 +62,7 @@ const copy = (from, name) => {
 };
 const dep = (...p) => path.join(repo, 'node_modules', ...p);
 
-for (const name of ['style.css', 'app.js', 'such-worker.js']) copy(path.join(here, name), name);
+for (const name of ['style.css', 'app.js', 'fragen.js', 'stimmen.js', 'such-worker.js']) copy(path.join(here, name), name);
 for (const name of ['logo.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', OG_CARD.file]) copy(path.join(here, 'brand', name), name);
 /** Browser und Crawler fragen an der Wurzel des Hosts danach, egal was die Seite nennt */
 fs.copyFileSync(path.join(here, 'brand/favicon.ico'), path.join(staging, 'favicon.ico'));
@@ -117,25 +121,38 @@ const site = {
   base: env.SITE_BASE,
   skript: env.SITE_SKRIPT,
   vorschau: !args.release,
+  fragen: args.fragen,
   ladegroesse: `rund ${Math.round(loadBytes / 1e6)} MB`,
 };
 
-const fill = text => text
-  .replaceAll('__KONTAKT__', env.SITE_KONTAKT)
-  .replaceAll('__ANSCHRIFT__', `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
+/** Markdown macht aus __X__ Fettdruck, ein vergessener Platzhalter fiele hinter renderMarkdown also keinem Stolperdraht mehr auf */
+const fill = text => {
+  const filled = text
+    .replaceAll('__KONTAKT__', env.SITE_KONTAKT)
+    .replaceAll('__ANSCHRIFT__', `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
+  const open = filled.match(/__[A-Z][A-Z_]+__/g);
+  if (open) throw new Error(`Rechtstexte: ${[...new Set(open)].join(', ')} fehlt, aus den Originaldokumenten eintragen (Plan §11.3)`);
+  return filled;
+};
 
 write('index.html', indexPage(questions, site));
 for (const forum of UNTERFOREN) write(`f/${forum.slug}/index.html`, forumPage(forum, questions, site));
 write('daten/meta.json', JSON.stringify({ ladegroesse: site.ladegroesse }));
 for (const q of questions) write(`f/${q.id}/index.html`, questionPage(q, site));
-for (const name of ['impressum', 'datenschutz']) write(`${name}/index.html`, textPage(name, fill(fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'utf8')), site));
+const text = name => fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'utf8');
+if (!text('datenschutz').includes('## Eigene Beiträge')) throw new Error('datenschutz.md: Abschnitt „Eigene Beiträge“ nicht gefunden');
+const voting = args.stimmen ? text('datenschutz').replace('## Eigene Beiträge', `${text('datenschutz-stimmen')}## Eigene Beiträge`) : text('datenschutz');
+const privacy = args.fragen ? voting.replace(/## Eigene Beiträge[\s\S]*?(?=## Ihre Rechte)/, text('datenschutz-fragen')) : voting;
+write('impressum/index.html', textPage('impressum', fill(text('impressum')), site));
+write('datenschutz/index.html', textPage('datenschutz', fill(privacy), site));
+if (args.fragen) write('nutzungsbedingungen/index.html', textPage('nutzungsbedingungen', fill(text('nutzungsbedingungen')), site));
 write('sitemap.xml', sitemap(questions, site));
 fs.writeFileSync(path.join(staging, 'robots.txt'), robotsTxt(site));
 
 /** Stolperdrähte auf dem fertigen Baum */
 const built = walk(staging);
 const pages = built.filter(f => f.endsWith('.html'));
-const texts = built.filter(f => /\.(html|css|json|xml|txt)$/.test(f) || /(app|such-worker|search|rank|model)\.js$/.test(f));
+const texts = built.filter(f => /\.(html|css|json|xml|txt)$/.test(f) || /(app|fragen|stimmen|such-worker|search|rank|model)\.js$/.test(f));
 for (const file of built) if (/\.(md|adoc|db|env)$/.test(file)) throw new Error(`gehört nicht auf die Site: ${file}`);
 for (const file of texts) {
   const text = fs.readFileSync(file, 'utf8');
