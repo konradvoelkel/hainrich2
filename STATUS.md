@@ -6,6 +6,9 @@ _Stand 2026-11-05._
 
 - Git-Repo auf `main`, Remote `origin` ist das private `konradvoelkel/hainrich2` auf GitHub.
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.
+- CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, auf Konrads
+  eigenem Runner `ci-eu` (Repo `ci-server`) in einem per Digest gepinnten `node:24`-Container. Der Runner nimmt nur private
+  Repos; wird dieses öffentlich, muss er vorher weg.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
@@ -67,6 +70,8 @@ _Stand 2026-11-05._
 - Was D18 offenließ, gilt so: Eine englische Frage bekommt einen Entwurf in ihrer Sprache, die Moderation entscheidet.
 - Bearbeitete Fragen behalten ihren alten Vektor, bis die Moderation ihn neu rechnen kann. Die Stichwortsuche sieht den
   neuen Text, die semantische Suche den alten.
+- Kein Smoke-Test in der CI. Er braucht den gebauten Baum und die Modelle, beides liegt außerhalb des Repos, und es fehlt ein
+  Schritt, der sie holt und prüft. Auch kein Pre-Push-Hook (Playbook §5 Punkt 7).
 - Kein Web-Manifest, es bräuchte `manifest-src` in der CSP. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
