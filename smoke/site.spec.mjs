@@ -122,6 +122,14 @@ for (const width of WIDTHS) {
   });
 }
 
+test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2“', async ({ page }) => {
+  for (const target of ['img', 'strong']) {
+    await page.goto('/eidl/f/s01/');
+    await page.locator(`.antwort .autor ${target}`).click();
+    await expect(page).toHaveURL(/\/eidl\/ueber\/$/);
+  }
+});
+
 test('die Seite „Über hAInrich2“ ist von überall unten erreichbar', async ({ page }) => {
   await page.goto('/eidl/f/s01/');
   await page.click('.fuss a:has-text("Über hAInrich2")');

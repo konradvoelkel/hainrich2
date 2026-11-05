@@ -149,13 +149,12 @@ test('die Sitemap nennt nur Unterforen mit Geprüftem', () => {
 
 test('Bot, Nutzer und Moderation tragen ihre Namen, an einer Beispielfrage steht keiner', () => {
   const bot = questionPage(question(), site);
-  assert.match(bot, /<strong>hAInrich2<\/strong><span class="bot">Bot</);
+  assert.match(bot, /<a class="person" href="\.\.\/\.\.\/ueber\/"><img [^>]*><strong>hAInrich2<\/strong><\/a><span class="bot">Bot</);
   assert.match(bot, /<strong>Frage<\/strong>/);
   assert.doesNotMatch(bot, /Anonymer Nutzer/);
   const html = questionPage({ ...question(), herkunft: 'nutzer', antworten: [{ art: 'moderation', status: 'geprüft', text: 'Selbst geschrieben.', zitate: [] }] }, site);
   assert.match(html, /<strong>Anonymer Nutzer<\/strong>/);
-  assert.match(html, /<a href="https:\/\/www\.konradvoelkel\.com" rel="noopener">Konrad Völkel<\/a>/);
-  assert.match(html, /<img class="gesicht" src="\.\.\/\.\.\/moderation-konrad\.jpg"/);
+  assert.match(html, /<a class="person" href="https:\/\/www\.konradvoelkel\.com" rel="noopener"><img class="gesicht" src="\.\.\/\.\.\/moderation-konrad\.jpg"[^>]*><strong>Konrad Völkel<\/strong><\/a>/);
   assert.ok(fs.existsSync(new URL(`../site/brand/${MODERATION.bild}`, import.meta.url)));
   assert.doesNotMatch(html, /class="bot"/);
 });

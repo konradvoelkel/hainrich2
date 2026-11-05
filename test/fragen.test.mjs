@@ -401,7 +401,7 @@ test('Findet Claude nichts, kann die Moderation bei der Freigabe selbst antworte
   assert.deepEqual([answer.art, answer.status, answer.text, answer.modell, answer.zitate], ['moderation', 'geprüft', OWN, null, []]);
   assert.deepEqual(c.inbox(), []);
   const html = fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8');
-  assert.match(html, /<strong><a href="https:\/\/www\.konradvoelkel\.com" rel="noopener">Konrad Völkel<\/a><\/strong><span class="rolle">Moderation</);
+  assert.match(html, /<strong>Konrad Völkel<\/strong><\/a><span class="rolle">Moderation</);
   assert.match(html, /<strong>Anonymer Nutzer<\/strong>/);
   assert.ok(html.includes(OWN));
   for (const bot of ['class="bot"', 'Sprachmodell erzeugt (Claude', 'Originaltext aus dem Skript']) assert.ok(!html.includes(bot), bot);

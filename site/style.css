@@ -114,6 +114,7 @@ pre { overflow-x: auto; }
 .autor { display: flex; flex-direction: column; align-items: center; gap: .25rem; padding: .8rem .4rem; background: var(--flaeche); font-size: .85rem; text-align: center; overflow-wrap: anywhere; }
 .autor img, .avatar { width: 3.5rem; height: 3.5rem; }
 .gesicht { border-radius: 50%; }
+.person { display: flex; flex-direction: inherit; align-items: center; gap: inherit; }
 .rolle { padding: .02rem .3rem; font-size: .72rem; overflow-wrap: normal; }
 .avatar { display: grid; place-items: center; border-radius: 50%; background: var(--karte); color: var(--marke); font-size: 1.6rem; font-weight: 700; }
 .inhalt { padding: .7rem 1rem 1rem; }
