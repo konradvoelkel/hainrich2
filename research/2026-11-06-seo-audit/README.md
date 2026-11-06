@@ -60,7 +60,7 @@ Host „geprüft“. Das sah nach einem Fehler aus, Konrad hat am 2026-11-06 bes
 in den Index, auch s19, s10, s04, s05 und s09, deren Antworten laut `research/2026-11-05-skriptluecken/` zu Unrecht sagen, etwas sei offen, und die beiden
 Testfragen (Befund 10).
 
-**2. Fehlerseiten sind leer.** `/eidl/gibtesnicht/` liefert 404 mit 0 Byte. Das trifft auch jeden alten Link auf eine zurückgezogene Frage,
+**2. Behoben: Fehlerseiten sind leer.** `/eidl/gibtesnicht/` liefert 404 mit 0 Byte. Das trifft auch jeden alten Link auf eine zurückgezogene Frage,
 der Besucher sieht eine weiße Seite. Nötig ist `handle_errors` in der Caddy-Rolle und eine Seite aus dem Bau. _Prüfen:_ `curl` auf eine
 falsche Adresse liefert Status 404 und HTML mit Link zum Forum.
 
@@ -78,7 +78,7 @@ die Moderation setzt. _Prüfen:_ kein Titel über 65 Zeichen.
 noch diese Seite (`lib/site.js:265`). Dazu kommen der doppelte Titel „Über hAInrich2 | hAInrich2“ und die Beschreibung „Über hAInrich2 von
 hAInrich2.“. _Prüfen:_ Ein Bau mit `--release` trägt beide Seiten in die Sitemap ein.
 
-**6. Ein Zitat führt ins Leere.** Frage s12 verlinkt `folien/vl12.pdf#page=2` im Skript, das gibt 404. Von 55 externen Links antworten 49 mit
+**6. Behoben: Ein Zitat führt ins Leere.** Frage s12 verlinkt `folien/vl12.pdf#page=2` im Skript, das gibt 404. Das Deck ist nicht kaputt, sondern noch nicht freigegeben: Das Skript liefert nur aus, was in `slides/freigegeben.txt` steht, derzeit VL 1 bis 4, und verlinkt nur das. Unser Korpus vom 2026-11-04 ist älter als diese Regel und enthält 24 solcher Zeilen. Die Zitate zeigen den Folienlink am Anfang deshalb nicht mehr an, gespeichert bleibt der wörtliche Text. Von 55 externen Links antworten 49 mit
 200, fünf `hdl.handle.net`-Links mit 403. Die sperren vermutlich nur meine Abfrage, von Hand nachsehen lohnt trotzdem.
 
 ### Mittel
@@ -115,7 +115,7 @@ Die Vorschau bleibt vorerst: Konrad gibt den Link zuerst den Studierenden (2026-
 
 1. **Erledigt:** Befund 10 ist entschieden.
 2. **Kleiner Umbau, ohne Server-Repo:** Befunde 3, 4, 5 und 8 sind erledigt.
-3. **Mit Server-Repo:** Befund 2. Dazu Befund 6 im Skript klären.
+3. **Mit Server-Repo:** Befund 2 ist erledigt, Befund 6 ebenso.
 4. **Vor dem Start:** Schalter für das Ende der Vorschau, dann die Entscheidung zu `QAPage`.
 5. **Nach dem Start:** Search Console einrichten, nach vier Wochen ansehen, welche Fragen Eindrücke bekommen, und erst dann über Kurztitel
    oder Adressen nachdenken.

@@ -18,7 +18,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 39 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 176 Unit-Tests, 16 Smoke-Tests und 21 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 178 Unit-Tests, 18 Smoke-Tests und 21 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -49,6 +49,7 @@ _Stand 2026-11-05._
   weiche Checker-Treffer. Rolle im Server-Repo erweitert (`d87bf31`) und ausgespielt. Rechtstexte: `site/texte/datenschutz-fragen.md`,
   `site/texte/nutzungsbedingungen.md`, live über `site/build.mjs --stimmen --fragen`. Jeder künftige Bau braucht beide Schalter. Ohne Kurscode-Hash im Vault bleibt der Pfad zu.
 
+- Neuer Auftritt (Höhenlinien als Textur aus `tools/render_brand.py`, Karten wie Aufkleber, Startseite 108 Pixel kürzer), 404-Seite mit `handle_errors` im Server-Repo, Folienlinks in Zitaten ausgeblendet: **seit 2026-11-06 live**. Überschriften in Bricolage Grotesque (OFL, `@fontsource-variable/bricolage-grotesque` 5.3.0, Lizenz im Impressum): **live**, Smoke gegen den echten Host grün.
 - Strukturierte Daten (`WebSite`, `BreadcrumbList`) und neue OG-Karte: **seit 2026-11-06 live**, Smoke gegen den echten Host grün. `QAPage` bewusst nicht, dort müssten Nutzer antworten können.
 - Beiträge tragen Namen (Plan D22): Bot hAInrich2, „Anonymer Nutzer“, Konrad Völkel mit Foto und Link. Dazu kurze Titel, Beschreibungen aus der Antwort, H1 mit Skriptname, Über-Seite und Startseite in der Sitemap (`research/2026-11-06-seo-audit/`). **Seit 2026-11-06 live**, Smoke gegen den echten Host grün.
 - Seite „Über hAInrich2“ (`site/texte/ueber.md`), unten auf jeder Seite verlinkt: Herkunft des Namens, die Idee, FAQ-Wiki, Prototyp. **Seit 2026-11-05 live**, Smoke gegen den echten Host grün.

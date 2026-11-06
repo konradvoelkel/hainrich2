@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { threadsOf, UNTERFOREN, unterforumOf } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, MODERATION, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { excerpt, foreignSource, forumPage, indexPage, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: false, ladegroesse: 'rund 25 MB' };
 const passage = { id: 'p1', page: 'kapitel', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
@@ -187,7 +187,7 @@ test('die Beschreibung ist der Anfang der Antwort, sonst das Kapitel', () => {
 test('die Startseite nennt das Skript in ihrer einzigen H1 und führt zur Idee', () => {
   const html = indexPage([question()], site);
   assert.equal(html.match(/<h1>/g).length, 1);
-  assert.match(html, /<h1>Fragen und Antworten zum Skript „Einführung in Deep Learning“<\/h1>/);
+  assert.match(html, /<h1>Fragen und Antworten zum Skript <span class="welle">„Einführung in Deep Learning“<\/span><\/h1>/);
   assert.match(html, /<a href="ueber\/">Mehr über die Idee<\/a>/);
   assert.doesNotMatch(html, /<span>Fragen und Antworten/, 'die Kopfzeile wiederholt die H1 nicht');
   assert.match(forumPage(UNTERFOREN[0], [], site), /<span>Fragen und Antworten/);
@@ -204,6 +204,26 @@ test('die Seite „Über hAInrich2“ darf in den Index, die Rechtstexte nicht',
   const legal = textPage('impressum', '# Impressum', site);
   assert.match(legal, /name="robots" content="noindex"/);
   assert.equal(titleOf(legal), 'Impressum | hAInrich2');
+});
+
+test('der Folienlink am Anfang eines Zitats fällt weg, der Text bleibt', () => {
+  const page = text => questionPage({ ...question(), antworten: [{ ...question().antworten[0], zitate: [{ titel: 'T', pfad: [], url: 'https://skript.test/x', text }] }] }, site);
+  const link = '[Folien VL 12, S. 2–8](https://skript.test/folien/vl12.pdf#page=2)';
+  const html = page(`${link}\n\nIm Kapitel steht etwas.`);
+  assert.ok(!html.includes('vl12.pdf'));
+  assert.match(html, /<blockquote><p>Im Kapitel steht etwas\.<\/p>/);
+  const alone = page(link);
+  assert.ok(!alone.includes('vl12.pdf'));
+  assert.match(alone, /<blockquote><p>Folien VL 12, S\. 2–8<\/p>/);
+  assert.equal(question().antworten[0].zitate[0].text, passage.text, 'gespeichert bleibt der wörtliche Text');
+});
+
+test('die Seite für unbekannte Adressen verweist von der Wurzel aus und bleibt draußen', () => {
+  const html = notFoundPage(site);
+  assert.match(html, /<h1>Diese Seite gibt es nicht<\/h1>/);
+  assert.match(html, /name="robots" content="noindex"/);
+  assert.match(html, /<a href="\/eidl\/">Zum Forum<\/a>/);
+  assert.doesNotMatch(html.replace(/<link rel="canonical"[^>]*>/, ''), /(?:src|href)="(?!\/eidl\/|https:|#)/);
 });
 
 const dataOf = html => JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);

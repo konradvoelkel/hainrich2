@@ -12,6 +12,7 @@
   --offen: oklch(0.42 0.09 70);
   --gut-grund: oklch(0.94 0.05 150);
   --gut: oklch(0.4 0.09 150);
+  --schatten: oklch(0.84 0.06 295);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,8 +28,11 @@
     --offen: oklch(0.86 0.1 85);
     --gut-grund: oklch(0.33 0.06 150);
     --gut: oklch(0.86 0.1 150);
+    --schatten: oklch(0.38 0.08 295);
   }
 }
+
+@font-face { font-family: 'Bricolage Grotesque'; src: url(schrift/bricolage-grotesque.woff2) format('woff2'); font-weight: 200 800; font-display: swap; }
 
 * { box-sizing: border-box; }
 
@@ -61,7 +65,7 @@ h2 { font-size: 1.05rem; line-height: 1.35; margin: 1.4rem 0 .4rem; }
 .badge.offen { background: var(--offen-grund); color: var(--offen); }
 .badge.gut { background: var(--gut-grund); color: var(--gut); }
 
-.suche { margin: .4rem 0 2rem; padding: 1rem; border: 1px solid var(--linie); border-radius: .5rem; background: var(--karte); }
+.suche { margin: .4rem 0 1rem; padding: 1rem; border: 1px solid var(--linie); border-radius: .5rem; background: var(--karte); }
 .suche label { display: block; margin-bottom: .35rem; font-weight: 600; }
 .suche input { width: 100%; padding: .55rem .7rem; border: 1px solid var(--linie); border-radius: .35rem; background: var(--grund); color: var(--tinte); font: inherit; }
 .suche input:focus { outline: 2px solid var(--marke); outline-offset: 1px; }
@@ -94,7 +98,7 @@ pre { overflow-x: auto; }
 
 .dokument h1 { margin-top: .4rem; }
 
-.fuss { margin-top: 2.5rem; padding-top: 1rem; padding-bottom: 2rem; border-top: 1px solid var(--linie); color: var(--leise); font-size: .9rem; }
+.fuss { margin-top: 1.5rem; padding-top: 1rem; padding-bottom: 1.25rem; border-top: 1px solid var(--linie); color: var(--leise); font-size: .9rem; }
 .fuss p { margin: 0 0 .5rem; }
 .fuss nav { display: flex; flex-wrap: wrap; gap: .2rem 1rem; }
 
@@ -104,6 +108,7 @@ pre { overflow-x: auto; }
 .liste thead th:first-child { text-align: left; }
 .liste tbody th { padding: .65rem .7rem; font-weight: 400; text-align: left; }
 .liste tbody td { padding: .65rem .7rem; color: var(--leise); text-align: right; vertical-align: top; white-space: nowrap; }
+.foren tbody th, .foren tbody td { padding-top: .34rem; padding-bottom: .34rem; }
 .liste tbody tr + tr > * { border-top: 1px solid var(--linie); }
 .liste tbody tr:hover > * { background: var(--flaeche); }
 .liste a { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
@@ -163,8 +168,9 @@ pre { overflow-x: auto; }
 .mod pre { overflow-x: auto; padding: .5rem; border: 1px solid var(--linie); border-radius: .4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 .verlauf, .zitatliste { padding-left: 1.2rem; }
 
-.einstieg p { margin: 0 0 1rem; }
-.titelzeile h2 { margin: .2rem 0 .6rem; font-size: 1.2rem; }
+.einstieg h1 { font-size: 1.25rem; }
+.einstieg p { margin: 0 0 .8rem; }
+.titelzeile h2 { margin: 0; font-size: 1.2rem; }
 .titelzeile { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; }
 .knopf.fragen { border-color: var(--marke); background: var(--marke); color: var(--grund); }
 .formular select { width: 100%; padding: .55rem .7rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); font: inherit; }
@@ -203,3 +209,19 @@ pre { overflow-x: auto; }
 .deckel { margin: .5rem 0; }
 .deckel label { display: block; }
 .deckel progress { display: block; width: 100%; margin-top: .2rem; accent-color: var(--marke); }
+
+/* Der Auftritt der öffentlichen Seiten: Höhenlinien einer Loss-Landschaft als Grund (tools/render_brand.py), Karten wie Aufkleber. Die Moderation bleibt nüchtern. */
+@media screen {
+  body:not(.mod)::before { content: ''; position: fixed; inset: 0; z-index: -1; background: var(--marke); opacity: .14; -webkit-mask: url(muster.svg) 0 0 / 52rem; mask: url(muster.svg) 0 0 / 52rem; }
+}
+:where(body:not(.mod)) :is(h1, h2, .marke, .suche label, .foren tbody a) { font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; letter-spacing: -.01em; }
+:where(body:not(.mod)) :is(.suche, .liste, .beitrag) { border: 2px solid var(--marke); border-radius: .8rem; box-shadow: .3rem .3rem 0 var(--schatten); }
+:where(body:not(.mod)) .suche input { border-width: 2px; border-radius: .5rem; }
+:where(body:not(.mod)) .knopf.fragen { border-radius: .6rem; box-shadow: .2rem .2rem 0 var(--schatten); font-weight: 700; transition: translate .12s, box-shadow .12s; }
+:where(body:not(.mod)) .knopf.fragen:hover { translate: -1px -1px; box-shadow: .3rem .3rem 0 var(--schatten); }
+:where(body:not(.mod)) .knopf.fragen:active { translate: .2rem .2rem; box-shadow: none; }
+.welle { text-decoration: underline wavy var(--marke) 2px; text-underline-offset: .22em; }
+.vorschau { background: repeating-linear-gradient(-45deg, var(--offen-grund) 0 1rem, color-mix(in oklch, var(--offen-grund) 90%, var(--offen)) 1rem 2rem); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  :where(body:not(.mod)) .knopf.fragen { transition: none; }
+}

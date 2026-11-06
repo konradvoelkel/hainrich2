@@ -2,7 +2,7 @@
 """
 Erzeugt das Logo und alle Ableitungen nach site/brand/. Generiert, nicht gezeichnet (Playbook §3.10, §3.13): Die Farben
 kommen aus dem Farbsystem, ein neuer Farbton rendert alles neu. Die Ergebnisse liegen im Repo, damit der Bau der Site kein
-Inkscape braucht. Braucht Inkscape, Pillow und die Schrift Inter.
+Inkscape braucht. Braucht Inkscape, Pillow, matplotlib und die Schrift Inter.
 
     python3 tools/render_brand.py           # schreibt alles neu
     python3 tools/render_brand.py --check   # prüft, ob die Dateien zum Skript passen
@@ -80,6 +80,34 @@ def face():
 </g>'''
 
 
+# Periodische Wellen ergeben eine Landschaft auf dem Torus, die Kachel schließt an allen Rändern nahtlos an
+WELLEN = [(1, 0, .9, 0), (0, 1, .8, 1.3), (1, 1, .6, 2.1), (1, -1, .55, .7), (2, 1, .32, 4), (1, 2, .3, 5.2), (2, -1, .26, 3.1), (3, 1, .14, 1.9), (1, -3, .12, .4)]
+MUSTER_SEITE = 800
+MUSTER_RASTER = 200
+MUSTER_LINIEN = 16
+
+
+def muster():
+    """Höhenlinien einer Loss-Landschaft, jede vierte kräftiger wie auf einer Karte. Nur Form, die Farbe gibt die Seite über mask-image"""
+    import contourpy
+    import numpy as np
+    axis = np.linspace(0, 1, MUSTER_RASTER + 1)
+    x, y = np.meshgrid(axis, axis)
+    field = sum(a * np.cos(2 * np.pi * (m * x + n * y) + phase) for m, n, a, phase in WELLEN)
+    lines = contourpy.contour_generator(axis * MUSTER_SEITE, axis * MUSTER_SEITE, field).lines
+    levels = np.linspace(field.min(), field.max(), MUSTER_LINIEN + 2)[1:-1]
+
+    def path(points):
+        thin = np.vstack([points[:-1:3], points[-1:]])
+        return 'M' + 'L'.join(f'{px:.0f} {py:.0f}' for px, py in thin)
+
+    groups = ['', '']
+    for i, level in enumerate(levels):
+        groups[i % 4 == 0] += ''.join(path(line) for line in lines(level))
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {MUSTER_SEITE} {MUSTER_SEITE}">'
+            f'<g fill="none" stroke="#000" stroke-linejoin="round"><path stroke-width="1.1" d="{groups[0]}"/><path stroke-width="2.2" d="{groups[1]}"/></g></svg>\n')
+
+
 def svg(body, width=512, height=512, label='hAInrich'):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" role="img" aria-label="{label}">\n'
             f'{body}\n</svg>\n')
@@ -125,7 +153,7 @@ def wordmark():
 <text x="540" y="372" style="{style}" fill="{TINTE}">h<tspan fill="{MARKE}">AI</tspan>nrich</text>''', 1800, 552)
 
 
-SOURCES = {'logo.svg': lambda: svg(mark()), 'favicon.svg': tile}
+SOURCES = {'logo.svg': lambda: svg(mark()), 'favicon.svg': tile, 'muster.svg': muster}
 PNGS = {'apple-touch-icon.png': (lambda: tile(0), 180), 'icon-192.png': (tile, 192), 'icon-512.png': (tile, 512), 'icon-maskable-512.png': (maskable, 512), 'logo-512.png': (lambda: svg(mark()), 512)}
 
 

@@ -122,6 +122,26 @@ for (const width of WIDTHS) {
   });
 }
 
+test('eine unbekannte Adresse zeigt in jeder Tiefe eine Seite mit Weg zurück', async ({ page }) => {
+  const seen = watch(page);
+  const response = await page.goto('/eidl/f/gibtesnicht/tiefer/');
+  expect(response.status()).toBe(404);
+  await expect(page.locator('h1')).toHaveText('Diese Seite gibt es nicht');
+  expect(await page.evaluate(() => document.styleSheets.length)).toBe(2);
+  await page.click('main a:has-text("Zum Forum")');
+  await expect(page).toHaveURL(/\/eidl\/$/);
+  expect(seen.problems.filter(p => !p.includes('404'))).toEqual([]);
+});
+
+test('die Überschriften stehen in der eigenen Schrift, geladen vom eigenen Host', async ({ page }) => {
+  const seen = watch(page);
+  await page.goto('/eidl/');
+  const loaded = await page.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.family.includes('Bricolage')).map(f => f.status); });
+  expect(loaded).toEqual(['loaded']);
+  expect(seen.requests.filter(u => /woff2/.test(u) && !own(u))).toEqual([]);
+  expect(seen.problems).toEqual([]);
+});
+
 test('strukturierte Daten stehen in der Seite, und die strenge CSP stört sich nicht daran', async ({ page }) => {
   const seen = watch(page);
   await page.goto('/eidl/f/s01/');

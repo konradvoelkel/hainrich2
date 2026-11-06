@@ -33,7 +33,13 @@ http.createServer((req, res) => {
   const root = LIVE && LIVE_PATHS.test(pathname) ? path.resolve(LIVE) : ROOT;
   let file = path.join(root, path.normalize(decodeURIComponent(pathname)));
   if (pathname.endsWith('/')) file = path.join(file, 'index.html');
-  if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end('nicht gefunden'); return; }
+  if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+    // wie handle_errors im Caddy-Block: Die Seite liegt im Docroot, auch wenn die Anfrage nach live/ ging
+    const page = path.join(ROOT, 'eidl/404.html');
+    res.writeHead(404, { 'Content-Type': TYPES['.html'], 'Content-Security-Policy': CSP, ...HOST_HEADERS });
+    res.end(fs.existsSync(page) ? fs.readFileSync(page) : 'nicht gefunden');
+    return;
+  }
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] ?? 'application/octet-stream', 'Content-Security-Policy': CSP, ...HOST_HEADERS });
   fs.createReadStream(file).pipe(res);
 }).listen(PORT, () => console.log(`http://localhost:${PORT}/eidl/ aus ${ROOT}`));
