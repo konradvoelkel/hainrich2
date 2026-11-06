@@ -12,7 +12,7 @@ Fragen stellen kann, wer den Kurscode aus ILIAS kennt. Die Nutzung ist freiwilli
 
 **Fristen.** Lehnt die Moderation eine Frage ab, wird ihr Text sofort gelöscht, nur der Grund bleibt sieben Tage für Sie sichtbar. Was niemand bearbeitet, wird spätestens nach 30 Tagen gelöscht. Solange die Moderation nicht entschieden hat, können Sie Ihre Frage unter „Meine Fragen“ selbst löschen.
 
-**Nach der Freigabe.** Die Frage wird dauerhaft öffentlich, und ein Sprachmodell von Anthropic (USA) beantwortet sie, falls noch keine Antwort vorliegt. Dabei geht nur der freigegebene Text an Anthropic. Der Hash wird gelöscht, auf dem Server gibt es ab da keine Verbindung mehr zu Ihnen. Öffentlich steht nur der Tag der Freigabe, kein Name. Falls trotz der Regeln ein Name durchrutscht, bleibt er auch nach dem Löschen bis zu sechs Monate in den Sicherungen.
+**Nach der Freigabe.** Die Frage wird dauerhaft öffentlich, und ein Sprachmodell von Anthropic (USA) beantwortet sie, falls noch keine Antwort vorliegt. Die Moderation kann es später noch einmal fragen. Dabei geht nur der freigegebene Text an Anthropic. Der Hash wird gelöscht, auf dem Server gibt es ab da keine Verbindung mehr zu Ihnen. Öffentlich steht nur der Tag der Freigabe, kein Name. Falls trotz der Regeln ein Name durchrutscht, bleibt er auch nach dem Löschen bis zu sechs Monate in den Sicherungen.
 
 ## Sofort-Entwurf, nur mit Ihrer Einwilligung
 

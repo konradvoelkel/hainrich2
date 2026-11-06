@@ -502,3 +502,90 @@ test('„Meine Fragen“ bekommt den Fragetext gesetzt, vor und nach der Freigab
   await c.form(`/eidl/mod/neu/${data.id}/`, { frage: 'Was bedeutet $x^2$ hier genau?', kapitel: KAPITEL, aktion: 'freigeben' }, await c.signIn());
   assert.match((await c.mine(data.id, data.geheimnis)).html, /katex/);
 });
+
+const NOCHMAL = '/eidl/mod/f/s01/';
+const neu = { status: 'ok', modell: 'neu', text: 'Neue Antwort.[1]', zitate: [{ ...zitat, text: 'Neues Zitat.' }], kapitel: KAPITEL, vektor: [0, 1, 0] };
+const again = async (c, cookie) => (await c.form(NOCHMAL, { aktion: 'nochmal' }, cookie)).status;
+
+test('D23: Der Vorschlag wartet in der Moderation, öffentlich wird er erst mit der Übernahme, und der Verlauf behält die alte Antwort', async t => {
+  const c = await setup();
+  t.after(c.close);
+  c.store.addAnswer('s01', { art: 'bot', status: 'ungeprüft', modell: 'alt', text: 'Alte Antwort.[1]', zitate: [zitat] });
+  const cookie = await c.signIn();
+  assert.match(await c.page(NOCHMAL, cookie), /value="nochmal"/);
+  assert.equal(await again(c, cookie), 303);
+  assert.deepEqual(c.inbox(), [{ id: 's01', text: seed.text, gruendlich: true }]);
+  assert.equal(await again(c, cookie), 409, 'ein Auftrag reicht');
+  assert.match(await c.page(NOCHMAL, cookie), /Claude arbeitet daran/);
+
+  await c.deliver('s01', neu);
+  assert.equal(c.store.question('s01').antworten[0].text, 'Alte Antwort.[1]');
+  assert.ok(!fs.readFileSync(c.file('f/s01/index.html'), 'utf8').includes('Neue Antwort'));
+  assert.match(await c.page(NOCHMAL, cookie), /class="vorschlag">Neue Antwort/);
+
+  assert.equal((await c.form(NOCHMAL, { aktion: 'uebernehmen_pruefen' }, cookie)).status, 303);
+  const [answer] = c.store.question('s01').antworten;
+  assert.deepEqual([answer.art, answer.status, answer.modell, answer.text, answer.bearbeitet, answer.zitate.map(z => z.text)], ['bot', 'geprüft', 'neu', 'Neue Antwort.[1]', false, ['Neues Zitat.']]);
+  assert.equal(c.store.question('s01').antworten.length, 1);
+  assert.equal(c.store.proposal('s01'), null);
+  assert.ok(fs.readFileSync(c.file('f/s01/index.html'), 'utf8').includes('Neue Antwort'));
+  assert.equal(c.store.revisions('s01')[0].vorher, 'Alte Antwort.[1]');
+});
+
+test('D23, I1: Eine zurückgezogene Frage geht nicht noch einmal zu Claude, und ohne Schlange gibt es den Knopf nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  c.store.setQuestionStatus('s01', 'zurückgezogen', 'admin');
+  assert.doesNotMatch(await c.page(NOCHMAL, cookie), /value="nochmal"/);
+  assert.equal(await again(c, cookie), 409);
+  assert.deepEqual(c.inbox(), []);
+  const off = await setup({ spooling: false });
+  t.after(off.close);
+  const session = await off.signIn();
+  assert.doesNotMatch(await off.page(NOCHMAL, session), /value="nochmal"/);
+  assert.equal(await again(off, session), 409);
+});
+
+test('D23: Ein Ergebnis ohne Text lässt sich nur verwerfen, ein „kein Beleg“ weicht einem echten Vorschlag', async t => {
+  const c = await setup();
+  t.after(c.close);
+  c.store.addAnswer('s01', { art: 'bot', status: 'kein_beleg', modell: 'alt', text: null, zitate: [] });
+  const cookie = await c.signIn();
+  await again(c, cookie);
+  await c.deliver('s01', { status: 'kein_beleg', modell: 'neu' });
+  assert.match(await c.page(NOCHMAL, cookie), /auch in den ganzen Kapiteln nichts/);
+  assert.equal((await c.form(NOCHMAL, { aktion: 'uebernehmen' }, cookie)).status, 400);
+  assert.equal((await c.form(NOCHMAL, { aktion: 'verwerfen' }, cookie)).status, 303);
+  assert.equal(c.store.proposal('s01'), null);
+
+  await again(c, cookie);
+  await c.deliver('s01', neu);
+  await c.form(NOCHMAL, { aktion: 'uebernehmen' }, cookie);
+  const [answer] = c.store.question('s01').antworten;
+  assert.deepEqual([answer.art, answer.status, answer.text], ['bot', 'ungeprüft', 'Neue Antwort.[1]']);
+});
+
+test('D23: Der Checker läuft auch auf dem Vorschlag, und ein Neustart lässt ihn nicht ewig laufen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  await again(c, cookie);
+  await c.deliver('s01', { ...neu, text: 'Matrikelnummer 1234567 gehört hierher.' });
+  assert.equal(c.store.proposal('s01').entwurf.status, 'checker');
+  assert.equal((await c.form(NOCHMAL, { aktion: 'uebernehmen' }, cookie)).status, 400);
+  assert.doesNotMatch(await c.page(NOCHMAL, cookie), /1234567/);
+
+  await again(c, cookie);
+  c.spool.cancel('s01');
+  await c.fragen.collect();
+  assert.equal(c.store.proposal('s01').entwurf.status, 'fehler');
+  assert.match(await c.page(NOCHMAL, cookie), /Ein Ergebnis kam nicht zustande/);
+});
+
+test('kein Text verspricht, dass nur die fragende Person etwas sieht: Die Moderation sieht es auch', () => {
+  for (const name of ['../lib/fragen.js', '../lib/site.js', '../site/fragen.js', '../site/texte/datenschutz-fragen.md']) {
+    assert.doesNotMatch(fs.readFileSync(new URL(name, import.meta.url), 'utf8'), /nur ich\b|nur Sie (?!und die Moderation)/, name);
+  }
+});
+

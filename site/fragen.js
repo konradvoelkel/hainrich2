@@ -86,11 +86,11 @@ async function loesche(eintrag) {
 
 function stand(frage) {
   if (frage.zustand === 'entwurf') return 'Claude schreibt einen Entwurf, das dauert rund eine Minute.';
-  if (frage.entwurf?.status === 'ok') return 'Wartet auf die Moderation. Bis dahin sehen nur Sie Frage und Entwurf.';
+  if (frage.entwurf?.status === 'ok') return 'Wartet auf die Moderation. Bis dahin sehen nur Sie und die Moderation Frage und Entwurf.';
   if (frage.entwurf?.status === 'kein_beleg') return 'Dazu habe ich im Skript nichts gefunden. Ihre Frage wartet auf die Moderation.';
   if (frage.entwurf) return 'Einen Entwurf gab es diesmal nicht. Ihre Frage wartet auf die Moderation und bekommt danach eine Antwort.';
   if (frage.einwilligung) return 'Ihre Frage enthält womöglich persönliche Angaben und ging deshalb nicht an Claude. Sie wartet auf die Moderation.';
-  return 'Wartet auf die Moderation, danach bekommt sie eine Antwort. Bis dahin sehen nur Sie die Frage.';
+  return 'Wartet auf die Moderation, danach bekommt sie eine Antwort. Bis dahin sehen nur Sie und die Moderation die Frage.';
 }
 
 function zeile(eintrag, frage) {

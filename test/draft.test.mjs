@@ -32,6 +32,16 @@ test('ein Entwurf trägt Zitat aus dem Korpus, Kapitel und gerundeten Vektor, un
   assert.equal(book.entries.length, 1);
 });
 
+test('wer noch einmal fragt, bekommt gleich ganze Kapitel und keinen weiteren Anlauf', async () => {
+  const counts = [];
+  const book = ledger();
+  const again = { ...corpus, select: async () => assert.fail('Passagen gab es schon'), chapters: async (_, count) => { counts.push(count); return [passage]; } };
+  const result = await draftFor({ ...job, gruendlich: true }, { corpus: again, call: async () => plain('KEIN_BELEG'), ledger: book, day: DAY });
+  assert.equal(result.status, 'kein_beleg');
+  assert.deepEqual(counts, [3]);
+  assert.equal(book.entries.length, 1);
+});
+
 test('ohne Beleg gibt es einen zweiten Anlauf mit ganzen Kapiteln', async () => {
   const seen = [];
   const answers = [plain('KEIN_BELEG'), cited('Doch.')];

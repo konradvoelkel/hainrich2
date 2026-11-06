@@ -172,7 +172,7 @@ test('Mit Einwilligung kommt der Entwurf sofort und nur für die fragende Person
   await page.click('#frage button.haupt');
   await expect(page.locator('.meine-frage .antwort .badge')).toHaveText('Entwurf', { timeout: 15_000 });
   await expect(page.locator('.meine-frage .antwort .katex')).toBeVisible();
-  await expect(page.locator('.meine-frage .hinweis')).toContainText('nur Sie sehen ihn');
+  await expect(page.locator('.meine-frage .hinweis')).toContainText('außer Ihnen sieht ihn nur die Moderation');
 
   await page.reload();
   await expect(page.locator('.meine-frage .frage-text')).toHaveText('Was bedeutet Broadcasting bei Tensoren genau?');
@@ -404,3 +404,26 @@ test('Aus der Suche in die Frage: Der Text kommt mit, ohne Adresse und ohne Anfr
   await expect(page.locator('#fragetext')).toHaveValue('');
   expect(problems).toEqual([]);
 });
+
+test('Claude noch einmal fragen: Der Vorschlag wartet in der Moderation und wird erst mit der Übernahme öffentlich', async ({ page, browser }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await page.goto('/eidl/mod/f/s04/');
+  await page.click('button[value="nochmal"]');
+  await expect(page.locator('.gemeldet')).toContainText('bei Claude');
+  await expect.poll(async () => { await page.reload(); return page.locator('.vorschlag').count(); }, { timeout: 15_000 }).toBe(1);
+  await expect(page.locator('.vorschlag')).toContainText('Ein Entwurf mit Formel');
+
+  const reader = await (await browser.newContext()).newPage();
+  await reader.goto('/eidl/f/s04/');
+  await expect(reader.locator('.antwort .text')).not.toContainText('Ein Entwurf mit Formel');
+
+  await page.click('button[value="uebernehmen"]');
+  await expect(page.locator('.gemeldet')).toContainText('übernommen');
+  await expect(page.locator('.vorschlag')).toHaveCount(0);
+  await reader.reload();
+  await expect(reader.locator('.antwort .text')).toContainText('Ein Entwurf mit Formel');
+  await expect(reader.locator('.antwort .badge')).toHaveText('ungeprüft');
+  expect(problems).toEqual([]);
+});
+

@@ -42,6 +42,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D20 | Wer mit Kurscode fragt, kann beim Absenden einwilligen, dass die Frage sofort an Claude geht und einen Entwurf bekommt. Frage und Entwurf sieht nur die fragende Person, bis die Moderation entscheidet. Ohne Einwilligung wartet die Frage auf die Freigabe und wird erst danach beantwortet. Beide Wege sind gleichwertig, die Einwilligung ist nicht vorbelegt und bis zur Entscheidung widerrufbar (Konrad, 2026-11-05). |
 | D21 | Über Fragen dürfen alle abstimmen, auch ohne Kurscode: hoch oder runter, die Summe steht an der Frage, Listen sortieren danach (Konrad, 2026-11-05). Weil niemand angemeldet ist, ist eine Stimme nicht überprüfbar: Wer die Browserdaten löscht, stimmt noch einmal. Deshalb entscheidet die Summe nichts, sie sortiert nur. Sie blendet nichts aus und ändert keine Kosten. |
 | D22 | Beiträge tragen Namen wie in einem Forum (Konrad, 2026-11-06): Der Bot heißt hAInrich2 und bleibt als Bot erkennbar (I8), Fragen von außen stehen unter „Anonymer Nutzer“, Beispielfragen weiter unter „Frage“, weil sie von niemandem aus dem Kurs stammen, Antworten der Moderation unter Konrad Völkel mit Foto und Link. Das steht vorerst fest in `lib/site.js`. Später gibt es mehrere Moderationskonten: Jede Antwort merkt sich ihr Konto, Name, Bild und Link kommen von dort, alte Antworten gehören Konrad, und wer admin ist, ist immer auch Moderator. |
+| D23 | Die Moderation kann Claude zu einer öffentlichen Frage noch einmal fragen (Konrad, 2026-11-06). Der zweite Lauf liest ganze Kapitel, dieselben Passagen ergäben dieselbe Antwort. Das Ergebnis wartet als Vorschlag in `vorschlaege`, öffentlich ändert sich erst etwas, wenn die Moderation es übernimmt; der Verlauf behält den alten Text. I1 bleibt gewahrt, weil nur freigegebener Text geht, und die Deckel gelten wie sonst. |
 | D19 | Das Forum hat Unterforen, nach dem Inhaltsverzeichnis des Skripts: Grundlagen, Lernen und Training, Architekturen und Repräsentationen, Praxis und Anwendung (Konrad, 2026-11-05). Eine Frage gehört über ihr Kapitel zu genau einem; `Optimierer` zählt zum Training. Die Adressen liegen unter `f/`, das bedient Caddy schon aus `live/`. |
 
 ## 3. Invarianten
@@ -391,7 +392,7 @@ Die Zustimmung steht direkt am Absenden, mit Versionsnummer je Frage. Die Texte 
 Freiwillig, nicht vorbelegt (D20):
 
 > Ich willige ein, dass meine Frage schon vor der Prüfung an Anthropic (USA) geht, damit ich sofort einen Entwurf bekomme. Frage
-> und Entwurf sehe bis zur Entscheidung der Moderation nur ich. Ohne Einwilligung bekomme ich die Antwort nach der Freigabe.
+> und Entwurf sehen bis zur Entscheidung außer mir nur die Moderation. Ohne Einwilligung bekomme ich die Antwort nach der Freigabe.
 > Ich kann die Einwilligung widerrufen, indem ich die Frage unter „Meine Fragen“ lösche; was schon gesendet ist, bleibt davon
 > unberührt.
 
