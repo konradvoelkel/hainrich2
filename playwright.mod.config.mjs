@@ -8,6 +8,6 @@ export default defineConfig({
   timeout: 180_000,
   retries: 0,
   workers: 1,
-  use: { baseURL: `http://localhost:${PORT}`, browserName: 'chromium' },
+  use: { baseURL: `http://localhost:${PORT}`, browserName: process.env.SMOKE_BROWSER ?? 'chromium' },
   webServer: { command: 'node smoke-mod/start.mjs', port: PORT, reuseExistingServer: false },
 });

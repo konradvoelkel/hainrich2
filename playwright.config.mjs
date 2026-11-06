@@ -8,6 +8,6 @@ export default defineConfig({
   testMatch: '*.spec.mjs',
   timeout: 180_000,
   retries: 0,
-  use: { baseURL: url ?? 'http://localhost:8772', browserName: 'chromium' },
+  use: { baseURL: url ?? 'http://localhost:8772', browserName: process.env.SMOKE_BROWSER ?? 'chromium' },
   webServer: url ? undefined : { command: 'node site/serve.mjs 8772', port: 8772, reuseExistingServer: false },
 });

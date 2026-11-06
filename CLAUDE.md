@@ -36,7 +36,7 @@ node site/build.mjs --modell claude-opus-5-5
 npm run smoke
 ```
 
-Mit `SMOKE_URL=https://hai.konradvoelkel.com` läuft er gegen den echten Host. Die Moderation im echten Browser, gegen eine
+Mit `SMOKE_URL=https://hai.konradvoelkel.com` läuft er gegen den echten Host, mit `SMOKE_BROWSER=firefox` oder `webkit` in einem anderen Browser. Die Moderation im echten Browser, gegen eine
 Wegwerf-Datenbank:
 
 ```bash

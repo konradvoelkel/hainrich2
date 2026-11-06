@@ -20,6 +20,17 @@ test('nur das Ziel eines Links geändert: zieht mit', () => {
   assert.equal(moveCitation(cited, [relinked]).how, 'neuer Link');
 });
 
+test('fällt nur der Folienlink am Kapitelanfang weg: zieht mit', () => {
+  const slides = passage('alt-1', 'alt', 'h1', `[Folien VL 12, S. 2–8](https://x.test/vl12.pdf#page=2)\n\n${cited.text}`);
+  const shorter = passage('alt-4', 'alt', 'h4', cited.text);
+  assert.equal(moveCitation(slides, [shorter]).how, 'neuer Link');
+});
+
+test('ein Zitat aus nichts als dem Folienlink zieht nicht um', () => {
+  const slides = passage('alt-1', 'alt', 'h1', '[Folien VL 12, S. 2–8](https://x.test/vl12.pdf#page=2)');
+  assert.equal(moveCitation(slides, [passage('alt-4', 'alt', 'h4', cited.text)]), null);
+});
+
 test('der Wortlaut steht in einer größeren Passage: zieht mit', () => {
   const larger = passage('alt-3', 'alt', 'h3', `Davor ein Satz. ${cited.text} Danach einer.`);
   assert.equal(moveCitation(cited, [larger]).how, 'neu geschnitten');
