@@ -126,7 +126,7 @@ test('ohne Schalter gibt es weder Pfeile noch Skript', () => {
   const off = { ...site, stimmen: false };
   const page = questionPage({ ...seed('s01', 'Was ist ein Tensor?'), punkte: 3 }, off);
   assert.ok(!page.includes('stimme'));
-  assert.ok(!page.includes('<script'));
+  assert.doesNotMatch(page, /<script[^>]*src=/);
   assert.ok(questionPage(seed('s01', 'Was ist ein Tensor?'), site).includes('stimmen.js'));
 });
 

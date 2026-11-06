@@ -206,6 +206,31 @@ test('die Seite „Über hAInrich2“ darf in den Index, die Rechtstexte nicht',
   assert.equal(titleOf(legal), 'Impressum | hAInrich2');
 });
 
+const dataOf = html => JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
+
+test('Frage und Unterforum tragen den sichtbaren Pfad als strukturierte Daten', () => {
+  const data = dataOf(questionPage(question(), site));
+  assert.equal(data['@context'], 'https://schema.org');
+  assert.equal(data['@type'], 'BreadcrumbList');
+  assert.deepEqual(data.itemListElement.map(e => [e.position, e.name, e.item]), [[1, 'Forum', 'https://example.test/eidl/'], [2, 'Grundlagen', 'https://example.test/eidl/f/grundlagen/'], [3, 'Tensoren', undefined]]);
+  assert.deepEqual(dataOf(forumPage(UNTERFOREN[1], [], site)).itemListElement.map(e => e.name), ['Forum', 'Lernen und Training']);
+});
+
+test('die Startseite nennt Site und Betreiber, Rechtstexte tragen keine Daten', () => {
+  const data = dataOf(indexPage([question()], site));
+  assert.equal(data['@type'], 'WebSite');
+  assert.equal(data.url, 'https://example.test/eidl/');
+  assert.deepEqual(data.publisher, { '@type': 'Person', name: 'Konrad Völkel', url: 'https://www.konradvoelkel.com' });
+  assert.doesNotMatch(textPage('impressum', '# Impressum', site), /ld\+json/);
+});
+
+test('ein Text mit </script> beendet die strukturierten Daten nicht', () => {
+  const titel = '</script><img src=x onerror=alert(1)>';
+  const html = forumPage({ ...UNTERFOREN[0], titel }, [], site);
+  assert.ok(!html.includes('</script><img'));
+  assert.equal(dataOf(html).itemListElement[1].name, titel);
+});
+
 test('Vorschau-Banner nur in der Vorschau', () => {
   assert.match(indexPage([question()], { ...site, vorschau: true }), /class="vorschau"/);
   assert.doesNotMatch(indexPage([question()], site), /class="vorschau"/);

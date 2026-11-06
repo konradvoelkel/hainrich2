@@ -5,8 +5,8 @@ _Stand 2026-11-06, gemessen am ausgespielten Stand `2d085af`. Skripte: `crawl.py
 
 **Ergebnis:** Die Site ist heute für Suchmaschinen unsichtbar, und das ist gewollt: `noindex` auf allen 41 Seiten, leere Sitemap.
 Für das Ende der Vorschau ist sie technisch gut vorbereitet. Schwach sind Titel, Beschreibungen und strukturierte Daten.
-Die Startbereitschaft lag bei **68 von 100**. Das ist eine Einschätzung, keine Messung. Die Befunde 3, 4, 5 und 8 sind seit dem 2026-11-06
-behoben und live; „Auf der Seite“ steigt damit auf rund 80, die Summe auf rund 73.
+Die Startbereitschaft lag bei **68 von 100**. Das ist eine Einschätzung, keine Messung. Die Befunde 3, 4, 5, 7 (ohne `QAPage`), 8 und 9 sind seit dem
+2026-11-06 live. Damit steigt die Summe auf rund 77: „Auf der Seite“ 80, „Strukturierte Daten“ 50, „Bilder“ 95.
 
 **Grenzen:** Keine Daten von Google, keine Rankings, kein Suchvolumen, keine Backlinks, keine Felddaten zu Core Web Vitals. Search
 Console ist nicht eingerichtet und kann ohne Indexierung wenig liefern. Die PageSpeed-API von Google habe ich nicht benutzt,
@@ -83,8 +83,8 @@ hAInrich2.“. _Prüfen:_ Ein Bau mit `--release` trägt beide Seiten in die Sit
 
 ### Mittel
 
-**7. Keine strukturierten Daten.** `WebSite` auf der Startseite und `BreadcrumbList` auf Unterforen und Fragen passen sofort, die Brotkrumen stehen
-schon sichtbar auf der Seite.
+**7. Zum Teil behoben: Keine strukturierten Daten.** `WebSite` auf der Startseite und `BreadcrumbList` auf Unterforen und Fragen sind live, die Brotkrumen
+folgen dem sichtbaren Pfad. Von Googles Prüfwerkzeug ist das nicht bestätigt, die Site ist `noindex` und der Name soll nicht in weitere Dienste.
 
 `QAPage` passt nur bedingt. Google verlangt: „Users must be able to submit answers to the question.“ Bei uns antworten nur Bot und Moderation.
 Ausgenommen sind laut Google Bildungsseiten mit Hausaufgabenfragen und einer Antwort von Fachleuten; ob das hier zutrifft, ist Auslegung.
@@ -94,10 +94,10 @@ auf Namen. Falls `QAPage` kommt, gehört `digitalSourceType` an die Bot-Antworte
 **8. Behoben: Die Startseite sagt wenig.** Die H1 heißt „Forum“, die Seite hat 150 Wörter. Der Skriptname steht nur in einer Kopfzeile ohne Überschrift.
 Eine H1 mit dem Skriptnamen und zwei Sätze mit Link auf „Über hAInrich2“ reichen.
 
-**9. Die OG-Karte ist veraltet.** Sie sagt „Jede Antwort mit wörtlichem Zitat“, Antworten der Moderation haben aber keines. Außerdem steht dort „hAInrich“,
+**9. Behoben: Die OG-Karte ist veraltet.** Sie sagt „Jede Antwort mit wörtlichem Zitat“, Antworten der Moderation haben aber keines. Außerdem steht dort „hAInrich“,
 die Site heißt hAInrich2 (`tools/render_brand.py:105`). Die Karte erscheint, wenn jemand den Link teilt, also auch in Chats des Kurses.
 
-**10. Die beiden Testfragen sind öffentlich.** `bf8ec38f9c86` und `0cfd2b864eda`. Das ist Konrads Entscheidung, aber vor dem Ende der Vorschau nötig.
+**10. Entschieden: Die beiden Testfragen bleiben.** `bf8ec38f9c86` und `0cfd2b864eda` (Konrad, 2026-11-06).
 
 ### Niedrig
 
@@ -111,12 +111,12 @@ die Site heißt hAInrich2 (`tools/render_brand.py:105`). Die Karte erscheint, we
 
 ## Reihenfolge
 
-Abhängigkeiten: 10 vor dem Ende der Vorschau. 3, 4 und 5 sind unabhängig und wirken erst danach, kosten aber wenig.
+Die Vorschau bleibt vorerst: Konrad gibt den Link zuerst den Studierenden (2026-11-06). Alles für die Suche wirkt also erst später.
 
-1. **Sofort, Konrad:** Befund 10 entscheiden.
+1. **Erledigt:** Befund 10 ist entschieden.
 2. **Kleiner Umbau, ohne Server-Repo:** Befunde 3, 4, 5 und 8 sind erledigt.
-3. **Mit Server-Repo:** Befund 2. Mit Inkscape: Befund 9.
-4. **Vor dem Start:** Schalter für das Ende der Vorschau, dann Befund 7.
+3. **Mit Server-Repo:** Befund 2. Dazu Befund 6 im Skript klären.
+4. **Vor dem Start:** Schalter für das Ende der Vorschau, dann die Entscheidung zu `QAPage`.
 5. **Nach dem Start:** Search Console einrichten, nach vier Wochen ansehen, welche Fragen Eindrücke bekommen, und erst dann über Kurztitel
    oder Adressen nachdenken.
 

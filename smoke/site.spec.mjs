@@ -122,6 +122,16 @@ for (const width of WIDTHS) {
   });
 }
 
+test('strukturierte Daten stehen in der Seite, und die strenge CSP stört sich nicht daran', async ({ page }) => {
+  const seen = watch(page);
+  await page.goto('/eidl/f/s01/');
+  const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
+  expect(data.itemListElement.map(e => e.name)).toEqual(['Forum', 'Grundlagen', 'Was ist Deep Learning?']);
+  await page.goto('/eidl/');
+  expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent())['@type']).toBe('WebSite');
+  expect(seen.problems).toEqual([]);
+});
+
 test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2“', async ({ page }) => {
   for (const target of ['img', 'strong']) {
     await page.goto('/eidl/f/s01/');

@@ -102,21 +102,21 @@ def fit(text, font_file, size, limit):
 
 
 def card():
-    lines = [('hAI', 'nrich', 112, TEXT_X, 250), ('Fragen und Antworten zum Skript', None, 36, TEXT_X, 330),
-             ('„Einführung in Deep Learning“', None, 36, TEXT_X, 378), ('Jede Antwort mit wörtlichem Zitat', None, 28, TEXT_X, 456)]
+    lines = [('hAI', 'nrich2', 112, TEXT_X, 250), ('Fragen und Antworten zum Skript', None, 36, TEXT_X, 330),
+             ('„Einführung in Deep Learning“', None, 36, TEXT_X, 378), ('Ein Bot antwortet mit Zitat, die Moderation prüft', None, 28, TEXT_X, 456)]
     limit = TEXT_RIGHT - TEXT_X
-    fit('hAInrich', FONT_BOLD, 112, limit)
+    fit('hAInrich2', FONT_BOLD, 112, limit)
     for text, _, size, _, _ in lines[1:]:
         fit(text, FONT_REGULAR, size, limit)
     style = 'font-family:Inter'
     title = (f'<text x="{TEXT_X}" y="250" style="{style};font-weight:700;font-size:112px" fill="{TINTE}">'
-             f'h<tspan fill="{MARKE}">AI</tspan>nrich</text>')
+             f'h<tspan fill="{MARKE}">AI</tspan>nrich2</text>')
     rows = '\n'.join(f'<text x="{x}" y="{y}" style="{style};font-size:{size}px" fill="{TINTE}">{text}</text>' for text, _, size, x, y in lines[1:])
     return svg(f'''<rect width="{CARD_W}" height="{CARD_H}" fill="{FLAECHE}"/>
 <rect x="0" y="{CARD_H - 14}" width="{CARD_W}" height="14" fill="{MARKE}"/>
 <g transform="translate(14 70) scale(.92)">{mark()}</g>
 {title}
-{rows}''', CARD_W, CARD_H, 'hAInrich: Fragen und Antworten zum Skript')
+{rows}''', CARD_W, CARD_H, 'hAInrich2: Fragen und Antworten zum Skript')
 
 
 def wordmark():
