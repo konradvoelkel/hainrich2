@@ -429,7 +429,7 @@ Was daran hängt und nicht durch Technik zu lösen ist:
   halten die Wörter aus §8 den Entwurf zurück.
 - **Löschen.** Der Widerruf wirkt nur nach vorn: Was bei Anthropic liegt, löscht ein Klick hier nicht. Das steht im Text.
 
-Gelesen am 2026-11-05 auf Anthropics eigenen Seiten, von Konrad noch zu bestätigen `[owner]`:
+Gelesen am 2026-11-05 auf Anthropics eigenen Seiten. Konrad hat die Rechtsfragen am 2026-11-06 selbst geprüft, die Umsetzung stimmt so:
 
 - **Vertragspartner** im EWR ist Anthropic Ireland, Limited (Commercial Terms, gültig ab 17.06.2025).
 - **Auftragsverarbeitung:** Das DPA ist Teil der Commercial Terms, eine eigene Unterschrift nennen die Seiten nicht. Anthropic ist Auftragsverarbeiter (DPA, gültig ab 24.02.2025).
@@ -437,7 +437,7 @@ Gelesen am 2026-11-05 auf Anthropics eigenen Seiten, von Konrad noch zu bestäti
   Zertifizierung ließ sich nicht prüfen, die Liste dazu war nicht lesbar. Der Text stützt sich deshalb nur auf die Klauseln.
 - **Training:** nicht auf API-Daten, außer bei ausdrücklich gemeldetem Feedback, das steht aber nur im Hilfeartikel (18.08.2026).
 - **Löschung:** binnen 30 Tagen; bei Verstößen gegen die Nutzungsrichtlinie bis zu 2 Jahre, Bewertungen bis zu 7 Jahre (Hilfeartikel, 01.07.2026).
-- **Offen:** Die Commercial Terms schließen die Nutzung durch Verbraucher aus. Ob Konrad als Privatperson mit eigenem Angebot darunterfällt, sagen sie nicht.
+- **Verbraucher:** Die Commercial Terms schließen die Nutzung durch Verbraucher aus. Ob Konrad als Privatperson mit eigenem Angebot darunterfällt, sagen sie nicht; das gehörte zu seiner Prüfung.
 
 `site/texte/datenschutz-fragen.md` trägt diese Angaben. Bricht `--fragen` an einem Platzhalter ab, fehlt noch eine.
 

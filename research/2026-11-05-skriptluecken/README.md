@@ -13,6 +13,22 @@ im Skript**, nur die Suche hat sie nicht geliefert, und **7 sind Fehlalarm**. �
 bewiesen fehlt. Die Einstufung ist mein Urteil; ob etwas ins Skript gehört, entscheidet Konrad. Die Spalte „Vorschlag“ und die
 Literatur kommen aus meinem Wissen, nicht aus dem Skript, und sind ungeprüft.
 
+## Nachtrag 2026-11-06: was daraus wurde
+
+Konrad hat die Liste abgearbeitet: teils das Skript ergänzt, teils bewusst weggelassen, weil es den Rahmen sprengt, teils die Antwort
+im Forum selbst geschrieben. Die Zuordnung unten kommt aus dem Vergleich der Live-Seiten mit dem lokalen Bau und aus dem Skriptstand
+`a74d433`. Sie zeigt, was sich geändert hat, nicht, was er für außerhalb des Rahmens hält.
+
+- **Im Skript ergänzt:** s12, Abschnitt „Warum rückwärts?“ in `autograd-berechnungsgraph`, veröffentlicht. Die Antwort ist neu
+  geschrieben. Der Korpus vom 2026-11-04 kennt den Abschnitt noch nicht.
+- **Antwort neu erklärt, Skript unverändert:** s21.
+- **Absatz „offen“ gestrichen, Skript unverändert:** s02, s13, s14, s16, s22, s25, s29.
+- **Nichts geändert:** s20 und s28. s20 sagt weiter „Offen bleibt“, und das stimmt, s28 behauptet auf der Site keine Lücke.
+
+**Korrektur zur Tabelle „Steht im Skript“:** Sie zählt alle 90 Antworten, auf der Site steht aber nur die von Opus. Die falsche
+Aussage stand dort nur bei s04 und s19, beide hat Konrad bearbeitet. Bei s05, s09 und s10 sagen es nur Haiku oder Sonnet. Auf der Site
+steht „offen“ heute nur noch bei s20.
+
 ## Echte Lücken
 
 ### Zentral
@@ -48,7 +64,7 @@ Hier ist nicht das Skript zu ergänzen, sondern **die Antwort falsch oder unvoll
 | **s05** ★ | Was passiert bei nicht linear trennbaren Daten? | „offen“, zwei Modelle | `glossar`: „sonst terminiert sie nie“; Konvergenzbeweis in `perzeptron-trainieren` | teilweise |
 | **s09** | Warum nicht linear und abschneiden? | „offen“, ein Modell | `was-ist-deep-learning`: lineare Regression mit der Klasse als Ziel, teilweise | nein |
 
-Drei Dinge folgen daraus. Die Antworten stehen so auf der Site. In der Moderation lässt sich der Text ändern, ein neues Zitat
+Drei Dinge folgen daraus. Bei s04 und s19 standen die Antworten so auf der Site (siehe Nachtrag). In der Moderation lässt sich der Text ändern, ein neues Zitat
 aber nicht hinzufügen, das verbietet I4 zu Recht. Und der zweite Anlauf mit ganzen Kapiteln läuft nur bei `kein_beleg`, nicht
 bei Teilantworten. Das `glossar` trifft oft, wird aber selten ausgewählt.
 

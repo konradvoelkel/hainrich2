@@ -221,7 +221,7 @@ pre { overflow-x: auto; }
 :where(body:not(.mod)) .knopf.fragen { border-radius: .6rem; box-shadow: .2rem .2rem 0 var(--schatten); font-weight: 700; transition: translate .12s, box-shadow .12s; }
 :where(body:not(.mod)) .knopf.fragen:hover { translate: -1px -1px; box-shadow: .3rem .3rem 0 var(--schatten); }
 :where(body:not(.mod)) .knopf.fragen:active { translate: .2rem .2rem; box-shadow: none; }
-.welle { text-decoration: underline wavy var(--marke) 2px; text-underline-offset: .22em; }
+.textmarker { padding-inline: .12em; background: linear-gradient(transparent 56%, color-mix(in oklch, var(--marke) 30%, transparent) 56% 94%, transparent 94%); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .vorschau { background: repeating-linear-gradient(-45deg, var(--offen-grund) 0 1rem, color-mix(in oklch, var(--offen-grund) 90%, var(--offen)) 1rem 2rem); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   :where(body:not(.mod)) .knopf.fragen { transition: none; }

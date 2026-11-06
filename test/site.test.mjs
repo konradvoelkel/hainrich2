@@ -187,7 +187,7 @@ test('die Beschreibung ist der Anfang der Antwort, sonst das Kapitel', () => {
 test('die Startseite nennt das Skript in ihrer einzigen H1 und führt zur Idee', () => {
   const html = indexPage([question()], site);
   assert.equal(html.match(/<h1>/g).length, 1);
-  assert.match(html, /<h1>Fragen und Antworten zum Skript <span class="welle">„Einführung in Deep Learning“<\/span><\/h1>/);
+  assert.match(html, /<h1>Fragen und Antworten zum Skript <span class="textmarker">„Einführung in Deep Learning“<\/span><\/h1>/);
   assert.match(html, /<a href="ueber\/">Mehr über die Idee<\/a>/);
   assert.doesNotMatch(html, /<span>Fragen und Antworten/, 'die Kopfzeile wiederholt die H1 nicht');
   assert.match(forumPage(UNTERFOREN[0], [], site), /<span>Fragen und Antworten/);
