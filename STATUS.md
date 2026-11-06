@@ -18,7 +18,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 39 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 184 Unit-Tests, 18 Smoke-Tests und 22 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 187 Unit-Tests, 18 Smoke-Tests und 22 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -28,9 +28,9 @@ _Stand 2026-11-05._
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
-- Der Korpus ist vom Skriptstand 2026-11-04 abends, 442 Passagen, nach dem Umbau des Skripts. Alle Zitat-Links der 30
-  Frageseiten antworten. Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate nach Wortlaut um. Das Skript ist inzwischen
-  weiter: `a74d433` vom 2026-11-05 bringt „Warum rückwärts?“, der Korpus kennt das noch nicht, auch auf dem VPS nicht.
+- Der Korpus ist vom Skriptstand `a74d433`, gebaut am 2026-11-06, 434 Passagen, auch auf dem VPS und im Browser. Er kennt „Warum rückwärts?“.
+  Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate in `antworten.json` nach Wortlaut um, der Folienlink am Kapitelanfang zählt dabei nicht.
+  Die Zitate in `public.db` zieht das nicht um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
@@ -68,7 +68,7 @@ _Stand 2026-11-05._
 
 - Stimmen lassen sich nicht prüfen und die Moderation kann sie nicht zurücksetzen. Wer die Browserdaten löscht, stimmt noch einmal; nur die Grenze je Adresse
   bremst das.
-- Für die geschlossene Alpha mit den aktuellen Studierenden bleibt der Laptop-Key auf dem VPS, den eigenen Key setzt Konrad erst danach (2026-11-06). Die Rechtstexte hat er freigegeben, die Fragen zu Anthropic geprüft: Die Umsetzung stimmt (Plan §11.3).
+- Für die geschlossene Alpha mit den aktuellen Studierenden bleibt der Laptop-Key auf dem VPS, den eigenen Key setzt Konrad erst danach (2026-11-06). Die Grenzen sind dafür angehoben (D24): 50 Anfragen am Tag, der Monatsdeckel von 15 $ reicht bei rund 8 ct je Anfrage für etwa 180. Darüber bleibt die Frage ohne Entwurf, die Texte sagen das noch nicht. Die Rechtstexte hat er freigegeben, die Fragen zu Anthropic geprüft: Die Umsetzung stimmt (Plan §11.3).
 - Keine Varianten, keine Votes, keine gelabelten Paare, keine eigenen Antworten, kein Richter: Duplikate entscheidet die Moderation
   von Hand. Kein Themen-Hinweis aus §8, kein Kurscode-Scan aus I7, keine Vornamenliste im Checker.
 - Bleibt eine freigegebene Frage wegen Deckel oder Ausfall ohne Antwort, gibt es keinen zweiten Versuch. Die Seite sagt dann „noch keine
@@ -97,7 +97,7 @@ _Stand 2026-11-05._
   hat er am 2026-11-06 freigegeben, mit dem Zusatz, dass die Moderation alles sieht (Zustimmung Version 2).
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
-- Smoke-Test nur in Chromium, nicht in Firefox und Safari.
+- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün, unter WebKit scheitern 13 von 22 an der Anmeldung, vermutlich weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt; nachgewiesen ist das nicht.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
 - Text-Fragmente nur in Chromium und nur an vier Links geprüft.
 - Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.
@@ -106,5 +106,5 @@ _Stand 2026-11-05._
 ## Nächster Schritt
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
-Als Nächstes gehört der Korpus neu gebaut. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes
+Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes
 indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

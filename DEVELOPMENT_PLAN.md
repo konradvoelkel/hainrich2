@@ -43,6 +43,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D21 | Über Fragen dürfen alle abstimmen, auch ohne Kurscode: hoch oder runter, die Summe steht an der Frage, Listen sortieren danach (Konrad, 2026-11-05). Weil niemand angemeldet ist, ist eine Stimme nicht überprüfbar: Wer die Browserdaten löscht, stimmt noch einmal. Deshalb entscheidet die Summe nichts, sie sortiert nur. Sie blendet nichts aus und ändert keine Kosten. |
 | D22 | Beiträge tragen Namen wie in einem Forum (Konrad, 2026-11-06): Der Bot heißt hAInrich2 und bleibt als Bot erkennbar (I8), Fragen von außen stehen unter „Anonymer Nutzer“, Beispielfragen weiter unter „Frage“, weil sie von niemandem aus dem Kurs stammen, Antworten der Moderation unter Konrad Völkel mit Foto und Link. Das steht vorerst fest in `lib/site.js`. Später gibt es mehrere Moderationskonten: Jede Antwort merkt sich ihr Konto, Name, Bild und Link kommen von dort, alte Antworten gehören Konrad, und wer admin ist, ist immer auch Moderator. |
 | D23 | Die Moderation kann Claude zu einer öffentlichen Frage noch einmal fragen (Konrad, 2026-11-06). Der zweite Lauf liest ganze Kapitel, dieselben Passagen ergäben dieselbe Antwort. Das Ergebnis wartet als Vorschlag in `vorschlaege`, öffentlich ändert sich erst etwas, wenn die Moderation es übernimmt; der Verlauf behält den alten Text. I1 bleibt gewahrt, weil nur freigegebener Text geht, und die Deckel gelten wie sonst. |
+| D24 | Für die geschlossene Alpha gelten höhere Grenzen (Konrad, 2026-11-06): 50 Anfragen am Tag im Worker, je Adresse 10 Fehlversuche in 15 Minuten, 30 Tokens und 20 Fragen in der Stunde, insgesamt 60 Fehlversuche in 15 Minuten. Ein Hörsaal kann hinter einer Adresse sitzen. Je Token bleibt es bei 2 Fragen in der Stunde, der Monatsdeckel bleibt bei 15 $. Die Texte zum Deckel bleiben vorerst, wie sie sind. |
 | D19 | Das Forum hat Unterforen, nach dem Inhaltsverzeichnis des Skripts: Grundlagen, Lernen und Training, Architekturen und Repräsentationen, Praxis und Anwendung (Konrad, 2026-11-05). Eine Frage gehört über ihr Kapitel zu genau einem; `Optimierer` zählt zum Training. Die Adressen liegen unter `f/`, das bedient Caddy schon aus `live/`. |
 
 ## 3. Invarianten
@@ -295,7 +296,7 @@ prüft `stop_reason` auf `refusal`. Im Betrieb gehört `fallbacks: "default"` da
 bewusst aus, damit kein anderes Modell unbemerkt einspringt. Entwürfe laufen einzeln, nicht im Batch: Batch verträgt sich
 nicht mit `fallbacks` und wäre nicht sofort.
 
-Seit D20 kostet eine Frage Geld, bevor ein Mensch sie gesehen hat. Deshalb zählt der Worker selbst: höchstens 20 Anfragen am
+Seit D20 kostet eine Frage Geld, bevor ein Mensch sie gesehen hat. Deshalb zählt der Worker selbst: höchstens 50 Anfragen am
 Tag und 15 $ im Monat, darüber bleibt die Frage ohne Entwurf. Das liegt mit Abstand unter den 20 $ aus D14, das Limit in der
 Console bleibt der zweite Deckel (I6). Beide Werte sind Vorgaben, die Konrad ändern kann.
 
@@ -366,12 +367,12 @@ ihr entfällt der Auftrag an den Worker. Bleibt `kein_beleg` stehen, liegt die F
 - `POST /api/token` prüft den Kurscode gegen den Hash und gibt ein signiertes, zufälliges Token aus,
   das im `localStorage` liegt. Der Server speichert dazu nichts. Es gibt keine Nutzerkonten. Der Schlüssel zum Signieren hängt
   am Hash des Codes.
-- Fehlversuche und Ausgabe werden je IP begrenzt, nur im Arbeitsspeicher: 5 Fehlversuche in 15 Minuten, 5 Tokens und 6 Fragen
-  in der Stunde je Adresse.
+- Fehlversuche und Ausgabe werden je IP begrenzt, nur im Arbeitsspeicher: 10 Fehlversuche in 15 Minuten, 30 Tokens und 20 Fragen
+  in der Stunde je Adresse, dazu 60 Fehlversuche in 15 Minuten insgesamt (D24).
 - Grenzen als Vorgabe: 2 neue Fragen pro Stunde je Token, höchstens 100 offene Fragen insgesamt,
-  20 Anfragen am Tag im Worker (§7.4). Was über dem Tagesdeckel liegt, wartet auf die Moderation.
+  50 Anfragen am Tag im Worker (§7.4). Was über dem Tagesdeckel liegt, wartet auf die Moderation.
 - Die Grenze je Nutzer ist weich: Alle teilen einen Code, wer ihn neu eingibt, bekommt ein neues Token. Seit D20 kostet Missbrauch
-  deshalb Geld, bis zum Deckel des Worker: im schlimmsten Fall rund 1,60 $ am Tag und 15 $ im Monat. Öffentlich wird er
+  deshalb Geld, bis zum Deckel des Worker: im schlimmsten Fall rund 4 $ am Tag und 15 $ im Monat. Öffentlich wird er
   weiter nicht. Der eigentliche Schutz ist der Deckel, nicht das Limit.
 - Abstimmen braucht kein Token (D21). Je Adresse gehen 200 Stimmen in der Stunde, insgesamt 5000, nur im Arbeitsspeicher. Hoch angesetzt, weil ein Hörsaal
   hinter einer Adresse sitzt. Das bremst Skripte, verhindert aber keine Manipulation.

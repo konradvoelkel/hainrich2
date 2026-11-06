@@ -79,10 +79,17 @@ test('der Kurscode gibt ein Token aus, ein falscher nicht, und ohne Token gibt e
   assert.equal((await c.ask()).status, 201);
 });
 
-test('nach fünf falschen Codes hilft auch der richtige nicht mehr', async t => {
+test('nach zehn falschen Codes hilft auch der richtige nicht mehr', async t => {
   const c = await setup();
   t.after(c.close);
-  for (let i = 0; i < 5; i++) await c.post('token', { kurscode: 'falsch' });
+  for (let i = 0; i < 10; i++) await c.post('token', { kurscode: 'falsch' });
+  assert.equal((await c.post('token', { kurscode: CODE })).status, 429);
+});
+
+test('ein Hörsaal hinter einer Adresse kommt rein, erst der 31. Zugang wartet', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (let i = 0; i < 30; i++) assert.equal((await c.post('token', { kurscode: CODE })).status, 200);
   assert.equal((await c.post('token', { kurscode: CODE })).status, 429);
 });
 
