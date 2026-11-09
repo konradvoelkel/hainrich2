@@ -25,6 +25,12 @@ npm test
 node tools/review.mjs
 ```
 
+Ob sich das veröffentlichte Skript seit dem Korpus geändert hat und welche Antworten Wortlaut zitieren, den es nicht mehr gibt:
+
+```bash
+node tools/skriptstand.mjs
+```
+
 Die Site bauen, dann gegen den fertigen Baum testen. `--modell` zeigt vorerst nur Platzhalter, bis der
 Blindvergleich entschieden ist:
 

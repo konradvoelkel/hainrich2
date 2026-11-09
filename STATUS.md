@@ -18,7 +18,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 39 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 187 Unit-Tests, 18 Smoke-Tests und 22 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 193 Unit-Tests, 18 Smoke-Tests und 22 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -28,9 +28,16 @@ _Stand 2026-11-05._
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
-- Der Korpus ist vom Skriptstand `a74d433`, gebaut am 2026-11-06, 434 Passagen, auch auf dem VPS und im Browser. Er kennt „Warum rückwärts?“.
+- Der Korpus für Worker und Moderation auf dem VPS ist vom Skriptstand `0513757`, gebaut am 2026-11-09, 442 Passagen. Die Suche im Browser und `phase1`
+  stehen noch auf `a74d433` vom 2026-11-06, 434 Passagen: `site/build.mjs` verlangt für jedes Zitat in `antworten.json` ID und Hash im Korpus (I4), und 44 davon
+  passen nach `0513757` nicht mehr. Der neue Korpus liegt deshalb getrennt unter `work/korpus-2026-11-09/`.
   Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate in `antworten.json` nach Wortlaut um, der Folienlink am Kapitelanfang zählt dabei nicht.
   Die Zitate in `public.db` zieht das nicht um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
+- `node tools/skriptstand.mjs` vergleicht die veröffentlichte `llms-full.txt` mit dem
+  Korpus und nennt die Antworten in `antworten.json`, deren Zitat es so nicht mehr gibt (Exit 1). Für `public.db` zeigt die Moderation dieselbe Liste, in der Übersicht
+  und an der Frage, gemessen am ausgespielten Korpus; der Web-Prozess liest ihn aus `korpus/` neben `app/`. Die Liste ist seit 2026-11-09 live, angesehen hat sie
+  auf dem Host nur Konrad; erwartet sind 14 Fragen, s30 ist nicht online.
+  Einen Auslöser vom Skript aus wie bei ds-en gibt es nicht, der Check läuft von Hand.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,

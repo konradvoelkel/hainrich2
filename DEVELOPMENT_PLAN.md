@@ -549,6 +549,8 @@ geänderte Seiten gebündelt alle 15 Sekunden neu. Die Abstimmung selbst braucht
 
 **Phase 4: Worker live.** Richter, Antworten, Budgetdeckel, Skriptstand-Prüfung. Abnahme: Eine Woche
 Betrieb mit echten Kosten auf der Seite Zahlen.
+Die Skriptstand-Prüfung gibt es seit 2026-11-09: `tools/skriptstand.mjs` von Hand, dazu die Liste veralteter Zitate in der Moderation. Veraltet heißt: Der
+Wortlaut steht in keiner Passage mehr, Ort und Schnitt zählen nicht. Ein Auslöser vom Skript aus, wie ihn ds-en mit `upstream.yml` hat, fehlt noch.
 
 **Phase 5: Skript-Anbindung.** Abschnitts-Link, Lückenbericht.
 

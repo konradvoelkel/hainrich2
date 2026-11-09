@@ -21,14 +21,14 @@ const question = (id, text, antwort) => ({
   antworten: [{ art: 'bot', status: 'ungeprüft', modell: 'test-modell', text: antwort, zitate: [{ titel: 'Titel', pfad: ['Abschnitt'], text: 'Wörtliches Zitat.', url: 'https://skript.test/a/' }] }],
 });
 
-async function setup() {
+async function setup({ passages = null } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-'));
   const live = path.join(dir, 'live');
   const store = openStore(path.join(dir, 'public.db'));
   store.importQuestions([question('s01', 'Was ist ein Neuron?', 'Ein Neuron rechnet.[1]'), question('s02', 'Was ist ein Tensor?', 'Ein Tensor ist ein Array.[1]')], [[1, 0], [0, 1]], site);
   store.saveModerator('konrad', 'admin', await hashPassphrase(PASSPHRASE));
   await publishAll(live, store);
-  const server = http.createServer(createHandler({ store, live }));
+  const server = http.createServer(createHandler({ store, live, passages }));
   await new Promise(done => server.listen(0, '127.0.0.1', done));
   const origin = `http://127.0.0.1:${server.address().port}`;
   const form = (url, fields, { cookie, from = origin, fetchSite } = {}) => fetch(`${origin}${url}`, {
@@ -50,6 +50,24 @@ async function setup() {
 }
 
 const edit = { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'speichern' };
+
+test('Zitate, die das ausgespielte Skript so nicht mehr hat, stehen in der Übersicht und an der Frage', async t => {
+  const c = await setup({ passages: [{ id: 'p', page: 'tensoren', text: 'Ein anderer Wortlaut.' }] });
+  t.after(c.close);
+  const cookie = await c.signIn();
+  assert.match(await (await c.get('/eidl/mod/', cookie)).text(), /Zitat steht so nicht mehr im Skript \(2\)/);
+  assert.match(await (await c.get('/eidl/mod/f/s01/', cookie)).text(), /Nicht mehr wörtlich im Skript: \[1\]\./);
+});
+
+test('steht der Wortlaut noch da oder fehlt der Korpus, gibt es keine Liste', async () => {
+  for (const passages of [[{ id: 'p', page: 'tensoren', text: 'Davor. Wörtliches Zitat. Danach.' }], null]) {
+    const c = await setup({ passages });
+    const cookie = await c.signIn();
+    const html = await (await c.get('/eidl/mod/', cookie)).text() + await (await c.get('/eidl/mod/f/s01/', cookie)).text();
+    c.close();
+    assert.doesNotMatch(html, /nicht mehr (wörtlich )?im Skript/);
+  }
+});
 
 test('ohne Sitzung gibt es nur die Anmeldung, und nichts lässt sich ändern', async t => {
   const c = await setup();

@@ -9,8 +9,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parsePages, pagePassages, parseBlocks } from '../lib/segment.js';
 import { createEmbedder } from '../lib/embedder.js';
+import { SKRIPT_SITE } from '../lib/skriptstand.js';
 
-const SITE = 'https://eidl-skript-131e30.pages.cs.uni-duesseldorf.de';
+const SITE = SKRIPT_SITE;
 const dir = process.argv[2];
 
 const plain = html => html.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
