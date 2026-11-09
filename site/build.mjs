@@ -29,7 +29,7 @@ if (!args.modell) throw new Error('--modell fehlt: Welche Antworten die Site zei
 /** aus dem Messbericht, research/2026-11-04-browsermodell */
 const MODEL_SHA = {
   'onnx/model_quantized.onnx': 'f37dfa6645b390114197d006274c4f330a71b12c973f55194f64a301aaef20d4',
-  'tokenizer.json': 'a7b955b5cb8d67f95542125b44e791248280deab367f8f4fa7da6eb4866a68f4',
+  'tokenizer.json': 'a7b955b5cb8d67f95542125b44e791248280deab367f8f4fa7da6eb4866a68f4', // gitleaks:allow, eine Prüfsumme
 };
 const MODEL_FILES = ['config.json', 'tokenizer_config.json', 'special_tokens_map.json', ...Object.keys(MODEL_SHA)];
 const ROUND = 4;

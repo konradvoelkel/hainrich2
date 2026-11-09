@@ -1,0 +1,3 @@
+# Fehlalarm von gitleaks (generic-api-key), geprüft am 2026-11-09: Das ist die SHA-256-Prüfsumme von
+# tokenizer.json in MODEL_SHA, kein Schlüssel. Der Messbericht research/2026-11-04-browsermodell nennt sie.
+13ca56b60d1c91e4270380a50bcb3b8588319ced:site/build.mjs:generic-api-key:27

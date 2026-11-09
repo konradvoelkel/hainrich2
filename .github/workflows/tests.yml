@@ -3,9 +3,9 @@ name: Tests
 # Die Unit-Tests (`npm test`, also `node --test`) bei jedem Push und Pull Request auf main.
 # Angelegt am 2026-11-06, vorher hatte das Repo keine CI (Playbook §5 Punkt 7).
 #
-# Sie laufen auf Konrads eigenem Runner `ci-eu` (Repo `ci-server`, dessen README ist die
-# Bedienungsanleitung), nicht auf GitHubs. Der Runner ist an genau dieses Repo gebunden und nimmt
-# nur private Repos: Wird hainrich2 öffentlich, muss vorher der Runner weg (Playbook §5 Punkt 10).
+# Bis zur Veröffentlichung liefen sie auf Konrads eigenem Runner `ci-eu` (Repo `ci-server`). Der nimmt
+# nur private Repos, denn der Pull Request eines Forks liefe dort als root (Playbook §3.7, §5 Punkt 10).
+# Seitdem laufen sie auf GitHubs Runnern, und die Zeile für hainrich2 in `ci-server` ist zu entfernen.
 #
 # Der Smoke-Test (`npm run smoke`, Playwright) fehlt hier mit Absicht. Er läuft gegen die gebaute
 # Site, und die liegt samt Modellen und WASM außerhalb des Repos (CLAUDE.md, „Was beißt“ 11). In
@@ -17,8 +17,7 @@ on:
   pull_request:
     branches: [main]
 
-# Das Repo hat auf ci-eu genau einen Runner, Läufe stellen sich also hintereinander an. Ein neuer
-# Lauf für denselben Ref ersetzt den alten, statt hinter ihm zu warten.
+# Ein neuer Lauf für denselben Ref ersetzt den alten, statt hinter ihm zu warten.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -31,22 +30,16 @@ permissions:
 jobs:
   unit:
     name: node --test
-    runs-on: [self-hosted, ci-eu]
-    # GitHubs Vorgabe sind 360 Minuten, und ein hängender Job blockiert das einzige Gleis. Die
-    # Tests brauchen unter einer Minute.
+    runs-on: ubuntu-24.04
+    # GitHubs Vorgabe sind 360 Minuten. Die Tests brauchen unter einer Minute.
     timeout-minutes: 15
-    # Im Container, weil der Host kein Node hat und der Runner dauerhaft ist: Der Container
-    # beginnt jedes Mal beim selben Image. Node 24 wie auf dem VPS (`node_major` im Server-Repo).
+    # Im Container, damit Node genau die Fassung des VPS ist (`node_major` im Server-Repo) und nicht
+    # die, die das Runner-Image gerade mitbringt.
     # Gepinnt per Digest, aufgelöst am 2026-11-06; der Tag davor ist nur für Menschen. `slim` hat
     # kein git. actions/checkout holt den Stand dann als Archiv über die API, und ein
     # .git-Verzeichnis braucht hier nichts.
     container:
       image: node:24.22.2-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
-    env:
-      # In einem Container-Job ist $HOME ein Verzeichnis des Runners, und der Job ist root. Ein
-      # npm-Cache dort bliebe als root-eigener Baum auf dem Host liegen und der nächste Lauf fände
-      # ihn. Dieser Pfad liegt im Container und verschwindet mit ihm.
-      npm_config_cache: /opt/ci/npm-cache
     steps:
       # Per Commit-SHA gepinnt, ein Tag lässt sich verschieben. Der Kommentar nennt die Fassung,
       # aufgelöst am 2026-11-06 mit `gh api repos/actions/checkout/git/ref/tags/v5.1.0`.
