@@ -28,9 +28,9 @@ _Stand 2026-11-05._
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
-- Der Korpus für Worker und Moderation auf dem VPS ist vom Skriptstand `0513757`, gebaut am 2026-11-09, 442 Passagen. Die Suche im Browser und `phase1`
+- Der Korpus für Worker und Moderation auf dem VPS ist vom Skriptstand `47662f1`, gebaut am 2026-11-10, 444 Passagen. Die Suche im Browser und `phase1`
   stehen noch auf `a74d433` vom 2026-11-06, 434 Passagen: `site/build.mjs` verlangt für jedes Zitat in `antworten.json` ID und Hash im Korpus (I4), und 44 davon
-  passen nach `0513757` nicht mehr. Der neue Korpus liegt deshalb getrennt unter `work/korpus-2026-11-09/`.
+  passen nach `0513757` nicht mehr. Der Korpus, der live ist, liegt deshalb getrennt unter `work/korpus-2026-11-10/`.
   Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate in `antworten.json` nach Wortlaut um, der Folienlink am Kapitelanfang zählt dabei nicht.
   Die Zitate in `public.db` zieht das nicht um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
 - `node tools/skriptstand.mjs` vergleicht die veröffentlichte `llms-full.txt` mit dem
