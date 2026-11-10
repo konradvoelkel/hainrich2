@@ -28,16 +28,17 @@ _Stand 2026-11-05._
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
-- Der Korpus für Worker und Moderation auf dem VPS ist vom Skriptstand `47662f1`, gebaut am 2026-11-10, 444 Passagen. Die Suche im Browser und `phase1`
-  stehen noch auf `a74d433` vom 2026-11-06, 434 Passagen: `site/build.mjs` verlangt für jedes Zitat in `antworten.json` ID und Hash im Korpus (I4), und 44 davon
-  passen nach `0513757` nicht mehr. Der Korpus, der live ist, liegt deshalb getrennt unter `work/korpus-2026-11-10/`.
-  Ändert sich das Skript wieder, zieht `tools/move-citations.mjs` die Zitate in `antworten.json` nach Wortlaut um, der Folienlink am Kapitelanfang zählt dabei nicht.
-  Die Zitate in `public.db` zieht das nicht um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
+- Der Korpus auf dem VPS, für Worker, Moderation und die Suche im Browser, ist vom Skriptstand `7a6254c`, gebaut am 2026-11-10 abends,
+  444 Passagen, unter `work/korpus-2026-11-10b/`. Seit D25 (2026-11-10) zeigt `work/korpus-aktuell` darauf, und `site/build.mjs` baut die Suche
+  daraus (`--korpus`); vorher stand die Suche auf 434 Passagen vom 2026-11-06. `phase1` bleibt eingefroren auf `a74d433`: Die Antworten in
+  `antworten.json` zitieren daraus, und der Bau prüft ihre Zitate dagegen (I4, `--daten`).
+  Die Zitate in `public.db` zieht kein Werkzeug um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
 - `node tools/skriptstand.mjs` vergleicht die veröffentlichte `llms-full.txt` mit dem
-  Korpus und nennt die Antworten in `antworten.json`, deren Zitat es so nicht mehr gibt (Exit 1). Für `public.db` zeigt die Moderation dieselbe Liste, in der Übersicht
+  Korpus hinter `work/korpus-aktuell` und nennt die Antworten in `antworten.json`, deren Zitat es so nicht mehr gibt (Exit 1). Für `public.db` zeigt die Moderation dieselbe Liste, in der Übersicht
   und an der Frage, gemessen am ausgespielten Korpus; der Web-Prozess liest ihn aus `korpus/` neben `app/`. Die Liste ist seit 2026-11-09 live, angesehen hat sie
   auf dem Host nur Konrad; erwartet sind 14 Fragen, s30 ist nicht online.
-  Einen Auslöser vom Skript aus wie bei ds-en gibt es nicht, der Check läuft von Hand.
+  Einen Auslöser vom Skript aus wie bei ds-en gibt es nicht, der Check läuft von Hand. Zuletzt nachgezogen am 2026-11-10 abends:
+  `cfbb330` und `ae6ec6d` ändern je eine Passage in `aktivierungsfunktionen` und `uebungsblaetter`.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,

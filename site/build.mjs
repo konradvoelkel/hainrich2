@@ -3,6 +3,8 @@
  * Allowlist statt Kopie des Repos (Playbook §3.10). Ohne --release trägt jede Seite ein Vorschau-Banner. --fragen nimmt die Rechtstexte
  * für den Fragepfad auf, --stimmen den Absatz zum Abstimmen. Text und Technik gehen am selben Tag live, also gehört jeder der beiden
  * Schalter zu seinem Gegenstück auf dem Server: Kurscode-Hash und `hainrich2_stimmen`.
+ * --daten liefert die Antworten und den Korpus, aus dem sie zitieren, --korpus den Korpus für die Suche im Browser. Getrennt, weil der
+ * erste mit den Antworten eingefroren ist und der zweite dem Skript folgt; auf dem Server kommen die Frageseiten ohnehin aus `live/`.
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -23,6 +25,7 @@ const { values: args } = parseArgs({ options: {
   stimmen: { type: 'boolean', default: false },
   ziel: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/site' },
   daten: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/work/phase1' },
+  korpus: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/work/korpus-aktuell' },
 } });
 if (!args.modell) throw new Error('--modell fehlt: Welche Antworten die Site zeigt, entscheidet der Blindvergleich.');
 
@@ -41,13 +44,14 @@ if (!env.SITE_KONTAKT || !env.SITE_ANSCHRIFT) throw new Error('site.env: SITE_KO
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const seeds = readJson(path.join(repo, 'seeds/fragen.json'));
 const rows = readJson(path.join(args.daten, 'antworten.json')).filter(r => r.model === args.modell);
-const { passages, fetched } = readJson(path.join(args.daten, 'corpus.json'));
-const passageVectors = readJson(path.join(args.daten, 'vectors.json'));
+const { passages: cited, fetched } = readJson(path.join(args.daten, 'corpus.json'));
+const { passages, fetched: korpusFetched } = readJson(path.join(args.korpus, 'corpus.json'));
+const passageVectors = readJson(path.join(args.korpus, 'vectors.json'));
 if (passageVectors.length !== passages.length) throw new Error('vectors.json passt nicht zu corpus.json');
 if (rows.length !== seeds.length) throw new Error(`${args.modell}: ${rows.length} Antworten für ${seeds.length} Fragen`);
 
 const day = fetched.slice(0, 10);
-const questions = seeds.map(seed => publicQuestion(seed, rows.find(r => r.seed === seed.id), passages, day));
+const questions = seeds.map(seed => publicQuestion(seed, rows.find(r => r.seed === seed.id), cited, day));
 
 const staging = fs.mkdtempSync(`${args.ziel}.bau-`);
 const base = path.join(staging, env.SITE_BASE);
@@ -176,4 +180,4 @@ fs.rmSync(args.ziel, { recursive: true, force: true });
 fs.renameSync(staging, args.ziel);
 fs.chmodSync(args.ziel, 0o755);
 
-console.log(`${pages.length} Seiten, ${questions.length} Fragen mit ${args.modell}, erster Klick ${(loadBytes / 1e6).toFixed(1)} MB Brotli, ${args.ziel}`);
+console.log(`${pages.length} Seiten, ${questions.length} Fragen mit ${args.modell}, Suche über ${passages.length} Passagen vom ${korpusFetched.slice(0, 10)}, erster Klick ${(loadBytes / 1e6).toFixed(1)} MB Brotli, ${args.ziel}`);

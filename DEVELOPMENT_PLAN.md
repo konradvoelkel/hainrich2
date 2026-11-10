@@ -44,6 +44,7 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D22 | Beiträge tragen Namen wie in einem Forum (Konrad, 2026-11-06): Der Bot heißt hAInrich2 und bleibt als Bot erkennbar (I8), Fragen von außen stehen unter „Anonymer Nutzer“, Beispielfragen weiter unter „Frage“, weil sie von niemandem aus dem Kurs stammen, Antworten der Moderation unter Konrad Völkel mit Foto und Link. Das steht vorerst fest in `lib/site.js`. Später gibt es mehrere Moderationskonten: Jede Antwort merkt sich ihr Konto, Name, Bild und Link kommen von dort, alte Antworten gehören Konrad, und wer admin ist, ist immer auch Moderator. |
 | D23 | Die Moderation kann Claude zu einer öffentlichen Frage noch einmal fragen (Konrad, 2026-11-06). Der zweite Lauf liest ganze Kapitel, dieselben Passagen ergäben dieselbe Antwort. Das Ergebnis wartet als Vorschlag in `vorschlaege`, öffentlich ändert sich erst etwas, wenn die Moderation es übernimmt; der Verlauf behält den alten Text. I1 bleibt gewahrt, weil nur freigegebener Text geht, und die Deckel gelten wie sonst. |
 | D24 | Für die geschlossene Alpha gelten höhere Grenzen (Konrad, 2026-11-06): 50 Anfragen am Tag im Worker, je Adresse 10 Fehlversuche in 15 Minuten, 30 Tokens und 20 Fragen in der Stunde, insgesamt 60 Fehlversuche in 15 Minuten. Ein Hörsaal kann hinter einer Adresse sitzen. Je Token bleibt es bei 2 Fragen in der Stunde, der Monatsdeckel bleibt bei 15 $. Die Texte zum Deckel bleiben vorerst, wie sie sind. |
+| D25 | Antworten und Suchkorpus kommen aus getrennten Verzeichnissen (Konrad, 2026-11-10). `phase1` bleibt eingefroren: die 90 Beispielantworten und der Korpus vom 2026-11-06, aus dem sie zitieren; gegen ihn prüft `site/build.mjs --daten` die Zitate (I4). Die Suche im Browser, Worker und Moderation bekommen den Korpus hinter dem Verweis `work/korpus-aktuell` (`--korpus`, `site/deploy-app.sh`), ebenso `tools/skriptstand.mjs`. Vorher hielt I4 die Suche auf dem Stand der Antworten fest, obwohl auf dem Server alle Frageseiten aus `live/` kommen. Die Antworten neu zu erzeugen hätte Geld gekostet und an der Suche nichts geändert. |
 | D19 | Das Forum hat Unterforen, nach dem Inhaltsverzeichnis des Skripts: Grundlagen, Lernen und Training, Architekturen und Repräsentationen, Praxis und Anwendung (Konrad, 2026-11-05). Eine Frage gehört über ihr Kapitel zu genau einem; `Optimierer` zählt zum Training. Die Adressen liegen unter `f/`, das bedient Caddy schon aus `live/`. |
 
 ## 3. Invarianten
@@ -551,6 +552,7 @@ geänderte Seiten gebündelt alle 15 Sekunden neu. Die Abstimmung selbst braucht
 Betrieb mit echten Kosten auf der Seite Zahlen.
 Die Skriptstand-Prüfung gibt es seit 2026-11-09: `tools/skriptstand.mjs` von Hand, dazu die Liste veralteter Zitate in der Moderation. Veraltet heißt: Der
 Wortlaut steht in keiner Passage mehr, Ort und Schnitt zählen nicht. Ein Auslöser vom Skript aus, wie ihn ds-en mit `upstream.yml` hat, fehlt noch.
+Seit 2026-11-10 vergleicht sie mit dem Korpus hinter `work/korpus-aktuell`, den auch Suche, Worker und Moderation bekommen (D25).
 
 **Phase 5: Skript-Anbindung.** Abschnitts-Link, Lückenbericht.
 

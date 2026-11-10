@@ -8,7 +8,7 @@
 #   VPS_HOST   user@<server>, in der gitignorten site/deploy.local.env
 #   VPS_APP    /srv/hainrich2/app
 #   VPS_KORPUS /srv/hainrich2/korpus
-#   KORPUS     corpus.json und vectors.json, Vorgabe ist das Arbeitsverzeichnis von Phase 1
+#   KORPUS     corpus.json und vectors.json, Vorgabe ist work/korpus-aktuell, wie bei site/build.mjs --korpus
 #   DRY_RUN=1  zeigt, was rsync täte, lädt nichts hoch und startet nichts neu
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 VPS_HOST=${VPS_HOST:?VPS_HOST=user@host in site/deploy.local.env setzen}
 VPS_APP=${VPS_APP:-/srv/hainrich2/app}
 VPS_KORPUS=${VPS_KORPUS:-/srv/hainrich2/korpus}
-KORPUS=${KORPUS:-/media/konrad/xtraspace/hainrich2/work/phase1}
+KORPUS=${KORPUS:-/media/konrad/xtraspace/hainrich2/work/korpus-aktuell}
 
 out=$(mktemp -d)
 trap 'rm -rf "$out"' EXIT

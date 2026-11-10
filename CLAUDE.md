@@ -71,7 +71,17 @@ Den Hash zum Kurscode für den Vault macht Konrad selbst, die Eingabe ist verdec
 node tools/kurscode-hash.mjs
 ```
 
-Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
+Die Antworten aus Phase 1 und der Korpus, aus dem sie zitieren, liegen eingefroren unter
+`/media/konrad/xtraspace/hainrich2/work/phase1/`. Der Korpus, der live ist, liegt hinter dem Verweis `work/korpus-aktuell` (Plan D25).
+Ein neues Skript zieht so nach: Korpus in ein eigenes Verzeichnis bauen, prüfen, den Verweis umstellen, die Site bauen, beides ausspielen.
+
+```bash
+node tools/build-corpus.mjs /media/konrad/xtraspace/hainrich2/work/korpus-<datum>
+```
+
+```bash
+ln -sfn korpus-<datum> /media/konrad/xtraspace/hainrich2/work/korpus-aktuell
+```
 
 ## Was beißt
 
@@ -98,3 +108,5 @@ Arbeitsdaten liegen unter `/media/konrad/xtraspace/hainrich2/work/phase1/`.
     `ZUSTIMMUNG.version` in `lib/fragen.js`.
 11. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
    `/media/konrad/xtraspace/hainrich2/`, nicht im Repo.
+12. **`phase1` wird nie getauscht.** `site/build.mjs` prüft die Zitate in `antworten.json` gegen den Korpus daneben (I4) und bricht
+   sonst ab. Die Suche im Browser (`--korpus`), `site/deploy-app.sh` und `tools/skriptstand.mjs` nehmen `work/korpus-aktuell`.
