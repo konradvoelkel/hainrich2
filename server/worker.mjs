@@ -19,11 +19,21 @@ if (!schlange || !korpus || !kosten || !credentials) throw new Error('HAINRICH2_
 const spool = openSpool(schlange);
 if (!spool.jobs().length) process.exit(0);
 
-/** zwei Minuten reichen für eine Antwort, die Wiederholungen übernimmt das SDK */
-const client = new Anthropic({ apiKey: fs.readFileSync(path.join(credentials, 'anthropic'), 'utf8').trim(), timeout: 120_000, maxRetries: 2 });
+/**
+ * Die Unit bricht den Lauf nach 15 Minuten ab (`TimeoutStartSec` im Server-Repo). Ein Auftrag braucht höchstens zwei Anläufe zu je zwei
+ * Minuten und ein paar Pausen, also fängt der Worker nach acht Minuten keinen neuen mehr an.
+ */
+const RUN_MS = 8 * 60_000;
+const started = Date.now();
+
+/**
+ * Zwei Minuten reichen für eine Antwort. Das SDK wiederholt nichts: Es würde auch nach einem Timeout noch einmal senden, und keine dieser
+ * Anfragen stünde im Kostenbuch. Wiederholt wird in lib/draft.js, Anfrage für Anfrage gebucht.
+ */
+const client = new Anthropic({ apiKey: fs.readFileSync(path.join(credentials, 'anthropic'), 'utf8').trim(), timeout: 120_000, maxRetries: 0 });
 const call = params => client.beta.messages.create({ ...params, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' });
 const day = new Date().toISOString().slice(0, 10);
 const ledger = new Ledger(path.join(kosten, `kosten-${day.slice(0, 7)}.json`), DOLLARS_PER_MONTH);
 
-await runJobs({ spool, corpus: await openCorpus(korpus), call, ledger, day });
+await runJobs({ spool, corpus: await openCorpus(korpus), call, ledger, day, until: started + RUN_MS });
 process.exit(0);

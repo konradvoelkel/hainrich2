@@ -10,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createApi } from '../lib/api.js';
 import { hashPassphrase } from '../lib/auth.js';
+import { Ledger } from '../lib/budget.js';
 import { runJobs } from '../lib/draft.js';
 import { createFragen } from '../lib/fragen.js';
 import { createHandler } from '../lib/mod.js';
@@ -55,7 +56,8 @@ const call = async request => ({
   usage: {},
   content: [/Keras/.test(request.messages[0].content.at(-1).text) ? { type: 'text', text: 'KEIN_BELEG' } : { type: 'text', text: 'Ein Entwurf mit Formel $c^2$.', citations: [{ document_index: 0 }] }],
 });
-const ledger = { entries: [], total: 0, limit: 1, addResponse() {} };
+/** das echte Kostenbuch, damit der Weg über Buchung und Antwort derselbe ist wie auf dem Server; die Attrappe kostet nichts */
+const ledger = new Ledger(path.join(dir, 'kostenbuch-attrappe.json'), 1000);
 setInterval(async () => {
   await runJobs({ spool, corpus, call, ledger, day: '2026-11-05', model: 'attrappe' });
   await frageweg.collect();

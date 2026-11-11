@@ -18,7 +18,7 @@ _Stand 2026-11-05._
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
   `/media/konrad/xtraspace/hainrich2/site/`. 39 Seiten, Suche im Browser, Impressum und
-  Datenschutz. 193 Unit-Tests, 18 Smoke-Tests und 22 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
+  Datenschutz. 216 Unit-Tests, 18 Smoke-Tests und 23 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
@@ -90,6 +90,10 @@ _Stand 2026-11-05._
 
 ## Nicht geprüft
 
+- Threat Model vom 2026-11-11 (`research/2026-11-11-threat-model/`): Von elf Befunden sind fünf behoben, getestet und seit dem 2026-11-11 ausgespielt (D26: Bremsen, /64, `api/meine`,
+  Kostenbuch, Laufzeit des Worker), aus dem Arbeitsbaum vor dem Commit. Am Host geprüft sind der Start des Web-Prozesses und der Smoke-Test (18 grün); ausgelöst hat dort niemand eine
+  Bremse, und der Worker hat mit dem neuen Kostenbuch noch keinen echten Auftrag bearbeitet. Das Löschen in der Moderation (D27) ist gebaut, getestet und seit dem 2026-11-11 ausgespielt; am Host hat es noch niemand benutzt, der Abschnitt liegt hinter der Anmeldung. Die Sätze zum Löschweg in `site/texte/datenschutz-fragen.md` und `datenschutz.md` hat Konrad am 2026-11-11 freigegeben. Offen sind der zweite Kostendeckel, der Satz über den Checker (A3), die zweite Schranke vor `/eidl/mod/`, Links und
+  Formelgrößen in Antworten. Ob eine Absage der API wirklich nichts kostet, ist angenommen, nicht nachgeschlagen. Der Abbruch des Worker nach 15 Minuten war nur gelesen, nie am Host gesehen.
 - Der Worker hat auf dem Server zwei echte Fragen bearbeitet (05.11.), eine mit Antwort und vier Zitaten, eine mit `kein_beleg`: drei Anfragen, 23 ct, 166 MB. `fallbacks` ging mit Citations durch,
   ein Ersatzmodell musste noch nicht einspringen. Prompt-Version 2 ist damit nicht gemessen, das war eine einzige Antwort.
 - `hainrich2-worker` kommt nachweislich nicht an `pending.db`, `hainrich2` nicht an den Key.

@@ -5,6 +5,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { DatabaseSync } from 'node:sqlite';
 import { hashPassphrase } from '../lib/auth.js';
 import { createHandler, MOD_CSP } from '../lib/mod.js';
 import { publishAll } from '../lib/publish.js';
@@ -46,7 +47,7 @@ async function setup({ passages = null } = {}) {
   const signIn = async () => (await form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE })).headers.get('set-cookie').split(';')[0];
   const file = name => path.join(live, 'eidl', name);
   const read = name => fs.readFileSync(file(name), 'utf8');
-  return { store, form, get, signIn, file, read, close: () => server.close() };
+  return { dir, store, form, get, signIn, file, read, close: () => server.close() };
 }
 
 const edit = { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'speichern' };
@@ -100,6 +101,20 @@ test('nach fünf Fehlversuchen hilft auch die richtige Passphrase nicht mehr', a
   t.after(c.close);
   for (let i = 0; i < 5; i++) await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: 'falsch' });
   assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE })).status, 429);
+});
+
+test('gleichzeitige Fehlversuche bei der Anmeldung kommen nicht an der Grenze vorbei', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const results = await Promise.all(Array.from({ length: 20 }, (_, i) => c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: `falsch-${i}` })));
+  assert.equal(results.filter(r => r.status === 401).length, 5);
+  assert.equal(results.filter(r => r.status === 429).length, 15);
+});
+
+test('richtige Anmeldungen verbrauchen nichts, auch nicht von der Grenze für alle', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (let i = 0; i < 31; i++) assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE })).status, 303);
 });
 
 test('POST von fremder Seite oder ohne Origin wird abgewiesen', async t => {
@@ -260,5 +275,87 @@ test('unbekannte Fragen und Aktionen enden sauber', async t => {
   const cookie = await c.signIn();
   assert.equal((await c.get('/eidl/mod/f/s99/', cookie)).status, 404);
   assert.equal((await c.get('/eidl/mod/f/..%2f..%2fetc/', cookie)).status, 404);
-  assert.equal((await c.form('/eidl/mod/f/s01/', { aktion: 'loeschen' }, { cookie })).status, 400);
+  assert.equal((await c.form('/eidl/mod/f/s01/', { aktion: 'umbenennen' }, { cookie })).status, 400);
+});
+
+const MARKE = 'Erika Musterfrau aus Gruppe 7';
+/** alles unter dem Verzeichnis, roh gelesen: Datenbank, WAL und jede veröffentlichte Datei */
+const everything = dir => fs.readdirSync(dir, { recursive: true, withFileTypes: true }).filter(e => e.isFile())
+  .map(e => fs.readFileSync(path.join(e.parentPath, e.name)).toString('latin1')).join('\n');
+
+test('D27: Endgültig löschen nimmt Frage, Antwort, Zitate, Verlauf und Stimmen weg, öffentlich und aus der Datenbankdatei', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  await c.form('/eidl/mod/f/s01/', { ...edit, frage: `Was meint ${MARKE} mit Neuron?` }, { cookie });
+  c.store.vote('s01', 'kennung', 1);
+  assert.ok(everything(c.dir).includes(MARKE), 'Gegenprobe: vorher steht der Text in den Dateien');
+  const res = await c.form('/eidl/mod/f/s01/', { aktion: 'loeschen', bestaetigt: '1' }, { cookie });
+  assert.equal(res.status, 303);
+  assert.match(res.headers.get('location'), /\/eidl\/mod\/\?ok=geloescht$/);
+  assert.equal(c.store.question('s01'), null);
+  assert.equal(c.store.voteTotals().anzahl, 0);
+  assert.deepEqual(c.store.revisions('s01').map(r => [r.feld, r.vorher, r.nachher, r.rolle]), [['gelöscht', null, null, 'admin']], 'wer wann gelöscht hat, bleibt, ohne Text');
+  assert.equal(c.store.counters().find(z => z.art === 'geloescht').anzahl, 1);
+  assert.ok(!fs.existsSync(c.file('f/s01/index.html')));
+  assert.deepEqual(JSON.parse(c.read('daten/fragen.json')).map(f => f.id), ['s02']);
+  assert.ok(!everything(c.dir).includes(MARKE), 'weder in der Datenbank noch im WAL noch in einer Seite');
+  assert.equal((await c.get('/eidl/mod/f/s01/', cookie)).status, 404);
+  assert.match(await (await c.get('/eidl/mod/?ok=geloescht', cookie)).text(), /Endgültig gelöscht/);
+  assert.ok(c.store.question('s02'), 'die andere Frage bleibt');
+});
+
+test('D27: Ohne Haken wird nichts gelöscht, und Löschen bleibt der Rolle admin vorbehalten', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  for (const aktion of ['loeschen', 'verlauf_bereinigen']) {
+    const ohne = await c.form('/eidl/mod/f/s01/', { aktion }, { cookie });
+    assert.equal(ohne.status, 422);
+    assert.match(await ohne.text(), /nicht rückgängig machen lässt/);
+  }
+  c.store.saveModerator('tutorin', 'moderator', await hashPassphrase(PASSPHRASE));
+  const tutorin = (await c.form('/eidl/mod/anmelden', { name: 'tutorin', passphrase: PASSPHRASE })).headers.get('set-cookie').split(';')[0];
+  for (const aktion of ['loeschen', 'verlauf_bereinigen']) assert.equal((await c.form('/eidl/mod/f/s01/', { aktion, bestaetigt: '1' }, { cookie: tutorin })).status, 403);
+  assert.ok(c.store.question('s01'));
+  assert.ok(fs.existsSync(c.file('f/s01/index.html')));
+  assert.doesNotMatch(await (await c.get('/eidl/mod/f/s01/', tutorin)).text(), /endgültig löschen/);
+  assert.match(await (await c.get('/eidl/mod/f/s01/', cookie)).text(), /endgültig löschen/);
+  assert.equal((await c.form('/eidl/mod/f/s01/', { aktion: 'zurueckziehen' }, { cookie: tutorin })).status, 303, 'Zurückziehen bleibt für alle der schnelle Weg');
+});
+
+test('D27: Nach einer Redaktion verschwindet der alte Wortlaut aus Verlauf und Datenbankdatei, wer wann geändert hat, bleibt', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  assert.doesNotMatch(await (await c.get('/eidl/mod/f/s01/', cookie)).text(), /Alte Fassungen aus dem Verlauf entfernen/, 'ohne Verlauf gibt es nichts zu bereinigen');
+  await c.form('/eidl/mod/f/s01/', { ...edit, frage: `Was meint ${MARKE} mit Neuron?` }, { cookie });
+  await c.form('/eidl/mod/f/s01/', { ...edit, frage: 'Was ist ein Neuron genau?' }, { cookie });
+  assert.ok(everything(c.dir).includes(MARKE), 'Gegenprobe: Der Verlauf hält den alten Wortlaut fest');
+  assert.ok(!c.read('f/s01/index.html').includes(MARKE));
+  const res = await c.form('/eidl/mod/f/s01/', { aktion: 'verlauf_bereinigen', bestaetigt: '1' }, { cookie });
+  assert.equal(res.status, 303);
+  assert.ok(!everything(c.dir).includes(MARKE));
+  assert.deepEqual(c.store.revisions('s01').map(r => [r.feld, r.vorher, r.nachher, r.rolle]), [['verlauf bereinigt', null, null, 'admin'], ['frage', null, null, 'admin'], ['frage', null, null, 'admin']]);
+  assert.equal(c.store.question('s01').text, 'Was ist ein Neuron genau?');
+  assert.match(c.read('f/s01/index.html'), /Was ist ein Neuron genau\?/);
+  const page = await (await c.get(res.headers.get('location'), cookie)).text();
+  assert.match(page, /alten Fassungen sind aus dem Verlauf entfernt/);
+  assert.match(page, /frage · admin · Text entfernt/);
+  assert.doesNotMatch(page, /Alte Fassungen aus dem Verlauf entfernen/);
+});
+
+test('D27: Auch was vor `secure_delete` in freien Seiten liegen blieb, ist nach dem Löschen aus der Datei', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const file = path.join(c.dir, 'public.db');
+  /** eine zweite Verbindung ohne `secure_delete`, wie die Datenbank bis 2026-11-11 lief */
+  const raw = new DatabaseSync(file);
+  raw.prepare("INSERT INTO revisions (question, feld, vorher, nachher, rolle, zeit) VALUES ('s02', 'frage', ?, 'x', 'admin', '2026-11-01T00:00:00Z')").run(`${MARKE} `.repeat(40));
+  raw.exec("DELETE FROM revisions WHERE question = 's02'; PRAGMA wal_checkpoint(TRUNCATE);");
+  raw.close();
+  if (!everything(c.dir).includes(MARKE)) return t.skip('dieses SQLite überschreibt Gelöschtes schon von sich aus');
+  const cookie = await c.signIn();
+  await c.form('/eidl/mod/f/s01/', { aktion: 'loeschen', bestaetigt: '1' }, { cookie });
+  assert.ok(!everything(c.dir).includes(MARKE));
 });

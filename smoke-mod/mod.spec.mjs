@@ -427,3 +427,20 @@ test('Claude noch einmal fragen: Der Vorschlag wartet in der Moderation und wird
   expect(problems).toEqual([]);
 });
 
+
+/** steht am Ende: Danach gibt es s04 nicht mehr */
+test('Endgültig löschen braucht den Haken, danach ist die Frage überall weg', async ({ page }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await page.goto('/eidl/mod/f/s04/');
+  await page.click('button[value="loeschen"]');
+  await expect(page).toHaveURL(/\/mod\/f\/s04\/$/);
+  expect((await page.request.get('/eidl/f/s04/')).status(), 'ohne Haken schickt der Browser das Formular nicht ab').toBe(200);
+  await page.check('input[name="bestaetigt"]');
+  await page.click('button[value="loeschen"]');
+  await expect(page.locator('.gemeldet')).toContainText('Endgültig gelöscht');
+  await expect(page).toHaveURL(/\/mod\/\?ok=geloescht$/);
+  expect((await page.request.get('/eidl/f/s04/')).status()).toBe(404);
+  expect((await page.request.get('/eidl/mod/f/s04/')).status()).toBe(404);
+  expect(problems).toEqual([]);
+});

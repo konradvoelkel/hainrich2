@@ -45,6 +45,8 @@ System auf einem anderen Korpus. Das alte Repo bleibt unberührt.
 | D23 | Die Moderation kann Claude zu einer öffentlichen Frage noch einmal fragen (Konrad, 2026-11-06). Der zweite Lauf liest ganze Kapitel, dieselben Passagen ergäben dieselbe Antwort. Das Ergebnis wartet als Vorschlag in `vorschlaege`, öffentlich ändert sich erst etwas, wenn die Moderation es übernimmt; der Verlauf behält den alten Text. I1 bleibt gewahrt, weil nur freigegebener Text geht, und die Deckel gelten wie sonst. |
 | D24 | Für die geschlossene Alpha gelten höhere Grenzen (Konrad, 2026-11-06): 50 Anfragen am Tag im Worker, je Adresse 10 Fehlversuche in 15 Minuten, 30 Tokens und 20 Fragen in der Stunde, insgesamt 60 Fehlversuche in 15 Minuten. Ein Hörsaal kann hinter einer Adresse sitzen. Je Token bleibt es bei 2 Fragen in der Stunde, der Monatsdeckel bleibt bei 15 $. Die Texte zum Deckel bleiben vorerst, wie sie sind. |
 | D25 | Antworten und Suchkorpus kommen aus getrennten Verzeichnissen (Konrad, 2026-11-10). `phase1` bleibt eingefroren: die 90 Beispielantworten und der Korpus vom 2026-11-06, aus dem sie zitieren; gegen ihn prüft `site/build.mjs --daten` die Zitate (I4). Die Suche im Browser, Worker und Moderation bekommen den Korpus hinter dem Verweis `work/korpus-aktuell` (`--korpus`, `site/deploy-app.sh`), ebenso `tools/skriptstand.mjs`. Vorher hielt I4 die Suche auf dem Stand der Antworten fest, obwohl auf dem Server alle Frageseiten aus `live/` kommen. Die Antworten neu zu erzeugen hätte Geld gekostet und an der Suche nichts geändert. |
+| D26 | Bremsen und Kostenbuch halten, was sie zusagen (Konrad, 2026-11-11, nach `research/2026-11-11-threat-model/`). Eine Bremse zählt den Versuch, bevor scrypt rechnet, und streicht ihn bei Erfolg; andersherum kamen gleichzeitige Versuche alle durch. IPv6 zählt je /64. „Meine Fragen“ und Löschen bekommen eine eigene Grenze, 600 Anfragen in der Minute je Adresse. Der Worker bucht jede Anfrage mit dem schlimmsten Fall, bevor sie hinausgeht: Eine Antwort ersetzt die Buchung, eine Absage der API streicht sie, ein Abbruch lässt sie stehen. Das SDK wiederholt nichts mehr; bei Überlast versucht der Worker es selbst bis zu zweimal neu. Nach acht Minuten fängt er keinen Auftrag mehr an, weil die Unit den Lauf nach 15 abbricht. Angenommen ist, dass eine Absage mit Status nichts kostet; was daran nicht stimmt, fängt nur das Limit in der Console (I6). |
+| D27 | Die Moderation kann endgültig löschen (Konrad, 2026-11-11, Befund A2 in `research/2026-11-11-threat-model/`). „Frage und Antwort endgültig löschen“ entfernt Frage, Antworten, Zitate, Verlauf, Vorschlag und Stimmen samt Seite und nimmt einen wartenden Auftrag aus der Schlange. „Alte Fassungen aus dem Verlauf entfernen“ leert nach einer Redaktion `vorher` und `nachher`. Beides ist der Rolle admin vorbehalten und braucht einen Haken; Zurückziehen bleibt für alle der schnelle Weg. Je Vorgang bleibt eine Zeile ohne Text mit Rolle und Zeit, dazu ein Tageszähler. `public.db` läuft seitdem mit `secure_delete`, und nach jedem Löschen baut `VACUUM` die Datei neu, weil sie bis dahin ohne lief. Nicht erreicht werden die Sicherungen (sechs Monate), Anthropic (30 Tage) und der Vektor einer bearbeiteten Frage, der weiter aus dem alten Wortlaut gerechnet ist. |
 | D19 | Das Forum hat Unterforen, nach dem Inhaltsverzeichnis des Skripts: Grundlagen, Lernen und Training, Architekturen und Repräsentationen, Praxis und Anwendung (Konrad, 2026-11-05). Eine Frage gehört über ihr Kapitel zu genau einem; `Optimierer` zählt zum Training. Die Adressen liegen unter `f/`, das bedient Caddy schon aus `live/`. |
 
 ## 3. Invarianten
@@ -299,7 +301,8 @@ nicht mit `fallbacks` und wäre nicht sofort.
 
 Seit D20 kostet eine Frage Geld, bevor ein Mensch sie gesehen hat. Deshalb zählt der Worker selbst: höchstens 50 Anfragen am
 Tag und 15 $ im Monat, darüber bleibt die Frage ohne Entwurf. Das liegt mit Abstand unter den 20 $ aus D14, das Limit in der
-Console bleibt der zweite Deckel (I6). Beide Werte sind Vorgaben, die Konrad ändern kann.
+Console bleibt der zweite Deckel (I6). Beide Werte sind Vorgaben, die Konrad ändern kann. Gebucht wird vor dem Aufruf, mit dem schlimmsten
+Fall von 60 ct; eine Anfrage ohne Antwort bleibt so im Buch und zählt für den Tag (D26). Die Admin-Seite nennt diese Buchungen eigens.
 
 ## 8. PII-Checker
 
@@ -351,6 +354,9 @@ wird danach geleert.
 
 Eigene Antworten durchlaufen dieselbe Freigabe wie Fragen.
 
+Zurückziehen nimmt nur die Seite weg, der Text bleibt in `public.db`. Für Löschwünsche und durchgerutschte Namen gibt es deshalb zwei Aktionen der
+Rolle admin (D27): die Frage samt allem endgültig löschen, oder nach einer Redaktion die alten Fassungen aus `revisions` entfernen.
+
 **Zahlen für Admins** unter `/mod/zahlen/`, nur Rolle `admin` (Konrad, 2026-11-05): Anfragen, Tokens und Kosten nach Zeitraum und Modell, Stand gegen die Deckel, Ergebnisse der Entwürfe,
 Bestand, Warteschlange, Stimmen, Verlauf von 14 Tagen. Die Kosten stehen allein im Kostenbuch des Worker, der Web-Prozess liest es nur, eine Kopie in `public.db` gibt es nicht. Was sonst passiert, zählen
 Tagessummen in `zaehler`, ohne Bezug zu Frage oder Person. Gezählt wird nur, was ohnehin ein Schreibzugriff ist (I10). Seitenaufrufe bräuchten ein Zugriffsprotokoll und einen anderen Satz im
@@ -369,7 +375,8 @@ ihr entfällt der Auftrag an den Worker. Bleibt `kein_beleg` stehen, liegt die F
   das im `localStorage` liegt. Der Server speichert dazu nichts. Es gibt keine Nutzerkonten. Der Schlüssel zum Signieren hängt
   am Hash des Codes.
 - Fehlversuche und Ausgabe werden je IP begrenzt, nur im Arbeitsspeicher: 10 Fehlversuche in 15 Minuten, 30 Tokens und 20 Fragen
-  in der Stunde je Adresse, dazu 60 Fehlversuche in 15 Minuten insgesamt (D24).
+  in der Stunde je Adresse, dazu 60 Fehlversuche in 15 Minuten insgesamt (D24). Gezählt wird vor der Prüfung, bei IPv6 je /64, und
+  „Meine Fragen“ samt Löschen hat 600 Anfragen in der Minute je Adresse (D26).
 - Grenzen als Vorgabe: 2 neue Fragen pro Stunde je Token, höchstens 100 offene Fragen insgesamt,
   50 Anfragen am Tag im Worker (§7.4). Was über dem Tagesdeckel liegt, wartet auf die Moderation.
 - Die Grenze je Nutzer ist weich: Alle teilen einen Code, wer ihn neu eingibt, bekommt ein neues Token. Seit D20 kostet Missbrauch

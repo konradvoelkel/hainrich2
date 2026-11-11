@@ -20,6 +20,19 @@ const plain = (text, extra = {}) => ({ model: 'claude-opus-5-5', stop_reason: 'e
 const temp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-'));
 const ledger = (limit = 15) => new Ledger(path.join(temp(), 'kosten.json'), limit);
 const job = { id: 'abc', text: 'Warum rückwärts?' };
+const timeout = () => Object.assign(new Error('Request timed out.'), { name: 'APIConnectionTimeoutError' });
+const refusal = status => Object.assign(new Error('abgewiesen'), { status });
+const nowait = async () => {};
+/** arbeitet die Liste ab: Fehler werden geworfen, alles andere ist die Antwort */
+const scripted = list => {
+  const calls = { count: 0 };
+  return Object.assign(async () => {
+    calls.count += 1;
+    const next = list.shift();
+    if (next instanceof Error) throw next;
+    return next;
+  }, { calls });
+};
 
 test('ein Entwurf trägt Zitat aus dem Korpus, Kapitel und gerundeten Vektor, und das Kostenbuch zählt ihn', async () => {
   const book = ledger();
@@ -79,8 +92,58 @@ test('jeder Auftrag endet mit einem Ergebnis, auch wenn die API ausfällt, und d
   t.mock.method(console, 'error', (...args) => logged.push(args.join(' ')));
   t.mock.method(console, 'log', (...args) => logged.push(args.join(' ')));
   const failure = Object.assign(new Error('Eine geheime Formulierung?'), { status: 529 });
-  await runJobs({ spool, corpus, call: async () => { throw failure; }, ledger: ledger(), day: DAY });
+  const book = ledger();
+  await runJobs({ spool, corpus, call: async () => { throw failure; }, ledger: book, day: DAY, wait: nowait });
+  assert.deepEqual(book.entries, [], 'eine Absage der API kostet nichts');
   assert.deepEqual(spool.jobs(), []);
   assert.deepEqual(spool.results().map(r => r.entry.status), ['fehler', 'fehler']);
   assert.ok(!logged.join('\n').includes('geheime'));
+});
+
+test('bricht ein Aufruf ohne Antwort ab, bleibt der schlimmste Fall im Buch, zählt für den Tag, und es gibt keinen zweiten Versuch', async () => {
+  const book = ledger();
+  const call = scripted([timeout(), cited('Zu spät.')]);
+  await assert.rejects(draftFor(job, { corpus, call, ledger: book, day: DAY, wait: nowait }), /timed out/);
+  assert.equal(call.calls.count, 1);
+  assert.deepEqual(book.entries.map(e => [e.label, e.dollars, e.offen]), [[DAY, 0.6, true]]);
+});
+
+test('abgebrochene Aufrufe füllen den Tagesdeckel wie beantwortete', async () => {
+  const book = ledger(1000);
+  for (let i = 0; i < REQUESTS_PER_DAY; i++) await assert.rejects(draftFor(job, { corpus, call: scripted([timeout()]), ledger: book, day: DAY, wait: nowait }));
+  const result = await draftFor(job, { corpus, call: () => assert.fail('kein Aufruf über dem Deckel'), ledger: book, day: DAY });
+  assert.equal(result.status, 'deckel');
+});
+
+test('bei Überlast gibt es zwei weitere Versuche mit Pause, und gebucht wird nur die Antwort', async () => {
+  const book = ledger();
+  const pauses = [];
+  const call = scripted([refusal(529), refusal(503), cited('Doch.')]);
+  const result = await draftFor(job, { corpus, call, ledger: book, day: DAY, wait: async ms => pauses.push(ms) });
+  assert.equal(result.status, 'ok');
+  assert.deepEqual(pauses, [2000, 8000]);
+  assert.deepEqual(book.entries.map(e => !!e.offen), [false]);
+});
+
+test('nach drei Absagen ist Schluss, eine Absage wegen der Anfrage selbst wird nicht wiederholt, und im Buch steht nichts', async () => {
+  const book = ledger();
+  const busy = scripted([refusal(529), refusal(529), refusal(529), cited('Nie.')]);
+  await assert.rejects(draftFor(job, { corpus, call: busy, ledger: book, day: DAY, wait: nowait }));
+  assert.equal(busy.calls.count, 3);
+  const invalid = scripted([refusal(400), cited('Nie.')]);
+  await assert.rejects(draftFor(job, { corpus, call: invalid, ledger: book, day: DAY, wait: nowait }));
+  assert.equal(invalid.calls.count, 1);
+  assert.deepEqual(book.entries, []);
+});
+
+test('nach der Frist fängt der Worker keinen Auftrag mehr an, der Rest bleibt in der Schlange', async t => {
+  t.mock.method(console, 'log', () => {});
+  const spool = openSpool(temp());
+  for (const id of ['a', 'b', 'c']) spool.submit({ id, text: 'Eine Frage?' });
+  let time = 0;
+  const call = async () => { time += 60; return cited('Ja.'); };
+  const done = await runJobs({ spool, corpus, call, ledger: ledger(), day: DAY, until: 100, now: () => time });
+  assert.equal(done, 2);
+  assert.equal(spool.jobs().length, 1);
+  assert.equal(spool.results().length, 2);
 });

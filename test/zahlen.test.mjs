@@ -119,3 +119,22 @@ test('Tageszähler zählen Ereignisse und Ergebnisse, nie den Text, und auch ein
   const page = await (await c.get('/eidl/mod/zahlen/', await c.signIn('konrad'))).text();
   assert.ok(!page.includes(FRAGE));
 });
+
+test('Anfragen ohne Antwort stehen eigens da und zählen gegen beide Deckel', () => {
+  const z = figures({ ...base, entries: [entry('2026-11-05', 0.1), { ...entry('2026-11-05', 0.6), rein: 0, raus: 0, offen: true }, { ...entry('2026-10-30', 0.6), offen: true }] });
+  assert.deepEqual([z.ohneAntwort.anfragen, z.ohneAntwort.dollar], [1, 0.6], 'nur dieser Monat');
+  assert.equal(z.deckel.tag.wert, 2);
+  assert.ok(Math.abs(z.deckel.monat.wert - 0.7) < 1e-9);
+});
+
+test('die Admin-Seite nennt Buchungen ohne Antwort, und nur wenn es welche gibt', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn('konrad');
+  const book = new Ledger(path.join(c.kosten, `kosten-${TODAY.slice(0, 7)}.json`), 15);
+  book.add(TODAY, 'claude-opus-5-5', { input_tokens: 1000, output_tokens: 100 });
+  assert.doesNotMatch(await (await c.get('/eidl/mod/zahlen/', cookie)).text(), /ohne Antwort, gebucht/);
+  book.reserve(TODAY, 'claude-opus-5-5', 0.6);
+  assert.equal(readCosts(c.kosten).entries.filter(e => e.offen).length, 1);
+  assert.match(await (await c.get('/eidl/mod/zahlen/', cookie)).text(), /1 Anfragen ohne Antwort, gebucht mit dem schlimmsten Fall \(0,60 \$\)/);
+});

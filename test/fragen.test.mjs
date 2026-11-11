@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
-import { createApi } from '../lib/api.js';
+import { createApi, READS_PER_MINUTE } from '../lib/api.js';
 import { checkToken, hashPassphrase, issueToken, tokenKey } from '../lib/auth.js';
 import { hardHits, softHits } from '../lib/checker.js';
 import { createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
@@ -40,11 +40,11 @@ async function setup({ spooling = true, now = Date.now } = {}) {
   const server = http.createServer((req, res) => (req.url.startsWith('/eidl/api/') ? api : mod)(req, res));
   await new Promise(done => server.listen(0, '127.0.0.1', done));
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const post = async (name, body, { token, from = origin } = {}) => {
+  const post = async (name, body, { token, from = origin, headers = {} } = {}) => {
     const res = await fetch(`${origin}/eidl/api/${name}`, {
       method: 'POST',
       body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json', Origin: from, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: { 'Content-Type': 'application/json', Origin: from, ...(token ? { Authorization: `Bearer ${token}` } : {}), ...headers },
     });
     return { status: res.status, data: await res.json() };
   };
@@ -84,6 +84,58 @@ test('nach zehn falschen Codes hilft auch der richtige nicht mehr', async t => {
   t.after(c.close);
   for (let i = 0; i < 10; i++) await c.post('token', { kurscode: 'falsch' });
   assert.equal((await c.post('token', { kurscode: CODE })).status, 429);
+});
+
+test('gleichzeitige Fehlversuche kommen nicht an der Grenze vorbei', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const results = await Promise.all(Array.from({ length: 40 }, (_, i) => c.post('token', { kurscode: `falsch-${i}` })));
+  assert.equal(results.filter(r => r.status === 401).length, 10);
+  assert.equal(results.filter(r => r.status === 429).length, 30);
+});
+
+test('ein richtiger Code zählt nicht als Fehlversuch, auch nicht zwischen falschen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const results = await Promise.all(Array.from({ length: 10 }, (_, i) => c.post('token', { kurscode: i === 4 ? CODE : 'falsch' })));
+  assert.equal(results.filter(r => r.status === 200).length, 1);
+  assert.equal((await c.post('token', { kurscode: CODE })).status, 200, 'neun Fehlversuche, der zehnte Platz ist wieder frei');
+  await c.post('token', { kurscode: 'falsch' });
+  assert.equal((await c.post('token', { kurscode: CODE })).status, 429);
+});
+
+test('Adressen aus demselben /64 teilen sich die Grenze, das Nachbarnetz nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const von = address => ({ headers: { 'X-Forwarded-For': address } });
+  for (let i = 1; i <= 10; i++) await c.post('token', { kurscode: 'falsch' }, von(`2001:db8:1:2::${i}`));
+  assert.equal((await c.post('token', { kurscode: CODE }, von('2001:db8:1:2:ffff::1'))).status, 429);
+  assert.equal((await c.post('token', { kurscode: CODE }, von('2001:db8:1:3::1'))).status, 200);
+});
+
+test('„Meine Fragen“ und Löschen haben eine Bremse je Adresse, andere merken davon nichts', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const hier = { headers: { 'X-Forwarded-For': '203.0.113.9' } };
+  const statuses = [];
+  for (let sent = 0; sent < READS_PER_MINUTE + 5; sent += 121) {
+    statuses.push(...(await Promise.all(Array.from({ length: 121 }, () => c.post('meine', { fragen: [] }, hier)))).map(r => r.status));
+  }
+  assert.equal(statuses.length, READS_PER_MINUTE + 5);
+  assert.equal(statuses.filter(s => s === 200).length, READS_PER_MINUTE);
+  assert.equal(statuses.filter(s => s === 429).length, 5);
+  assert.equal((await c.post('loeschen', { id: 'x', geheimnis: 'y' }, hier)).status, 429);
+  assert.equal((await c.post('meine', { fragen: [] })).status, 200);
+});
+
+test('eine zurückgezogene Frage ist für „Meine Fragen“ weg, eine sichtbare kommt ohne Antworten und Vektor', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const shown = await c.mine('s01', 'egal');
+  assert.deepEqual(Object.keys(shown).sort(), ['html', 'id', 'url', 'zustand']);
+  assert.equal(shown.zustand, 'öffentlich');
+  c.store.setQuestionStatus('s01', 'zurückgezogen', 'admin');
+  assert.deepEqual(await c.mine('s01', 'egal'), { id: 's01', zustand: 'weg' });
 });
 
 test('ein Hörsaal hinter einer Adresse kommt rein, erst der 31. Zugang wartet', async t => {
@@ -588,6 +640,23 @@ test('D23: Der Checker läuft auch auf dem Vorschlag, und ein Neustart lässt ih
   await c.fragen.collect();
   assert.equal(c.store.proposal('s01').entwurf.status, 'fehler');
   assert.match(await c.page(NOCHMAL, cookie), /Ein Ergebnis kam nicht zustande/);
+});
+
+test('D27: Endgültig löschen nimmt den wartenden Auftrag mit, und ein spätes Ergebnis legt nichts wieder an', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  assert.equal(await again(c, cookie), 303);
+  assert.equal(c.inbox().length, 1);
+  assert.equal((await c.form(NOCHMAL, { aktion: 'loeschen', bestaetigt: '1' }, cookie)).status, 303);
+  assert.deepEqual(c.inbox(), [], 'der Text geht nach dem Löschen nicht mehr zu Claude');
+  assert.equal(c.store.proposal('s01'), null);
+  /** der Worker hatte den Auftrag schon gelesen und liefert jetzt */
+  c.spool.submit({ id: 's01', text: 'egal' });
+  await c.deliver('s01', neu);
+  assert.equal(c.store.question('s01'), null);
+  assert.equal(c.store.proposal('s01'), null);
+  assert.deepEqual(c.spool.results(), []);
 });
 
 test('kein Text verspricht, dass nur die fragende Person etwas sieht: Die Moderation sieht es auch', () => {

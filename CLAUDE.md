@@ -110,3 +110,5 @@ ln -sfn korpus-<datum> /media/konrad/xtraspace/hainrich2/work/korpus-aktuell
    `/media/konrad/xtraspace/hainrich2/`, nicht im Repo.
 12. **`phase1` wird nie getauscht.** `site/build.mjs` prüft die Zitate in `antworten.json` gegen den Korpus daneben (I4) und bricht
    sonst ab. Die Suche im Browser (`--korpus`), `site/deploy-app.sh` und `tools/skriptstand.mjs` nehmen `work/korpus-aktuell`.
+13. **Zwischen Prüfen und Zählen einer Bremse steht kein `await`, und kein API-Aufruf geht hinaus, bevor er im Kostenbuch steht.** Sonst
+    kommen gleichzeitige Versuche alle durch, und ein Abbruch kostet Geld, das niemand zählt (Plan D26). Zu jeder neuen Bremse gehört ein Test mit `Promise.all`.

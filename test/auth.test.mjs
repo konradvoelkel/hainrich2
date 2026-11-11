@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createLimiter, createSessions, hashPassphrase, verifyPassphrase } from '../lib/auth.js';
 import { hardHits } from '../lib/checker.js';
+import { clientOf, networkOf } from '../lib/http.js';
 
 test('die Passphrase steht nicht im Hash, und nur die richtige passt', async () => {
   const stored = await hashPassphrase('eine lange Passphrase');
@@ -34,6 +35,30 @@ test('Fehlversuche zählen je Schlüssel und verfallen', () => {
   assert.equal(limiter.allowed('b'), true);
   time = 101;
   assert.equal(limiter.allowed('a'), true);
+});
+
+test('ein gezählter Versuch lässt sich wieder streichen, aber nur einmal und nur dieser', () => {
+  const limiter = createLimiter({ max: 2, window: 100, now: () => 0 });
+  const forget = limiter.fail('a');
+  limiter.fail('a');
+  assert.equal(limiter.allowed('a'), false);
+  forget();
+  forget();
+  assert.equal(limiter.allowed('a'), true);
+  limiter.fail('a');
+  assert.equal(limiter.allowed('a'), false, 'der zweite Aufruf hat den anderen Eintrag nicht mitgenommen');
+});
+
+test('IPv6 zählt je /64, IPv4 je Adresse', () => {
+  assert.equal(networkOf('2001:db8:1:2::a'), '2001:db8:1:2::/64');
+  assert.equal(networkOf('2001:0db8:0001:0002:dead:beef:0:1'), '2001:db8:1:2::/64');
+  assert.notEqual(networkOf('2001:db8:1:3::a'), networkOf('2001:db8:1:2::a'));
+  assert.equal(networkOf('::1'), '0:0:0:0::/64');
+  assert.equal(networkOf('fe80::1%eth0'), 'fe80:0:0:0::/64');
+  assert.equal(networkOf('::ffff:203.0.113.7'), '203.0.113.7');
+  assert.equal(networkOf('203.0.113.7'), '203.0.113.7');
+  assert.equal(clientOf({ headers: { 'x-forwarded-for': '2001:db8:9:9::9, 2001:db8:1:2::a' }, socket: {} }), '2001:db8:1:2::/64', 'nur der letzte Eintrag stammt von Caddy');
+  assert.equal(clientOf({ headers: {}, socket: { remoteAddress: '127.0.0.1' } }), '127.0.0.1');
 });
 
 test('der Checker sperrt die harten Fälle aus Plan §8', () => {
