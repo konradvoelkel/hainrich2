@@ -26,4 +26,4 @@ Eigene Fragen lassen sich in dieser Fassung noch nicht stellen. Bevor das mögli
 
 ## Ihre Rechte
 
-Sie haben die Rechte aus Art. 15–21 DSGVO und das Recht auf Beschwerde bei einer Aufsichtsbehörde; für Nordrhein-Westfalen ist das die Landesbeauftragte für Datenschutz und Informationsfreiheit NRW.
+Sie haben die Rechte aus Art. 15–21 DSGVO und das Recht auf Beschwerde bei einer Aufsichtsbehörde; für Nordrhein-Westfalen ist das die Landesbeauftragte für Datenschutz und Informationsfreiheit NRW. Um sie auszuüben, genügt eine Nachricht an die Adresse im [Impressum](../impressum/).
