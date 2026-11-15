@@ -101,7 +101,7 @@ _Stand 2026-11-05._
   Wirkung auf echte Fragen nicht. Die Stärke des Zuschlags (`KAPITEL_BONUS`, `KAPITEL_FAKTOR`, Platz 1 bei `fuse`) ist geschätzt.
   Am Host ist `/eidl/f/kapitel/backpropagation/` nach dem Ausspielen mit 200 erreichbar, Caddy liefert `f/*` also auch zwei Ebenen tief aus `live/`. Die Suche auf den Kapitelseiten ist bis 2026-11-15 in keinem echten Browser gelaufen, und ihre Treffer führten ins Leere: `site/app.js` setzte
   `f/<id>/` relativ zur Kapitelseite. Behoben am 2026-11-15 mit `data-root` vor dem Link, ein Smoke-Test klickt jetzt einen Treffer auf
-  `/eidl/f/kapitel/backpropagation/` (lokal 19 von 19). Live ist der Fix erst mit dem nächsten `site/deploy.sh`. Die Migration der `pending.db` ist nur daran belegt, dass der Web-Prozess nach dem Neustart läuft.
+  `/eidl/f/kapitel/backpropagation/` (lokal 19 von 19). Live seit 2026-11-15 mit `site/deploy.sh`, `app.js` am Host bytegleich, Smoke gegen den Host 19 von 19. Die Migration der `pending.db` ist nur daran belegt, dass der Web-Prozess nach dem Neustart läuft.
 - Threat Model vom 2026-11-11 (`research/2026-11-11-threat-model/`): Von elf Befunden sind fünf behoben, getestet und seit dem 2026-11-11 ausgespielt (D26: Bremsen, /64, `api/meine`,
   Kostenbuch, Laufzeit des Worker), aus dem Arbeitsbaum vor dem Commit. Am Host geprüft sind der Start des Web-Prozesses und der Smoke-Test (18 grün); ausgelöst hat dort niemand eine
   Bremse, und der Worker hat mit dem neuen Kostenbuch noch keinen echten Auftrag bearbeitet. Das Löschen in der Moderation (D27) ist gebaut, getestet und seit dem 2026-11-11 ausgespielt; am Host hat es noch niemand benutzt, der Abschnitt liegt hinter der Anmeldung. Die Sätze zum Löschweg in `site/texte/datenschutz-fragen.md` und `datenschutz.md` hat Konrad am 2026-11-11 freigegeben, sie sind seit demselben Tag live (`site/deploy.sh`; im Inhalt änderte sich nur die Datenschutzseite, die Seite am Host ist bytegleich mit dem gebauten Stand, Smoke gegen den Host 18 grün). Der Löschweg hängt an der Adresse im Impressum: Der Name hat MX-Einträge, ob das Postfach die Adresse annimmt, ist mit keiner Testmail geprüft. Offen sind der zweite Kostendeckel, der Satz über den Checker (A3), die zweite Schranke vor `/eidl/mod/`, Links und
@@ -119,7 +119,9 @@ _Stand 2026-11-05._
 - Ob der Prüfschritt etwas taugt: 58 von 87 Hinweisen, bei allen Modellen ähnlich oft.
 - Impressum und Datenschutz hat Konrad am 2026-11-05 freigegeben, mit dem Absatz zur Moderation. Die Fassung für Fragen von außen
   hat er am 2026-11-06 freigegeben, mit dem Zusatz, dass die Moderation alles sieht (Zustimmung Version 2). Den Absatz „Löschen nach der Freigabe“ und den
-  Satz unter „Ihre Rechte“ hat er am 2026-11-11 freigegeben, live seit demselben Tag wie das Löschen in der Moderation (D27).
+  Satz unter „Ihre Rechte“ hat er am 2026-11-11 freigegeben, live seit demselben Tag wie das Löschen in der Moderation (D27). Dass zu einer
+  Frage auch das Kapitel gespeichert wird, von dessen Seite sie kam, nennt „Was auf dem Server liegt“ seit 2026-11-15, von ihm freigegeben und
+  am selben Tag live; die Kapitelseiten liefen seit dem 2026-11-12 ohne diesen Satz.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
 - Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün, unter WebKit scheitern 13 von 22 an der Anmeldung, vermutlich weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt; nachgewiesen ist das nicht.
