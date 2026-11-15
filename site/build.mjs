@@ -12,8 +12,8 @@ import path from 'node:path';
 import { promisify, parseArgs } from 'node:util';
 import zlib from 'node:zlib';
 import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
-import { UNTERFOREN } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
+import { KAPITEL, UNTERFOREN } from '../lib/forum.js';
+import { excerpt, foreignSource, forumPage, indexPage, kapitelPage, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
 import { quoteUrl } from '../lib/segment.js';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -143,6 +143,12 @@ const fill = text => {
 
 write('index.html', indexPage(questions, site));
 for (const forum of UNTERFOREN) write(`f/${forum.slug}/index.html`, forumPage(forum, questions, site));
+/** Die Kennung trägt das Skript selbst; stimmt sie nicht zum Korpus, verweist der Link ins Leere */
+for (const kapitel of KAPITEL) {
+  const found = passages.find(p => p.page === kapitel.slug);
+  if (found?.title !== kapitel.titel) throw new Error(`Kapitel ${kapitel.slug}: Korpus sagt ${found?.title ?? 'nichts'}, Forum ${kapitel.titel}`);
+  write(`f/kapitel/${kapitel.slug}/index.html`, kapitelPage(kapitel, questions, site));
+}
 write('daten/meta.json', JSON.stringify({ ladegroesse: site.ladegroesse }));
 for (const q of questions) write(`f/${q.id}/index.html`, questionPage(q, site));
 const text = name => fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'utf8');

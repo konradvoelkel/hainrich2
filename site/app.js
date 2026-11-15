@@ -6,6 +6,9 @@ const TIMEOUT_MS = 90_000;
 const DEBOUNCE_MS = 200;
 
 const bereich = document.getElementById('suche');
+/** Auf einer Kapitelseite steht hier der Kapiteltitel, sonst nichts; `root` führt von der Seite zurück zur Wurzel des Forums */
+const kapitel = bereich.dataset.kapitel || null;
+const wurzel = bereich.dataset.root ?? '';
 const feld = document.getElementById('suchfeld');
 const status = document.getElementById('suchstatus');
 const treffer = document.getElementById('treffer');
@@ -56,7 +59,7 @@ function suche() {
   letzte += 1;
   bieteAn();
   if (!anfrage) { treffer.hidden = true; return; }
-  if (stichworteDa) worker.postMessage({ act: 'suche', anfrage, nummer: letzte });
+  if (stichworteDa) worker.postMessage({ act: 'suche', anfrage, nummer: letzte, kapitel });
 }
 
 function modellFehlt() {
@@ -67,7 +70,7 @@ function modellFehlt() {
 
 function start() {
   status.textContent = 'Die Suche lädt …';
-  worker = new Worker('such-worker.js', { type: 'module' });
+  worker = new Worker(`${wurzel}such-worker.js`, { type: 'module' });
   const frist = setTimeout(() => { if (!modellDa) modellFehlt(); }, TIMEOUT_MS);
   worker.onerror = () => { clearTimeout(frist); modellFehlt(); };
   worker.onmessage = ({ data }) => {

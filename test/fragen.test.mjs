@@ -665,3 +665,31 @@ test('kein Text verspricht, dass nur die fragende Person etwas sieht: Die Modera
   }
 });
 
+
+test('ein Kapitelhinweis von der Kapitelseite landet in der Schlange und ist bei der Moderation vorgewählt', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { status, data } = await c.ask({ kapitel: 'backpropagation' });
+  assert.equal(status, 201);
+  assert.equal(c.pending.get(data.id).kapitel, 'Backpropagation');
+  const cookie = await c.signIn();
+  const page = await c.page(`/eidl/mod/neu/${data.id}/`, cookie);
+  assert.match(page, /Die Frage kam von der Kapitelseite „Backpropagation“/);
+  assert.match(page, /<option selected>Backpropagation<\/option>/);
+});
+
+test('ein unbekannter Kapitelhinweis fällt weg, die Frage kommt trotzdem an', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { status, data } = await c.ask({ kapitel: '<script>' });
+  assert.equal(status, 201);
+  assert.equal(c.pending.get(data.id).kapitel, null);
+});
+
+test('die Kapitelseiten liegen nach dem Start in live/, auch die noch leeren', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const page = fs.readFileSync(c.file('f/kapitel/backpropagation/index.html'), 'utf8');
+  assert.match(page, /Zu diesem Kapitel gibt es noch keine Frage/);
+  assert.ok(fs.existsSync(c.file('f/kapitel/optimierer/index.html')));
+});

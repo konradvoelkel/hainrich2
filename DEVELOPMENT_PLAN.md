@@ -483,9 +483,14 @@ Fragen dienen zugleich als Testset. Seeds zu Übungen oder Organisatorischem gib
 
 ## 13. Anbindung ans Skript
 
-- „Frage zu diesem Abschnitt“: Link aus jeder Skriptseite mit Kapitel und Anker im Parameter. Der
-  Kontext geht in die Suche und ins Retrieval ein. Das ist ein kleiner Eingriff im Repo `eidl-skript`,
-  gekennzeichnet als externes Angebot.
+- „Frage zu diesem Kapitel“ (Stand 2026-11-12, ausgespielt): Link am Ende jeder Skriptseite auf
+  `…/eidl/f/kapitel/<kennung>/`. Die Kennung ist die Seitenkennung des Skripts (`backpropagation`), der Bau
+  prüft sie gegen den Korpus. Die Kapitelseite zeigt die Fragen des Kapitels, ihre Suche reiht das Kapitel nach
+  vorn (Zuschlag im Worker, §6.3), und „Frage stellen“ führt in das Formular mit `?kapitel=`. Der Hinweis
+  wandert mit bis zur Moderation und ist dort vorgewählt; ins Retrieval des Entwurfs geht er nicht. Ein Anker
+  im Parameter gibt es nicht. Das ist ein kleiner Eingriff im Repo `eidl-skript`, gekennzeichnet als externes
+  Angebot. Er kommt erst, wenn das Forum nicht mehr in der Vorschau ist. Konrad (2026-11-12): Die Vorschau
+  bleibt, bis mindestens eine Studierendenfrage eingereicht ist, und erst danach zieht der Link ins Skript nach.
 - Lückenbericht für dich: je Kapitel `kein_beleg`, Votes, abgelehnte Duplikate, korrigierte
   Antworten. Eine Seite in `/mod/`, keine öffentlichen Daten.
 

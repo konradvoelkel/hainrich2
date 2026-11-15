@@ -22,6 +22,11 @@ _Stand 2026-11-05._
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
   auf dem Server.
+- Kapitelseiten `f/kapitel/<kennung>/`, 29 Stück (`lib/forum.js` `KAPITEL`, `lib/site.js` `kapitelPage`), gebaut am 2026-11-12, lokal
+  getestet und **ausgespielt am 2026-11-12** (App mit Neustart um 09:23, statisch danach): Fragen des Kapitels, Suche mit Kapitelbezug (`lib/rank.js`, `lib/search.js`, `site/such-worker.js`),
+  „Frage stellen“ mit `?kapitel=` ins Formular. Der Hinweis reist mit (`pending.db`, Spalte `kapitel`, wird beim Start nachgetragen) und
+  ist bei der Moderation vorgewählt; die Entscheidung bleibt dort. Die Kennung ist die Seitenkennung des Skripts, der Bau prüft sie gegen
+  den Korpus. Das Skript verweist noch nicht darauf, und das bleibt so, bis das Forum aus der Vorschau ist (Konrad, 2026-11-12: Vorschau bleibt, bis mindestens eine Studierendenfrage eingereicht ist).
 - `site/deploy.sh`: liefert den fertigen Baum per rsync in den Docroot.
 - `https://hai.konradvoelkel.com/eidl/` ist seit 2026-11-04 online, als Staging: der Vorschau-Baum mit den
   Opus-Platzhaltern, Banner und `noindex` auf allen 39 Seiten, leere Sitemap, Impressum und Datenschutz. Das ist
@@ -90,9 +95,12 @@ _Stand 2026-11-05._
 
 ## Nicht geprüft
 
+- Kapitelseiten und Kapitelbezug: Die Tests prüfen Markup, Sortierung im Beispiel und den Weg bis zur Moderation. Gemessen ist die
+  Wirkung auf echte Fragen nicht. Die Stärke des Zuschlags (`KAPITEL_BONUS`, `KAPITEL_FAKTOR`, Platz 1 bei `fuse`) ist geschätzt.
+  Am Host ist `/eidl/f/kapitel/backpropagation/` nach dem Ausspielen mit 200 erreichbar, Caddy liefert `f/*` also auch zwei Ebenen tief aus `live/`. Die Suche auf den Kapitelseiten ist in keinem echten Browser gelaufen; geprüft sind Abruf und Dateien (`curl`) und der Smoke-Test lokal (18 von 18). Die Migration der `pending.db` ist nur daran belegt, dass der Web-Prozess nach dem Neustart läuft.
 - Threat Model vom 2026-11-11 (`research/2026-11-11-threat-model/`): Von elf Befunden sind fünf behoben, getestet und seit dem 2026-11-11 ausgespielt (D26: Bremsen, /64, `api/meine`,
   Kostenbuch, Laufzeit des Worker), aus dem Arbeitsbaum vor dem Commit. Am Host geprüft sind der Start des Web-Prozesses und der Smoke-Test (18 grün); ausgelöst hat dort niemand eine
-  Bremse, und der Worker hat mit dem neuen Kostenbuch noch keinen echten Auftrag bearbeitet. Das Löschen in der Moderation (D27) ist gebaut, getestet und seit dem 2026-11-11 ausgespielt; am Host hat es noch niemand benutzt, der Abschnitt liegt hinter der Anmeldung. Die Sätze zum Löschweg in `site/texte/datenschutz-fragen.md` und `datenschutz.md` hat Konrad am 2026-11-11 freigegeben. Offen sind der zweite Kostendeckel, der Satz über den Checker (A3), die zweite Schranke vor `/eidl/mod/`, Links und
+  Bremse, und der Worker hat mit dem neuen Kostenbuch noch keinen echten Auftrag bearbeitet. Das Löschen in der Moderation (D27) ist gebaut, getestet und seit dem 2026-11-11 ausgespielt; am Host hat es noch niemand benutzt, der Abschnitt liegt hinter der Anmeldung. Die Sätze zum Löschweg in `site/texte/datenschutz-fragen.md` und `datenschutz.md` hat Konrad am 2026-11-11 freigegeben, sie sind seit demselben Tag live (`site/deploy.sh`; im Inhalt änderte sich nur die Datenschutzseite, die Seite am Host ist bytegleich mit dem gebauten Stand, Smoke gegen den Host 18 grün). Der Löschweg hängt an der Adresse im Impressum: Der Name hat MX-Einträge, ob das Postfach die Adresse annimmt, ist mit keiner Testmail geprüft. Offen sind der zweite Kostendeckel, der Satz über den Checker (A3), die zweite Schranke vor `/eidl/mod/`, Links und
   Formelgrößen in Antworten. Ob eine Absage der API wirklich nichts kostet, ist angenommen, nicht nachgeschlagen. Der Abbruch des Worker nach 15 Minuten war nur gelesen, nie am Host gesehen.
 - Der Worker hat auf dem Server zwei echte Fragen bearbeitet (05.11.), eine mit Antwort und vier Zitaten, eine mit `kein_beleg`: drei Anfragen, 23 ct, 166 MB. `fallbacks` ging mit Citations durch,
   ein Ersatzmodell musste noch nicht einspringen. Prompt-Version 2 ist damit nicht gemessen, das war eine einzige Antwort.
@@ -106,7 +114,8 @@ _Stand 2026-11-05._
   wäre die Auswahl heute meist etwas anders; ihre Zitate betrifft das nicht.
 - Ob der Prüfschritt etwas taugt: 58 von 87 Hinweisen, bei allen Modellen ähnlich oft.
 - Impressum und Datenschutz hat Konrad am 2026-11-05 freigegeben, mit dem Absatz zur Moderation. Die Fassung für Fragen von außen
-  hat er am 2026-11-06 freigegeben, mit dem Zusatz, dass die Moderation alles sieht (Zustimmung Version 2).
+  hat er am 2026-11-06 freigegeben, mit dem Zusatz, dass die Moderation alles sieht (Zustimmung Version 2). Den Absatz „Löschen nach der Freigabe“ und den
+  Satz unter „Ihre Rechte“ hat er am 2026-11-11 freigegeben, live seit demselben Tag wie das Löschen in der Moderation (D27).
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
 - Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün, unter WebKit scheitern 13 von 22 an der Anmeldung, vermutlich weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt; nachgewiesen ist das nicht.

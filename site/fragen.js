@@ -13,6 +13,7 @@ const formFrage = document.getElementById('frage');
 const text = document.getElementById('fragetext');
 const zustimmung = document.getElementById('zustimmung');
 const einwilligung = document.getElementById('einwilligung');
+const kapitelHinweis = document.getElementById('kapitel-hinweis');
 const bereich = document.getElementById('meine');
 const liste = document.getElementById('meine-liste');
 
@@ -152,7 +153,7 @@ formFrage.addEventListener('submit', async event => {
   event.preventDefault();
   fehler(formFrage);
   const frage = text.value.trim();
-  const { status, daten } = await post('fragen', { frage, zustimmung: +formFrage.dataset.zustimmung, einwilligung: !!einwilligung?.checked }, lies(TOKEN, null));
+  const { status, daten } = await post('fragen', { frage, zustimmung: +formFrage.dataset.zustimmung, einwilligung: !!einwilligung?.checked, ...(kapitel ? { kapitel: kapitel.slug } : {}) }, lies(TOKEN, null));
   if (status === 401) {
     schreib(TOKEN, null);
     zeigeFormular();
@@ -170,6 +171,20 @@ formFrage.addEventListener('submit', async event => {
   await aktualisiere();
   bereich.scrollIntoView();
 });
+
+/** Von einer Kapitelseite mitgebracht (`?kapitel=<kennung>`). Unbekannte Kennungen fallen weg, die Moderation ordnet ohnehin ein */
+const kapitelListe = (() => {
+  try {
+    return JSON.parse(document.getElementById('kapitel-liste')?.textContent ?? '[]');
+  } catch {
+    return [];
+  }
+})();
+const kapitel = kapitelListe.find(k => k.slug === new URLSearchParams(location.search).get('kapitel')) ?? null;
+if (kapitel && kapitelHinweis) {
+  kapitelHinweis.textContent = `Ihre Frage geht in das Unterforum „${kapitel.unterforum}“, Kapitel „${kapitel.titel}“. Die Moderation kann das noch ändern.`;
+  kapitelHinweis.hidden = false;
+}
 
 /** aus der Suche mitgebracht; einmal abgeholt, liegt es nirgends mehr */
 try {
