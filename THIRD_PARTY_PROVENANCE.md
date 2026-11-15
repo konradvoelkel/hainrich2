@@ -19,7 +19,7 @@ Nichts davon liegt in diesem Repository. Pakete kommen über `npm ci` nach `pack
 | Bestandteil | Fassung | Lizenz | Wofür |
 |---|---|---|---|
 | [Anthropic SDK](https://github.com/anthropics/anthropic-sdk-typescript) | 1.4.0 | Apache 2.0 | der Worker, der Entwürfe bei Claude anfragt |
-| [Playwright](https://playwright.dev/) | 1.63.0 | Apache 2.0 | Browser-Tests |
+| [Playwright](https://playwright.dev/) | 1.65.1 | Apache 2.0 | Browser-Tests |
 | [Inter](https://rsms.me/inter/) | lokal installiert | SIL Open Font License 1.1 | `tools/render_brand.py` setzt damit die Vorschaukarte `site/brand/og-card.png`; die Schrift selbst wird nicht ausgeliefert |
 
 Die Zitate auf der Site stammen aus dem Skript [„Einführung in Deep Learning“](https://eidl-skript-131e30.pages.cs.uni-duesseldorf.de/)
