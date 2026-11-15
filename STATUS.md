@@ -9,6 +9,10 @@ _Stand 2026-11-05._
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, auf Konrads
   eigenem Runner `ci-eu` (Repo `ci-server`) in einem per Digest gepinnten `node:24`-Container. Der Runner nimmt nur private
   Repos; wird dieses öffentlich, muss er vorher weg.
+- Abhängigkeiten, Stand 2026-11-15: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0) und Playwright 1.65.1 (vorher 1.63.0), das
+  Anthropic SDK bleibt bei 1.4.0. `research/2026-11-15-transformers-4.3.2/` belegt, dass 4.3.2 dieselben Vektoren rechnet: 466 Passagen
+  und 30 Seed-Fragen in Node, die Fragen und die Trefferlisten in Chromium, Firefox und WebKit, jeweils Byte für Byte. **Ausgespielt
+  ist 4.3.2 nicht:** Auf dem VPS und in `www/` läuft 4.3.0, bis beide Deploys zusammen gehen.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
@@ -127,7 +131,7 @@ _Stand 2026-11-05._
   am selben Tag live; die Kapitelseiten liefen seit dem 2026-11-12 ohne diesen Satz.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
-- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün, unter WebKit scheitern 13 von 22 an der Anmeldung, vermutlich weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt; nachgewiesen ist das nicht.
+- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün, unter WebKit scheitern 14 von 23 an der Anmeldung (2026-11-15, mit Playwright 1.63.0 und 1.65.1 dieselben Tests), vermutlich weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt; nachgewiesen ist das nicht.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
 - Text-Fragmente nur in Chromium und nur an vier Links geprüft.
 - Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.
