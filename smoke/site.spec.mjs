@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const FORUMS = ['/eidl/f/grundlagen/', '/eidl/f/lernen/', '/eidl/f/architekturen/', '/eidl/f/praxis/'];
-const PAGES = ['/eidl/', ...FORUMS, '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/ueber/', '/eidl/impressum/', '/eidl/datenschutz/'];
+const PAGES = ['/eidl/', ...FORUMS, '/eidl/f/kapitel/backpropagation/', '/eidl/f/s04/', '/eidl/f/s12/', '/eidl/f/s02/', '/eidl/ueber/', '/eidl/impressum/', '/eidl/datenschutz/'];
 const WIDTHS = [320, 375, 414, 768, 1200];
 const own = url => new URL(url).origin === new URL(process.env.SMOKE_URL ?? 'http://localhost:8772').origin;
 
@@ -46,6 +46,20 @@ test('Suche findet die Frage und das Kapitel, ohne etwas zu senden', async ({ pa
   await expect(page.locator('#treffer-skript li')).toHaveCount(3);
   expect(seen.requests.slice(requestsBefore)).toEqual([]);
   expect(seen.requests.filter(u => !own(u))).toEqual([]);
+  expect(seen.problems).toEqual([]);
+});
+
+test('auf der Kapitelseite führt ein Suchtreffer zur Frage, nicht unter die Kapitelseite', async ({ page }) => {
+  const seen = watch(page);
+  await page.goto('/eidl/f/kapitel/backpropagation/');
+  await page.locator('#suchfeld').focus();
+  await expect(page.locator('#suchstatus')).toContainText('Suche bereit', { timeout: 120_000 });
+  await page.locator('#suchfeld').fill('Sind neuronale Netze immer MLPs?');
+  await expect(page.locator('#treffer-fragen li').first()).toBeVisible();
+  await page.locator('#treffer-fragen li a').first().click();
+  await expect(page).toHaveURL(/^[^?#]*\/eidl\/f\/s\d+\/$/);
+  expect(new URL(page.url()).pathname).toMatch(/^\/eidl\/f\/s\d+\/$/);
+  await expect(page.locator('.bot').first()).toHaveText('Bot');
   expect(seen.problems).toEqual([]);
 });
 

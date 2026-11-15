@@ -48,7 +48,7 @@ function bieteAn(fragen = []) {
 }
 
 function zeige({ fragen, skript }) {
-  listeFragen.replaceChildren(...fragen.map(f => zeile(f.text, `f/${f.id}/`, f.kapitel, f.html)));
+  listeFragen.replaceChildren(...fragen.map(f => zeile(f.text, `${wurzel}f/${f.id}/`, f.kapitel, f.html)));
   listeSkript.replaceChildren(...skript.map(p => zeile([p.titel, ...p.pfad.slice(-1)].join(' › '), p.url, p.ausschnitt)));
   treffer.hidden = !fragen.length && !skript.length;
   bieteAn(fragen);
