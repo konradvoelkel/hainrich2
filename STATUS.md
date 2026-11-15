@@ -33,10 +33,12 @@ _Stand 2026-11-05._
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
-- Der Korpus auf dem VPS, für Worker, Moderation und die Suche im Browser, ist vom Skriptstand `8c24caa` (veröffentlicht 2026-11-14),
-  gebaut am 2026-11-15, 466 Passagen, unter `work/korpus-2026-11-15/`, ausgespielt am 2026-11-15 um 10:50 mit beiden Deploys: Hashes in `www/`
-  und `korpus/` gleich, Smoke 18/18 gegen den Host. `work/korpus-aktuell` zeigt darauf (D25), und `site/build.mjs` baut die Suche
-  daraus (`--korpus`). Davor: `7a6254c` mit 444 Passagen in `korpus-2026-11-10b/`, vor D25 stand die Suche auf 434 Passagen vom 2026-11-06. `phase1` bleibt eingefroren auf `a74d433`: Die Antworten in
+- Der Korpus auf dem VPS, für Worker, Moderation und die Suche im Browser, ist vom Skriptstand, der am 2026-11-15 um 10:48 GMT
+  veröffentlicht wurde (Commit nicht nachgesehen), gebaut am 2026-11-15, 466 Passagen, unter `work/korpus-2026-11-15b/`, ausgespielt am
+  2026-11-15 um 20:06 mit beiden Deploys: Prüfsummen in `www/` und `korpus/` wie lokal, `hainrich2-web` nach dem Neustart aktiv, Smoke
+  19/19 gegen den Host. `work/korpus-aktuell` zeigt darauf (D25), und `site/build.mjs` baut die Suche daraus (`--korpus`). Davor am
+  selben Tag: `8c24caa` (veröffentlicht 2026-11-14) in `korpus-2026-11-15/`, ausgespielt um 10:50; der Unterschied ist eine Passage in
+  `universelle-approximation`, nur die Tausendertrennung („295 554“ statt „295.554“). Davor: `7a6254c` mit 444 Passagen in `korpus-2026-11-10b/`, vor D25 stand die Suche auf 434 Passagen vom 2026-11-06. `phase1` bleibt eingefroren auf `a74d433`: Die Antworten in
   `antworten.json` zitieren daraus, und der Bau prüft ihre Zitate dagegen (I4, `--daten`).
   Die Zitate in `public.db` zieht kein Werkzeug um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
 - `node tools/skriptstand.mjs` vergleicht die veröffentlichte `llms-full.txt` mit dem
@@ -46,6 +48,7 @@ _Stand 2026-11-05._
   Einen Auslöser vom Skript aus wie bei ds-en gibt es nicht, der Check läuft von Hand. Zuletzt nachgezogen am 2026-11-15:
   22 neue und 3 geänderte Passagen, vor allem die Formen-Verteilung in `autograd-berechnungsgraph` (+14) und die Lernkurve in
   `universelle-approximation` (+6). In `antworten.json` kommen s19 und ein weiteres Zitat bei s17 auf die Opus-Liste, sie hat jetzt 18 Antworten.
+  Am Abend desselben Tages noch eine geänderte Passage (Tausendertrennung), die Liste bleibt bei 18.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
