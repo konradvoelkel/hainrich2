@@ -33,17 +33,19 @@ _Stand 2026-11-05._
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
   Zertifikatsname in den öffentlichen CT-Logs. A und AAAA bei INWX, Rolle `hainrich2`, Wache (Server-Repo
   `1b83e10`, `27a20d6`). Die 13 Smoke-Tests sind auch gegen den echten Host grün (`SMOKE_URL`).
-- Der Korpus auf dem VPS, für Worker, Moderation und die Suche im Browser, ist vom Skriptstand `7a6254c`, gebaut am 2026-11-10 abends,
-  444 Passagen, unter `work/korpus-2026-11-10b/`. Seit D25 (2026-11-10) zeigt `work/korpus-aktuell` darauf, und `site/build.mjs` baut die Suche
-  daraus (`--korpus`); vorher stand die Suche auf 434 Passagen vom 2026-11-06. `phase1` bleibt eingefroren auf `a74d433`: Die Antworten in
+- Der Korpus auf dem VPS, für Worker, Moderation und die Suche im Browser, ist vom Skriptstand `8c24caa` (veröffentlicht 2026-11-14),
+  gebaut am 2026-11-15, 466 Passagen, unter `work/korpus-2026-11-15/`, ausgespielt am 2026-11-15 um 10:50 mit beiden Deploys: Hashes in `www/`
+  und `korpus/` gleich, Smoke 18/18 gegen den Host. `work/korpus-aktuell` zeigt darauf (D25), und `site/build.mjs` baut die Suche
+  daraus (`--korpus`). Davor: `7a6254c` mit 444 Passagen in `korpus-2026-11-10b/`, vor D25 stand die Suche auf 434 Passagen vom 2026-11-06. `phase1` bleibt eingefroren auf `a74d433`: Die Antworten in
   `antworten.json` zitieren daraus, und der Bau prüft ihre Zitate dagegen (I4, `--daten`).
   Die Zitate in `public.db` zieht kein Werkzeug um: Bei s12 zeigt ein Textfragment noch auf die entfernte Folienzeile, die Seite öffnet dann oben.
 - `node tools/skriptstand.mjs` vergleicht die veröffentlichte `llms-full.txt` mit dem
   Korpus hinter `work/korpus-aktuell` und nennt die Antworten in `antworten.json`, deren Zitat es so nicht mehr gibt (Exit 1). Für `public.db` zeigt die Moderation dieselbe Liste, in der Übersicht
   und an der Frage, gemessen am ausgespielten Korpus; der Web-Prozess liest ihn aus `korpus/` neben `app/`. Die Liste ist seit 2026-11-09 live, angesehen hat sie
   auf dem Host nur Konrad; erwartet sind 14 Fragen, s30 ist nicht online.
-  Einen Auslöser vom Skript aus wie bei ds-en gibt es nicht, der Check läuft von Hand. Zuletzt nachgezogen am 2026-11-10 abends:
-  `cfbb330` und `ae6ec6d` ändern je eine Passage in `aktivierungsfunktionen` und `uebungsblaetter`.
+  Einen Auslöser vom Skript aus wie bei ds-en gibt es nicht, der Check läuft von Hand. Zuletzt nachgezogen am 2026-11-15:
+  22 neue und 3 geänderte Passagen, vor allem die Formen-Verteilung in `autograd-berechnungsgraph` (+14) und die Lernkurve in
+  `universelle-approximation` (+6). In `antworten.json` kommen s19 und ein weiteres Zitat bei s17 auf die Opus-Liste, sie hat jetzt 18 Antworten.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
