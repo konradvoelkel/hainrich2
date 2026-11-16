@@ -14,8 +14,12 @@ _Stand 2026-11-05._
   und 30 Seed-Fragen in Node, die Fragen und die Trefferlisten in Chromium, Firefox und WebKit, jeweils Byte für Byte.
   `research/2026-11-16-anthropic-sdk-1.8.0/` belegt, dass der Worker mit 1.8.0 dieselben Anfragen schickt und Absagen, Abbrüche und
   Timeouts gleich bucht: 19 Szenarien gegen einen Attrappen-Server, ohne echten Aufruf; nur die Logzeile nennt jetzt die Fehlerklasse.
-  **Ausgespielt ist beides nicht:** Auf dem VPS laufen transformers.js 4.3.0 und SDK 1.4.0, in `www/` 4.3.0, bis beide Deploys
-  zusammen gehen. Einen echten Aufruf mit 1.8.0 gab es noch nicht.
+  **Ausgespielt am 2026-11-16** mit beiden Deploys, Commit `92b6560`: In `www/` änderten sich nur `transformers.min.js` und seine drei
+  komprimierten Fassungen (am Host SHA-256 `8b5a3171…34decb`), in `app/` nur `package.json` und die beiden Pakete. Der Neustart von
+  `hainrich2-web` kam erst um 01:56:53, rund zweieinhalb Minuten nach den Dateien: Die Verbindung dafür wies `ufw limit` ab, und
+  `site/deploy-app.sh` endete mit Status 255; nachgeholt mit einer einzelnen Verbindung. Danach `hainrich2-web` aktiv, Smoke 19/19 gegen
+  den Host, die API weist `GET` mit 405 ab, die Anmeldeseite der Moderation kommt. **Einen echten Aufruf mit SDK 1.8.0 gab es noch
+  nicht:** Der erste Entwurf nach dem Ausspielen ist der erste, und das Journal des Workers habe ich nicht gelesen.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
