@@ -9,10 +9,13 @@ _Stand 2026-11-05._
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, auf Konrads
   eigenem Runner `ci-eu` (Repo `ci-server`) in einem per Digest gepinnten `node:24`-Container. Der Runner nimmt nur private
   Repos; wird dieses öffentlich, muss er vorher weg.
-- Abhängigkeiten, Stand 2026-11-15: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0) und Playwright 1.65.1 (vorher 1.63.0), das
-  Anthropic SDK bleibt bei 1.4.0. `research/2026-11-15-transformers-4.3.2/` belegt, dass 4.3.2 dieselben Vektoren rechnet: 466 Passagen
-  und 30 Seed-Fragen in Node, die Fragen und die Trefferlisten in Chromium, Firefox und WebKit, jeweils Byte für Byte. **Ausgespielt
-  ist 4.3.2 nicht:** Auf dem VPS und in `www/` läuft 4.3.0, bis beide Deploys zusammen gehen.
+- Abhängigkeiten, Stand 2026-11-16: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0), Playwright 1.65.1 (vorher 1.63.0) und das
+  Anthropic SDK 1.8.0 (vorher 1.4.0). `research/2026-11-15-transformers-4.3.2/` belegt, dass 4.3.2 dieselben Vektoren rechnet: 466 Passagen
+  und 30 Seed-Fragen in Node, die Fragen und die Trefferlisten in Chromium, Firefox und WebKit, jeweils Byte für Byte.
+  `research/2026-11-16-anthropic-sdk-1.8.0/` belegt, dass der Worker mit 1.8.0 dieselben Anfragen schickt und Absagen, Abbrüche und
+  Timeouts gleich bucht: 19 Szenarien gegen einen Attrappen-Server, ohne echten Aufruf; nur die Logzeile nennt jetzt die Fehlerklasse.
+  **Ausgespielt ist beides nicht:** Auf dem VPS laufen transformers.js 4.3.0 und SDK 1.4.0, in `www/` 4.3.0, bis beide Deploys
+  zusammen gehen. Einen echten Aufruf mit 1.8.0 gab es noch nicht.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
