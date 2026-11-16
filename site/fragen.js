@@ -2,6 +2,8 @@
  * Fragen stellen und „Meine Fragen“. Token, Geheimnisse und die Kopie der Fragen liegen nur in diesem Browser, unter `eidl:` (Plan §4). Der
  * Entwurf kommt fertig gerendert vom Server, wie jede Antwort. Während er läuft, fragt die Seite alle paar Sekunden nach.
  */
+import './zitate.js';
+
 const API = '../../api/';
 const TAKT_MS = 3000;
 const FRIST_MS = 240_000;
@@ -16,6 +18,7 @@ const einwilligung = document.getElementById('einwilligung');
 const kapitelHinweis = document.getElementById('kapitel-hinweis');
 const bereich = document.getElementById('meine');
 const liste = document.getElementById('meine-liste');
+const gesendet = document.getElementById('meine-status');
 
 /** Ohne `localStorage` geht es für diese Sitzung trotzdem, die Liste ist dann beim nächsten Besuch weg */
 const notfall = new Map();
@@ -147,6 +150,8 @@ formCode.addEventListener('submit', async event => {
   schreib(TOKEN, daten.token);
   document.getElementById('kurscode').value = '';
   zeigeFormular();
+  /** Das Formular, das den Fokus hielt, ist jetzt verborgen. Ohne diesen Schritt stünde die Tastatur am Seitenanfang */
+  text.focus();
 });
 
 formFrage.addEventListener('submit', async event => {
@@ -158,6 +163,7 @@ formFrage.addEventListener('submit', async event => {
     schreib(TOKEN, null);
     zeigeFormular();
     fehler(formCode, 'Bitte geben Sie den Kurscode noch einmal ein.');
+    document.getElementById('kurscode').focus();
     return;
   }
   if (status !== 201) {
@@ -170,6 +176,11 @@ formFrage.addEventListener('submit', async event => {
   if (einwilligung) einwilligung.checked = false;
   await aktualisiere();
   bereich.scrollIntoView();
+  /** sagen, dass es geklappt hat, und die Tastatur dorthin stellen, wo die Frage jetzt steht */
+  if (gesendet) gesendet.textContent = 'Ihre Frage ist angekommen und steht jetzt in dieser Liste.';
+  const kopf = bereich.querySelector('h2');
+  kopf.tabIndex = -1;
+  kopf.focus();
 });
 
 /** Von einer Kapitelseite mitgebracht (`?kapitel=<kennung>`). Unbekannte Kennungen fallen weg, die Moderation ordnet ohnehin ein */

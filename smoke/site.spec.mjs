@@ -44,6 +44,10 @@ test('Suche findet die Frage und das Kapitel, ohne etwas zu senden', async ({ pa
   await expect(page.locator('#treffer-fragen')).toContainText('MLP');
   await expect(page.locator('#treffer-fragen li')).toHaveCount(5);
   await expect(page.locator('#treffer-skript li')).toHaveCount(3);
+  await expect(page.locator('#suchstatus')).toHaveText('5 Fragen und 3 Stellen im Skript gefunden.');
+  await expect(page.locator('#suche')).toHaveAttribute('role', 'search');
+  await page.locator('#suchfeld').fill('');
+  await expect(page.locator('#suchstatus')).toContainText('Suche bereit');
   expect(seen.requests.slice(requestsBefore)).toEqual([]);
   expect(seen.requests.filter(u => !own(u))).toEqual([]);
   expect(seen.problems).toEqual([]);
@@ -88,8 +92,32 @@ test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link, noindex', async ({ pa
   await expect(page.locator('.zitate figure').first().locator('blockquote')).not.toBeEmpty();
   await expect(page.locator('.zitate figcaption a').first()).toHaveAttribute('href', /^https:\/\/eidl-skript/);
   await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex');
+  await expect(page.locator('#z1 details')).not.toHaveAttribute('open', '');
+  await expect(page.locator('#z1 figcaption a')).toBeVisible();
   await page.locator('.marke-zitat').first().click();
   await expect(page).toHaveURL(/#z1$/);
+  await expect(page.locator('#z1 details')).toHaveAttribute('open', '');
+  await expect(page.locator('#z1 blockquote')).toBeVisible();
+  await expect(page.locator('.frage time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
+  await expect(page.locator('.weiter a')).toHaveCount(2);
+  await page.locator('.frage .meta a').click();
+  await expect(page).toHaveURL(/\/f\/kapitel\/[a-z0-9-]+\/$/);
+  await expect(page.locator('h1')).toContainText('Fragen zu');
+  await expect(page.locator('.themen a[href$="/s04/"]')).toBeVisible();
+});
+
+test('breite Formeln scrollen im eigenen Kasten, der Sprunglink führt zum Inhalt', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto('/eidl/f/s09/');
+  await page.locator('.zitate details').evaluateAll(alle => alle.forEach(zitat => { zitat.open = true; }));
+  const breit = await page.locator('.katex-display').evaluateAll(alle => alle.filter(e => e.scrollWidth > e.clientWidth + 1).length);
+  expect(breit).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.sprung')).toBeFocused();
+  await expect(page.locator('.sprung')).toBeInViewport();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#inhalt$/);
 });
 
 test('ohne JavaScript bleibt alles lesbar, das tote Suchfeld fehlt', async ({ browser, baseURL }) => {

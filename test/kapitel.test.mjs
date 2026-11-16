@@ -46,22 +46,26 @@ test('die Kapitelseite trägt Adresse, Titel, Brotkrumen und einen Link ins Form
 
 test('die Suche auf der Kapitelseite kennt ihren Kapiteltitel und findet ihre Dateien unter der Wurzel', () => {
   const html = kapitelPage(backprop, [], site);
-  assert.match(html, /<section class="suche" id="suche" hidden data-root="\.\.\/\.\.\/\.\.\/" data-kapitel="Backpropagation">/);
+  assert.match(html, /<section class="suche" id="suche" role="search" aria-label="Suche im Forum" hidden data-root="\.\.\/\.\.\/\.\.\/" data-kapitel="Backpropagation">/);
   assert.match(html, /<a class="knopf fragen" href="\.\.\/\.\.\/neu\/\?kapitel=backpropagation">Diese Frage stellen<\/a>/);
   assert.doesNotMatch(indexPage([], site), /data-kapitel/);
-  assert.match(indexPage([], site), /<section class="suche" id="suche" hidden data-root="">/);
+  assert.match(indexPage([], site), /<section class="suche" id="suche" role="search" aria-label="Suche im Forum" hidden data-root="">/);
 });
 
-test('nur geprüfte Fragen des Kapitels machen die Seite indexierbar, und nur sie stehen dort', () => {
+test('erst drei geprüfte Fragen machen die Kapitelseite indexierbar, und nur ihre Fragen stehen dort', () => {
   const open = question();
   const other = { ...reviewed(question()), id: 's02', kapitel: 'Tensoren' };
   const closed = kapitelPage(backprop, [open], site);
   assert.match(closed, /name="robots" content="noindex"/);
   assert.match(closed, /<a href="\.\.\/\.\.\/s01\/">/);
-  const done = kapitelPage(backprop, [reviewed(open), other], site);
-  assert.match(done, /name="robots" content="index,follow"/);
-  assert.match(done, /<a href="\.\.\/\.\.\/s01\/">/);
-  assert.doesNotMatch(done, /s02/, 'Fragen aus anderen Kapiteln gehören nicht auf diese Seite');
+  const one = kapitelPage(backprop, [reviewed(open), other], site);
+  assert.match(one, /name="robots" content="noindex"/, 'eine Liste mit einer Frage ist zu dünn für den Index');
+  assert.match(one, /<a href="\.\.\/\.\.\/s01\/">/);
+  assert.doesNotMatch(one, /s02/, 'Fragen aus anderen Kapiteln gehören nicht auf diese Seite');
+  const three = ['s01', 's03', 's04'].map(id => ({ ...reviewed(open), id }));
+  assert.match(kapitelPage(backprop, three.slice(0, 2), site), /name="robots" content="noindex"/);
+  assert.match(kapitelPage(backprop, three, site), /name="robots" content="index,follow"/);
+  assert.match(kapitelPage(backprop, [...three.slice(0, 2), { ...open, id: 's05' }], site), /name="robots" content="noindex"/, 'ungeprüfte zählen nicht');
 });
 
 test('ohne Knopf „Frage stellen“ bei abgeschaltetem Fragepfad, die Suche bleibt', () => {
@@ -70,13 +74,15 @@ test('ohne Knopf „Frage stellen“ bei abgeschaltetem Fragepfad, die Suche ble
   assert.match(html, /id="suche"/);
 });
 
-test('das Unterforum verweist auf die Kapitelseiten, die Sitemap nennt nur Kapitel mit Geprüftem', () => {
+test('das Unterforum verweist auf die Kapitelseiten, die Sitemap nennt nur Kapitel mit drei geprüften Fragen', () => {
   const lernen = forumPage(UNTERFOREN.find(u => u.slug === 'lernen'), [], site);
   assert.match(lernen, /<a href="\.\.\/kapitel\/backpropagation\/">Backpropagation<\/a>/);
   assert.equal(lernen.match(/href="\.\.\/kapitel\//g).length, 9, 'Lernen und Training hat neun Kapitel');
-  const map = sitemap([reviewed(question())], site);
+  const three = ['s01', 's03', 's04'].map(id => ({ ...reviewed(question()), id }));
+  const map = sitemap(three, site);
   assert.match(map, /<loc>https:\/\/example\.test\/eidl\/f\/kapitel\/backpropagation\/<\/loc>/);
   assert.doesNotMatch(map, /f\/kapitel\/tensoren\//);
+  assert.doesNotMatch(sitemap(three.slice(0, 2), site), /f\/kapitel\//, 'unter drei geprüften Fragen bleibt die Kapitelseite draußen');
   assert.doesNotMatch(sitemap([question()], site), /f\/kapitel\//);
 });
 
@@ -132,4 +138,10 @@ test('eine ältere pending.db bekommt die Spalte für den Kapitelhinweis nachtr�
   const again = openPending(file);
   assert.equal(again.get('alt').text, 'Eine alte Frage?', 'Die Migration lässt alte Zeilen unberührt');
   again.close();
+});
+
+test('wer fragen kann, steht auf der Seite auch ohne Kurscode und ohne JavaScript', () => {
+  const sichtbar = askPage(site).replace(/<form[\s\S]*?<\/form>/g, '');
+  assert.match(sichtbar, /Fragen stellen kann nur, wer den Kurscode hat, und den gibt es im Kurs in ILIAS\. Lesen können alle\./);
+  assert.match(sichtbar, /Was mit einer Frage geschieht, steht unter <a href="\.\.\/\.\.\/datenschutz\/">Datenschutz<\/a>\./);
 });

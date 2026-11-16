@@ -66,7 +66,7 @@ const copy = (from, name) => {
 };
 const dep = (...p) => path.join(repo, 'node_modules', ...p);
 
-for (const name of ['style.css', 'app.js', 'fragen.js', 'stimmen.js', 'such-worker.js']) copy(path.join(here, name), name);
+for (const name of ['style.css', 'app.js', 'fragen.js', 'stimmen.js', 'zitate.js', 'such-worker.js']) copy(path.join(here, name), name);
 for (const name of ['logo.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'muster.svg', MODERATION.bild, OG_CARD.file]) copy(path.join(here, 'brand', name), name);
 /** Browser und Crawler fragen an der Wurzel des Hosts danach, egal was die Seite nennt */
 fs.copyFileSync(path.join(here, 'brand/favicon.ico'), path.join(staging, 'favicon.ico'));
@@ -166,7 +166,7 @@ fs.writeFileSync(path.join(staging, 'robots.txt'), robotsTxt(site));
 /** Stolperdrähte auf dem fertigen Baum */
 const built = walk(staging);
 const pages = built.filter(f => f.endsWith('.html'));
-const texts = built.filter(f => /\.(html|css|json|xml|txt)$/.test(f) || /(app|fragen|stimmen|such-worker|search|rank|model)\.js$/.test(f));
+const texts = built.filter(f => /\.(html|css|json|xml|txt)$/.test(f) || /(app|fragen|stimmen|zitate|such-worker|search|rank|model)\.js$/.test(f));
 for (const file of built) if (/\.(md|adoc|db|env)$/.test(file)) throw new Error(`gehört nicht auf die Site: ${file}`);
 for (const file of texts) {
   const text = fs.readFileSync(file, 'utf8');

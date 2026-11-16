@@ -165,11 +165,14 @@ test('Mit Einwilligung kommt der Entwurf sofort und nur für die fragende Person
   await page.click('#code button.haupt');
   await expect(page.locator('#code .fehler')).toContainText('stimmt nicht');
   await enterCode(page);
+  await expect(page.locator('#fragetext')).toBeFocused();
   await expect(page.locator('#einwilligung')).not.toBeChecked();
   await page.fill('#fragetext', 'Was bedeutet Broadcasting bei Tensoren genau?');
   await page.check('#zustimmung');
   await page.check('#einwilligung');
   await page.click('#frage button.haupt');
+  await expect(page.locator('#meine-status')).toContainText('Ihre Frage ist angekommen');
+  await expect(page.locator('#meine > h2')).toBeFocused();
   await expect(page.locator('.meine-frage .antwort .badge')).toHaveText('Entwurf', { timeout: 15_000 });
   await expect(page.locator('.meine-frage .antwort .katex')).toBeVisible();
   await expect(page.locator('.meine-frage .hinweis')).toContainText('außer Ihnen sieht ihn nur die Moderation');

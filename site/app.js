@@ -21,6 +21,7 @@ let letzte = 0;
 let warten = null;
 let modellDa = false;
 let stichworteDa = false;
+let modellWeg = false;
 
 /** `html` kommt fertig gesetzt vom Server, wie die Seiten selbst */
 const zeile = (kopf, href, unten, html) => {
@@ -47,10 +48,27 @@ function bieteAn(fragen = []) {
   neueFrage.hidden = anfrage.length < +neueFrage.dataset.mindestens || fragen.some(f => gleich(f.text) === gleich(anfrage));
 }
 
+/** Der Zustand der Suche in einem Satz, solange keine Treffer dastehen */
+function bereit() {
+  if (modellDa) return 'Suche bereit. Sie läuft in Ihrem Browser.';
+  if (modellWeg) return stichworteDa ? 'Das Sprachmodell ließ sich nicht laden. Die Stichwortsuche funktioniert weiter.' : 'Die Suche ließ sich nicht laden. Die Liste unten funktioniert weiter.';
+  return stichworteDa ? 'Stichwortsuche bereit, das Sprachmodell lädt noch …' : 'Die Suche lädt …';
+}
+
+const zahl = (n, eins, viele) => `${n} ${n === 1 ? eins : viele}`;
+
+/** Die Trefferliste ist keine Live-Region. Was gefunden ist, sagt deshalb die Statuszeile, auch einem Vorleseprogramm */
+function melde(fragen, skript) {
+  const gefunden = fragen.length || skript.length ? `${zahl(fragen.length, 'Frage', 'Fragen')} und ${zahl(skript.length, 'Stelle', 'Stellen')} im Skript gefunden.` : 'Nichts gefunden.';
+  if (modellDa) status.textContent = gefunden;
+  else status.textContent = `${gefunden} ${modellWeg ? 'Ohne Sprachmodell, nur über Stichworte.' : 'Das Sprachmodell lädt noch, dann werden die Treffer genauer.'}`;
+}
+
 function zeige({ fragen, skript }) {
   listeFragen.replaceChildren(...fragen.map(f => zeile(f.text, `${wurzel}f/${f.id}/`, f.kapitel, f.html)));
   listeSkript.replaceChildren(...skript.map(p => zeile([p.titel, ...p.pfad.slice(-1)].join(' › '), p.url, p.ausschnitt)));
   treffer.hidden = !fragen.length && !skript.length;
+  melde(fragen, skript);
   bieteAn(fragen);
 }
 
@@ -58,18 +76,17 @@ function suche() {
   const anfrage = feld.value.trim();
   letzte += 1;
   bieteAn();
-  if (!anfrage) { treffer.hidden = true; return; }
+  if (!anfrage) { treffer.hidden = true; status.textContent = bereit(); return; }
   if (stichworteDa) worker.postMessage({ act: 'suche', anfrage, nummer: letzte, kapitel });
 }
 
 function modellFehlt() {
-  status.textContent = stichworteDa
-    ? 'Das Sprachmodell ließ sich nicht laden. Die Stichwortsuche funktioniert weiter.'
-    : 'Die Suche ließ sich nicht laden. Die Liste unten funktioniert weiter.';
+  modellWeg = true;
+  status.textContent = bereit();
 }
 
 function start() {
-  status.textContent = 'Die Suche lädt …';
+  status.textContent = bereit();
   worker = new Worker(`${wurzel}such-worker.js`, { type: 'module' });
   const frist = setTimeout(() => { if (!modellDa) modellFehlt(); }, TIMEOUT_MS);
   worker.onerror = () => { clearTimeout(frist); modellFehlt(); };
@@ -77,13 +94,13 @@ function start() {
     switch (data.act) {
       case 'stichworte':
         stichworteDa = true;
-        status.textContent = 'Stichwortsuche bereit, das Sprachmodell lädt noch …';
+        status.textContent = bereit();
         suche();
         break;
       case 'modell':
         clearTimeout(frist);
         modellDa = true;
-        status.textContent = 'Suche bereit. Sie läuft in Ihrem Browser.';
+        status.textContent = bereit();
         suche();
         break;
       case 'modellfehler':

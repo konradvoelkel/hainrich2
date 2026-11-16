@@ -20,6 +20,16 @@ _Stand 2026-11-05._
   `site/deploy-app.sh` endete mit Status 255; nachgeholt mit einer einzelnen Verbindung. Danach `hainrich2-web` aktiv, Smoke 19/19 gegen
   den Host, die API weist `GET` mit 405 ab, die Anmeldeseite der Moderation kommt. **Einen echten Aufruf mit SDK 1.8.0 gab es noch
   nicht:** Der erste Entwurf nach dem Ausspielen ist der erste, und das Journal des Workers habe ich nicht gelesen.
+- `research/2026-11-16-seo-audit/`: zweites SEO-Audit, am ausgespielten Stand mit 99 Seiten. Startbereitschaft 79 von 100 (eine
+  Einschätzung), kein Rückschritt seit dem Audit vom 06.11. Offen vor dem Ende der Vorschau: Frageseiten verlinken weder ihr Kapitel
+  noch andere Fragen, „geprüft“ nennt weder Prüfer noch Datum, Kapitelseiten würden ab einer geprüften Frage indexiert, und für das
+  Ende der Vorschau fehlt der Schalter in `public.db` samt Test. Eine Regel für Trainings-Crawler gibt es nicht, das ist Konrads
+  Entscheidung. **Umgebaut am selben Tag, nicht ausgespielt** (Abschnitt 7 des Berichts): Frageseiten verlinken Kapitel und Unterforum,
+  Kapitelseiten werden erst ab drei geprüften Fragen indexierbar, Beschreibungen ohne Listenzeichen und mit lesbaren Formeln, die
+  Suche sagt ihre Treffer an, das Frageformular hält den Fokus und sagt, wer fragen kann, breite Formeln zeigen ihren Rand, lange
+  Zitate sind eingeklappt (s09 bei 360 px von 7760 auf 3839 px), und
+  `test/vorschau.test.mjs` hält das Ende der Vorschau für die dynamischen Seiten fest. 234 Unit-Tests, Smoke 20/20 in drei Browsern,
+  `smoke:mod` 23/23 in Chromium und Firefox. Am Host steht weiter der Stand `92b6560`.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt

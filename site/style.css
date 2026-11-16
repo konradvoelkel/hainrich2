@@ -86,7 +86,12 @@ h2 { font-size: 1.05rem; line-height: 1.35; margin: 1.4rem 0 .4rem; }
 .marke-zitat { font-size: .85em; text-decoration: none; }
 
 .zitate figure { margin: .8rem 0 0; scroll-margin-top: .6rem; }
-.zitate figure:target blockquote { border-left-color: var(--marke); background: var(--flaeche); }
+.zitate figure:target :is(blockquote, summary) { border-left-color: var(--marke); background: var(--flaeche); }
+/* Ein langes Zitat zeigt seinen Anfang, der Rest klappt auf. Die Zeile sieht aus wie der Anfang des Zitats, damit klar ist, was aufgeht */
+.zitate summary { padding: .4rem .85rem; border-left: 3px solid var(--linie); cursor: pointer; }
+.zitate summary:focus-visible { outline: 2px solid var(--marke); outline-offset: 1px; }
+.zitate .mehr { color: var(--marke); font-size: .9rem; white-space: nowrap; }
+.zitate details[open] :is(.anriss, .zu), .zitate details:not([open]) .auf { display: none; }
 blockquote { margin: 0; padding: .1rem .85rem; border-left: 3px solid var(--linie); }
 blockquote > :first-child { margin-top: .4rem; }
 blockquote > :last-child { margin-bottom: .4rem; }
@@ -210,6 +215,27 @@ pre { overflow-x: auto; }
 .deckel { margin: .5rem 0; }
 .deckel label { display: block; }
 .deckel progress { display: block; width: 100%; margin-top: .2rem; accent-color: var(--marke); }
+
+/* Sprunglink für die Tastatur: sichtbar erst, wenn sie ihn erreicht */
+.sprung { position: absolute; left: -999rem; top: .5rem; z-index: 2; padding: .4rem .7rem; border: 2px solid var(--marke); border-radius: .4rem; background: var(--karte); color: var(--tinte); }
+.sprung:focus { left: .5rem; }
+/* Fokus, den ein Skript setzt, damit die Tastatur an der richtigen Stelle weitermacht, braucht keinen Rahmen */
+[tabindex="-1"]:focus { outline: none; }
+/* Von der Frage weiter zum Kapitel und zum Unterforum */
+.weiter { display: flex; flex-wrap: wrap; gap: .2rem 1.2rem; margin: 1rem 0 0; font-size: .95rem; }
+/* Mit dem Finger treffbar, mindestens 24 px, ohne dass Satz oder Kopfzeile auseinanderrücken (research/2026-11-16-seo-audit) */
+.marke-zitat { margin: -.3rem -.1rem; padding: .3rem .25rem; }
+.nummer { margin-block: -.3rem; margin-right: -.4rem; padding: .3rem .4rem; }
+.pfad a, .weiter a, .fuss nav a, .foren tbody a { display: inline-block; padding-block: .2rem; }
+/* Eine breite Formel scrollt in ihrem Kasten. Wo der Browser es kann, verblasst der Rand, hinter dem noch etwas kommt; ohne Überlauf bleibt die Zeitleiste aus */
+@supports (animation-timeline: scroll()) {
+  .katex-display { animation: formel-rand linear both; animation-timeline: scroll(self inline); }
+  @keyframes formel-rand {
+    0% { mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent); }
+    2%, 98% { mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent); }
+    100% { mask-image: linear-gradient(to right, transparent, #000 2.5rem); }
+  }
+}
 
 /* Der Auftritt der öffentlichen Seiten: Höhenlinien einer Loss-Landschaft als Grund (tools/render_brand.py), Karten wie Aufkleber. Die Moderation bleibt nüchtern. */
 @media screen {

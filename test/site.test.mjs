@@ -223,6 +223,7 @@ test('die Seite für unbekannte Adressen verweist von der Wurzel aus und bleibt 
   assert.match(html, /<h1>Diese Seite gibt es nicht<\/h1>/);
   assert.match(html, /name="robots" content="noindex"/);
   assert.match(html, /<a href="\/eidl\/">Zum Forum<\/a>/);
+  assert.doesNotMatch(html, /rel="canonical"|og:url/, 'die Seite steht für jede unbekannte Adresse, also nennt sie keine eigene');
   assert.doesNotMatch(html.replace(/<link rel="canonical"[^>]*>/, ''), /(?:src|href)="(?!\/eidl\/|https:|#)/);
 });
 
@@ -232,7 +233,7 @@ test('Frage und Unterforum tragen den sichtbaren Pfad als strukturierte Daten', 
   const data = dataOf(questionPage(question(), site));
   assert.equal(data['@context'], 'https://schema.org');
   assert.equal(data['@type'], 'BreadcrumbList');
-  assert.deepEqual(data.itemListElement.map(e => [e.position, e.name, e.item]), [[1, 'Forum', 'https://example.test/eidl/'], [2, 'Grundlagen', 'https://example.test/eidl/f/grundlagen/'], [3, 'Tensoren', undefined]]);
+  assert.deepEqual(data.itemListElement.map(e => [e.position, e.name, e.item]), [[1, 'Forum', 'https://example.test/eidl/'], [2, 'Grundlagen', 'https://example.test/eidl/f/grundlagen/'], [3, 'Tensoren', 'https://example.test/eidl/f/kapitel/tensoren/']]);
   assert.deepEqual(dataOf(forumPage(UNTERFOREN[1], [], site)).itemListElement.map(e => e.name), ['Forum', 'Lernen und Training']);
 });
 
@@ -257,8 +258,10 @@ test('Vorschau-Banner nur in der Vorschau', () => {
 });
 
 test('Ausschnitt ohne Markdown und Formeln', () => {
-  const text = excerpt('Ein **Wort** mit $x^2$ und [Link](http://a.test).');
-  assert.equal(text, 'Ein Wort mit … und Link.');
+  assert.equal(excerpt('Ein **Wort** mit $x^2$ und [Link](http://a.test).'), 'Ein Wort mit x^2 und Link.');
+  assert.equal(excerpt('Die Funktion $w \\cdot x + b$ liegt in $\\mathbb{R}$, nicht in $[0, 1]$.'), 'Die Funktion w · x + b liegt in ℝ, nicht in [0, 1].');
+  assert.equal(excerpt('Ein Bruch $\\frac{a}{b}$ und eine Summe $\\sum_{i=1}^n x_i$ bleiben draußen.'), 'Ein Bruch … und eine Summe … bleiben draußen.');
+  assert.equal(excerpt('- Erstens das.\n- Zweitens dies.\n1. Dann jenes.'), 'Erstens das. Zweitens dies. Dann jenes.', 'Listenzeichen gehören nicht in eine Beschreibung');
   assert.ok(excerpt('wort '.repeat(100), 50).length <= 52);
   assert.equal(excerpt('Ein _kursives_ Wort, zero_grad und a > b'), 'Ein kursives Wort, zero_grad und a > b');
 });
@@ -275,4 +278,29 @@ test('der Stolperdraht für fremde Quellen schlägt an, Links lässt er durch', 
   assert.match(foreignSource('<link rel="stylesheet" href="//fonts.test/a.css">'), /fonts\.test/);
   assert.match(foreignSource('<img alt="" src="http://a.test/b.png">'), /a\.test/);
   assert.equal(foreignSource('<a href="https://a.test/">x</a>'), null);
+});
+
+test('die Frageseite führt weiter: zum Kapitel und zum Unterforum, mit Datum und einem Namen für jeden Beitrag', () => {
+  const html = questionPage(question(), site);
+  assert.match(html, /<p class="meta"><a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/p>/);
+  assert.match(html, /<nav class="pfad" aria-label="Pfad">.*<a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/nav>/);
+  assert.match(html, /<nav class="weiter" aria-label="Weitere Fragen"><a href="\.\.\/kapitel\/tensoren\/">Alle Fragen zu „Tensoren“<\/a><a href="\.\.\/grundlagen\/">Unterforum Grundlagen<\/a><\/nav>/);
+  assert.equal(html.match(/<time datetime="2026-11-04">04\.11\.2026<\/time>/g).length, 2);
+  assert.match(html, /<div class="faden">\s*<article class="beitrag frage" id="b1" aria-label="Frage">[\s\S]*<article class="beitrag antwort" id="b2" aria-label="Antwort des Bots">[\s\S]*<\/div>\s*<nav class="weiter"/);
+  assert.match(html, /<a class="marke-zitat" href="#z1" aria-label="Zitat 1">\[1\]<\/a>/);
+  assert.match(html, /<section class="zitate" data-nosnippet>/, 'die Trefferbeschreibung soll aus der Antwort kommen, nicht aus dem Skript');
+  assert.match(html, /<a class="sprung" href="#inhalt">Zum Inhalt<\/a>[\s\S]*<main id="inhalt">/);
+});
+
+test('ein langes Zitat ist eingeklappt und zeigt Anfang und Quelle, ein kurzes bleibt offen', () => {
+  const page = text => questionPage({ ...question(), antworten: [{ ...question().antworten[0], zitate: [{ titel: 'T', pfad: ['A'], url: 'https://skript.test/x', text }] }] }, site);
+  const lang = `Der erste Satz des Zitats steht für sich. ${'Dann folgt eine längere Herleitung mit $w \\cdot x + b$ und vielen Worten. '.repeat(6)}`;
+  const html = page(lang);
+  assert.match(html, /<figure id="z1"><details><summary><span class="anriss">Der erste Satz des Zitats steht für sich\. Dann folgt[^<]* …<\/span> <span class="mehr zu">ganzes Zitat<\/span><span class="mehr auf">einklappen<\/span><\/summary><blockquote><p>Der erste Satz/);
+  assert.match(html, /<\/blockquote><\/details><figcaption>\[1\] <a href="https:\/\/skript\.test\/x" rel="noopener">T › A<\/a><\/figcaption><\/figure>/, 'die Quelle steht außerhalb, also immer sichtbar');
+  assert.equal(html.match(/vielen Worten/g).length, 7, 'der volle Wortlaut steht im HTML, auch eingeklappt: sechsmal im Zitat, einmal im Anfang');
+  assert.match(html, /<script type="module" src="\.\.\/\.\.\/zitate\.js"><\/script>/, 'eine Marke [1] klappt ihr Zitat auf');
+  const kurz = page('Ein kurzes Zitat bleibt, wie es ist.');
+  assert.match(kurz, /<figure id="z1"><blockquote><p>Ein kurzes Zitat bleibt, wie es ist\.<\/p>/);
+  assert.doesNotMatch(kurz, /<details|zitate\.js/);
 });
