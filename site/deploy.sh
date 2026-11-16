@@ -22,6 +22,19 @@ if [ ! -f "$out/eidl/index.html" ] || [ ! -f "$out/robots.txt" ]; then
   exit 1
 fi
 
+# Dieses Skript braucht nur eine Verbindung. Weist `ufw limit` sie ab, ist nichts übertragen; bricht rsync später ab, kann der Docroot
+# halb neu sein, und ein zweiter Lauf bringt ihn in Ordnung.
+ende() {
+  local status=$?
+  [ "$status" -ne 0 ] || return 0
+  if [ -n "${DRY_RUN:-}" ]; then
+    echo "deploy.sh: gescheitert (Status $status): Probelauf, auf dem Server ist nichts verändert." >&2
+  else
+    echo "deploy.sh: gescheitert (Status $status). Steht oben „Connection refused“, ist nichts übertragen, fast immer ufw limit: eine Minute warten, nicht nachproben. Sonst kann der Docroot halb übertragen sein: noch einmal starten." >&2
+  fi
+}
+trap ende EXIT
+
 echo "deploy.sh: $out -> $VPS_HOST:$VPS_WWW${DRY_RUN:+ (Probelauf)}"
 # Kanonische Zeile aus Playbook §3.10: --chmod ohne --no-perms, kein grep hinter rsync.
 rsync -a --chmod=D755,F644 --delete --itemize-changes ${DRY_RUN:+--dry-run} "$out/" "$VPS_HOST:$VPS_WWW/"

@@ -39,6 +39,10 @@ _Stand 2026-11-05._
   ist bei der Moderation vorgewählt; die Entscheidung bleibt dort. Die Kennung ist die Seitenkennung des Skripts, der Bau prüft sie gegen
   den Korpus. Das Skript verweist noch nicht darauf, und das bleibt so, bis das Forum aus der Vorschau ist (Konrad, 2026-11-12: Vorschau bleibt, bis mindestens eine Studierendenfrage eingereicht ist).
 - `site/deploy.sh`: liefert den fertigen Baum per rsync in den Docroot.
+- `site/deploy-app.sh` führt seit 2026-11-16 alle Schritte über eine SSH-Verbindung (vorher drei), nennt beim Scheitern den Schritt und
+  was schon auf dem Server liegt, und prüft nach dem Neustart, ob `hainrich2-web` nach fünf Sekunden aktiv ist und keinen automatischen
+  Neustart gezählt hat (`research/2026-11-16-deploy-eine-verbindung/`). Geprüft: zwölf Fehlerwege gegen Attrappen, und im Probelauf gegen
+  den Server eine Verbindung statt zwei. **Nicht geprüft:** ein echter Lauf mit Neustart, den gab es mit dem neuen Skript noch nicht.
 - `https://hai.konradvoelkel.com/eidl/` ist seit 2026-11-04 online, als Staging: der Vorschau-Baum mit den
   Opus-Platzhaltern, Banner und `noindex` auf allen 39 Seiten, leere Sitemap, Impressum und Datenschutz. Das ist
   Konrads Entscheidung. Der Name ist nirgends verlinkt, steht aber wie jeder
