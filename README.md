@@ -8,9 +8,9 @@ Ein privates Angebot von Konrad Völkel, nicht der Heinrich-Heine-Universität D
 
 ## Stand
 
-Ein Prototyp in geschlossener Alpha: Seit November 2026 läuft das Forum für einen Kurs unter `hai.konradvoelkel.com/eidl/`. Die
-Site ist noch eine Vorschau, sie trägt ein Banner und `noindex`, und fragen kann nur, wer den Kurscode aus dem Kurs hat. Ob und wie
-es weitergeht, ist offen; das Forum kann sich ändern oder wieder verschwinden.
+Ein Prototyp: Seit November 2026 läuft das Forum für einen Kurs unter
+[hai.konradvoelkel.com/eidl/](https://hai.konradvoelkel.com/eidl/). Lesen und abstimmen können alle; fragen kann nur, wer den
+Kurscode aus dem Kurs hat. Ob und wie es weitergeht, ist offen; das Forum kann sich ändern oder wieder verschwinden.
 
 Was gebaut und geprüft ist und was nicht, steht in [`STATUS.md`](STATUS.md). Die Entscheidungen mit Datum und Begründung stehen in
 [`DEVELOPMENT_PLAN.md`](DEVELOPMENT_PLAN.md), die Messungen mit ihren Skripten unter [`research/`](research/). Diese Dokumente
@@ -21,7 +21,7 @@ sind Arbeitsunterlagen: Sie nennen auch, was nicht funktioniert hat.
 - **Lesen ist statisch.** Jede Frage ist eine fertige HTML-Seite, auch die Formeln. Lesen braucht kein JavaScript, kein Cookie
   und keine Anmeldung.
 - **Die Suche läuft im Browser.** Ein auf 16.384 Tokens geschnittenes `multilingual-e5-small` rechnet per WebAssembly. Was jemand
-  tippt, verlässt den Browser nicht, und das Modell lädt erst beim ersten Klick ins Suchfeld.
+  tippt, verlässt den Browser nicht, und das Modell lädt erst beim ersten Klick oder Fokus ins Suchfeld.
 - **Fragen braucht einen Kurscode** aus dem Kurs. Er gibt ein Token aus, Nutzerkonten gibt es nicht.
 - **Ohne Freigabe und ohne Einwilligung erreicht kein Text die Claude API.** Normal sieht erst die Moderation eine Frage, danach
   entwirft der Bot. Wer beim Absenden ausdrücklich einwilligt, bekommt sofort einen Entwurf; ein Checker hält dabei zurück, was

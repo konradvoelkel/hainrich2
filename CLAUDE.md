@@ -32,18 +32,20 @@ node tools/skriptstand.mjs
 ```
 
 Den Stand der Beispielfragen vom Server holen (liest nur), die Site daraus bauen, dann gegen den fertigen Baum testen. Was ausgespielt
-wird, trägt beide Schalter `--stimmen --fragen`:
+wird, trägt die drei Schalter `--stimmen --fragen --release`. Die Vorschau ist seit dem 2026-11-17 beendet (Plan D45); ein Bau ohne
+`--release` brächte Banner und `noindex` auf die statischen Seiten zurück:
 
 ```bash
 site/stand-holen.sh
 ```
 
 ```bash
-( . ./.env.local; node site/build.mjs --stand "$HAINRICH2_DATEN/work/stand-vom-host.json" --stimmen --fragen )
+( . ./.env.local; node site/build.mjs --stand "$HAINRICH2_DATEN/work/stand-vom-host.json" --stimmen --fragen --release )
 ```
 
 Ohne `--stand` nimmt `--modell <id>` die Antworten aus Phase 1, wie das Modell sie schrieb, alle als ungeprüft: Die Prüfung steht nur
-in `public.db` auf dem Server.
+in `public.db` auf dem Server. Bricht der Bau ab, bleibt der alte Baum liegen, und der Browser-Test läuft grün gegen ihn: erst die
+letzte Zeile des Baus lesen, dann testen.
 
 ```bash
 npm run smoke

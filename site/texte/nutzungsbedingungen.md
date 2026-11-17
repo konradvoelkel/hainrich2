@@ -18,7 +18,7 @@ Fragen und Antworten werden öffentlich, nachdem die Moderation sie freigegeben 
 
 Mit dem Absenden geben Sie Ihre Frage gemeinfrei: Sie stellen sie unter [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/deed.de) und verzichten damit auf alle Rechte an dem Text, soweit das Gesetz es zulässt. Alle dürfen die Frage dann frei verwenden, verändern und weitergeben, auch außerhalb dieses Forums, ohne Sie zu fragen oder zu nennen. Das lässt sich nicht zurücknehmen. Stellen Sie deshalb nur Fragen, die Sie selbst formuliert haben.
 
-In diesem Forum heißt das: Die Frage wird nach der Freigabe veröffentlicht, wenn nötig bearbeitet, und von einem Sprachmodell beantwortet. Sie darf außerdem helfen, das Skript zu verbessern. An jeder Frage, für die das gilt, steht der Vermerk „gemeinfrei“. Fragen, die vor dieser Fassung eingereicht wurden, tragen ihn nicht.
+In diesem Forum heißt das: Die Frage wird nach der Freigabe veröffentlicht, wenn nötig bearbeitet, und von einem Sprachmodell beantwortet. Sie darf außerdem helfen, das Skript zu verbessern.
 
 Ihre Rechte aus dem Datenschutz bleiben davon unberührt: Löschen lassen können Sie eine Frage hier weiterhin, wie es unter [Datenschutz](../datenschutz/) steht.
 

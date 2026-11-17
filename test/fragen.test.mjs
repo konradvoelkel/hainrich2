@@ -418,7 +418,8 @@ test('ein neuer Kurscode macht alte Tokens ungültig', async () => {
 
 test('keine Beispielfrage schlägt im Checker an, sie gingen sonst nie sofort an Claude', () => {
   const seeds = JSON.parse(fs.readFileSync(new URL('../seeds/fragen.json', import.meta.url), 'utf8'));
-  assert.ok(seeds.length >= 29);
+  /** 27 seit dem 2026-11-17: s30, s19 und s27 sind gestrichen. Die Zahl sagt nur, dass die Datei gelesen ist */
+  assert.ok(seeds.length >= 27);
   for (const { frage } of seeds) assert.deepEqual([...hardHits(frage), ...softHits(frage)], [], frage);
 });
 

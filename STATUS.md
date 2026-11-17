@@ -69,28 +69,67 @@ _Stand 2026-11-17._
   Fragetexte, Prüfdaten und alle 134 Zitate wie vor dem Ausspielen, Smoke 21 von 21 in drei Browsern. Freigegeben wurde am Host seit
   dem 05.11. keine Frage; dass eine Redaktion bei der Freigabe dort Nullen und danach einen neuen Vektor ergibt, hat also noch
   niemand gesehen. Der CI-Lauf zu `d977182` lief beim Ausspielen noch und endete sieben Minuten später grün.
-- **Gebaut am späten Abend des 2026-11-17, nicht ausgespielt** (Konrads Liste vom Abend, Plan D37 bis D40):
+- **Die Vorschau ist beendet, seit dem Abend des 2026-11-17** (Konrads Entscheidung, vor der ersten Studierendenfrage; Plan D45).
+  - Konrad hat den Schalter unter `/eidl/mod/zahlen/` zwischen 23:14 und 23:28 selbst umgelegt; seitdem schreibt der Server seine
+    Seiten ohne Banner, und Geprüftes ist `index,follow`. Der statische Bau mit `--release` ging auf sein Wort um 23:42 hinaus
+    (`site/deploy.sh`, wie im Probelauf: neuer Inhalt in allen 66 HTML-Seiten, `sitemap.xml`, `daten/fragen.json`; gelöscht die
+    statischen Seiten zu s19 und s27). Dieser Bau stammt aus dem Arbeitsbaum, nicht aus einem Commit: `06fe244` plus den Änderungen
+    dieses Abends an den Texten und Seeds.
+  - **s19 und s27 gibt es nicht mehr:** Er hat sie in der Moderation endgültig gelöscht. Sie sind aus `seeds/fragen.json` und
+    `seeds/kurztitel.json` gestrichen, der Bestand hat 27 Beispielfragen und zwei Testfragen. Der Bau brach an ihnen zuerst ab; eine
+    zurückgezogene Beispielfrage lässt er seither weg, eine gelöschte muss aus den Seeds.
+  - **Die Rechtstexte hat Konrad am selben Abend gegengelesen:** Impressum, Über-Seite und Nutzungsbedingungen passen, Datenschutz
+    mit zwei Korrekturen („Beim ersten Klick/Fokus ins Suchfeld“, „Was Sie in die Suche eintippen“). In den Nutzungsbedingungen sind
+    die zwei Sätze über Fragen ohne Vermerk gestrichen, die Über-Seite sagt „Die Fragen kommen von Nutzern“. Alles live seit 23:42.
+  - **Am Host danach:** kein Banner mehr auf irgendeiner Seite; `index,follow` an Startseite, Unterforen, Über-Seite und den 29
+    Frageseiten, `noindex` an Rechtstexten, Frageformular, Fehlerseite und den Kapitelseiten mit weniger als drei geprüften Fragen;
+    s19 und s27 antworten mit 404. Die Sitemap nennt 35 Adressen. Smoke 22 von 22 in Chromium, Firefox und WebKit.
+  - **Search Console:** Sitemap `https://hai.konradvoelkel.com/eidl/sitemap.xml` am 17.11. eingereicht, Status „Success“, 35 Seiten
+    erkannt.
+  - **Gebaut, nicht ausgespielt:** Links aus der Moderation zurück zur öffentlichen Site (im Kopf „Zum Forum“, an jeder sichtbaren
+    Frage „öffentliche Seite“) und derselbe Wortlaut „Klick/Fokus“ im Hinweis an der Suche. Beides braucht `site/deploy-app.sh`.
+    `npm test` 301 von 301, `smoke:mod` 27 von 27 in Firefox und in drei von vier Läufen in Chromium: Einmal scheiterte dort der
+    ältere Test „ungespeicherte Änderungen …“, allein lief er dreimal durch; die Ursache ist nicht gesucht.
+  - **Veraltete Zitate gibt es am Host keine mehr** (nur gelesen, um 23:55 gegen den ausgespielten Korpus gerechnet): Am Nachmittag
+    waren es zehn. Konrad hat am Abend s19 und s27 gelöscht und die übrigen acht Antworten neu erzeugen lassen und geprüft (s17, s18,
+    s20, s21, s22, s24, s26 und die Testfrage `0cfd2b864eda`, Prüfdatum 2026-11-17). Alle 29 sichtbaren Antworten sind geprüft. Das
+    waren die ersten echten Aufrufe des Workers mit SDK 1.8.0; die Zahlen-Seite und sein Journal habe ich danach nicht gelesen.
+    s29 beginnt weiter mit einer Absage („Die Skriptpassagen vergleichen SGD und Adam nicht hinsichtlich der Generalisierung“). Eine
+    Regel, die eine Seite mit veraltetem Zitat aus dem Index hält, gibt es nicht.
+  - **Nicht entschieden:** ob jetzt die Links aus dem Skript und aus dem Blog nachziehen. Sie hingen an der alten Bedingung.
+- **Gebaut am späten Abend des 2026-11-17 und um 23:04 ausgespielt** (Konrads Listen vom Abend, Plan D37 bis D44; Commit `06fe244`):
   - `QAPage` trägt `reviewedBy` und `lastReviewed`; neben „Frage“ steht an einer Beispielfrage „von Konrad Völkel“.
   - Die Zitate stehen in einem `<aside>`, das Prüfdatum ist Text. Gemessen mit trafilatura am lokalen Bau: Die Frage steht bei 29
     von 29 Seiten am Anfang des Auszugs (am Host vor diesem Stand 28 von 31), und der Vermerk nennt sein Datum. Die Ursache steht in
     Abschnitt 10 des Berichts `research/2026-11-17-seo-audit/`.
   - Eine Formel als MyST-Direktive (```` ```{math} ````) wird im Korpus-Schnitt, im Suchausschnitt und in der Anzeige eine Formel.
     Kein Suchausschnitt trägt mehr „{math}“; der Korpus ist nicht neu gebaut, zwei Passagen wechseln erst dann ihre Kennung.
-  - `setLicence` in `lib/store.js` für die zwei Testfragen (Konrad: gemeinfrei). **Am Host nicht gesetzt**, das geht erst nach dem
-    Ausspielen.
+  - `setLicence` in `lib/store.js` für die zwei Testfragen (Konrad: gemeinfrei). Am Host nach dem Ausspielen von der Konsole gesetzt,
+    mit Revision und der Rolle `konsole`; beide Seiten tragen den Vermerk sichtbar und im Markup.
   - Der lokale Bau zeigt die 29 Beispielfragen wie am Server: `site/stand-holen.sh` hat den Stand am 17.11. um 21:50 geholt (nur
     gelesen: 29 Antworten geprüft, 29 Kurztitel, zehn bearbeitet), `site/build.mjs --stand` baut daraus.
   - Aus dem Threat Model, auf Konrads Entscheidungen vom selben Abend (Plan D41 bis D44): ein Geräte-Cookie, damit fremde
     Fehlversuche ein bekanntes Gerät nicht von der Moderation aussperren; „Melden“ öffnet eine vorbereitete E-Mail; der Datenschutz
-    hat eigene Abschnitte „Widerspruchsrecht“ und „Beiträge melden“ und nennt das zweite Cookie. **Die geänderten Rechtstexte hat
-    Konrad nicht gelesen.** Verschoben oder hingenommen sind B1, B4, C5 und D1.
+    hat eigene Abschnitte „Widerspruchsrecht“ und „Beiträge melden“ und nennt das zweite Cookie. **Die geänderten Rechtstexte sind
+    live, und Konrad hat sie nicht gelesen.** Verschoben oder hingenommen sind B1, B4, C5 und D1.
   - Für die Veröffentlichung: Orte in `.env.local`, Betriebsnotizen aus Plan und Status, README, Lizenzen, Provenienz, Abschnitt
     „Quelltext“ hinter einem Schalter (leer, also nicht zu sehen), Pre-Push-Hook (eingerichtet in diesem Checkout).
-  - Tests: `npm test` 300 von 300. Gegen den lokalen Bau aus dem Stand vom Server: `npm run smoke` 22 von 22 in Chromium, Firefox und WebKit, `npm run
-    smoke:mod` 26 von 26 in Chromium und Firefox; im Bild angesehen bei 375 px und am Desktop. **Nicht geprüft:** der Aufruf von
-    `gitleaks` im Hook (nicht installiert), der Hook bei einem echten Push, der Abschnitt „Quelltext“ auf einer gebauten Seite (nur
-    die Ersetzung an der Textdatei), ob ein Mailprogramm die vorbereitete E-Mail ganz übernimmt (geprüft ist nur der Link), das
-    Geräte-Cookie in WebKit, und nichts davon am Host.
+  - Tests vor dem Ausspielen: `npm test` 300 von 300, auch im Pre-Push-Hook am gepushten Commit, CI grün. Gegen den lokalen Bau aus
+    dem Stand vom Server: `npm run smoke` 22 von 22 in Chromium, Firefox und WebKit, `npm run smoke:mod` 26 von 26 in Chromium und
+    Firefox; im Bild angesehen bei 375 px und am Desktop. Der Web-Prozess lief mit diesem Stand einmal lokal gegen eine
+    Wegwerf-Datenbank.
+  - Ausgespielt wie im Probelauf: `site/deploy.sh` (neuer Inhalt in 64 HTML-Seiten, `style.css`, `daten/passagen.json`), dann
+    `site/deploy-app.sh` (sieben Dateien unter `lib/`, neu `lib/orte.js`, `server/web.mjs`, neu `site/site.env`), Dienst nach fünf
+    Sekunden aktiv und ohne automatischen Neustart.
+  - **Am Host danach:** Smoke 22 von 22 in Chromium, Firefox und WebKit. Neuer Crawl, 99 Seiten: trafilatura nimmt die Frage bei 31
+    von 31 Frageseiten mit, immer am Anfang des Auszugs (vorher 28), und der Prüfvermerk nennt auf allen 30 Seiten, die einen haben,
+    sein Datum. Jede Frageseite trägt „Melden“ als vorbereitete E-Mail, der Datenschutz die Abschnitte „Beiträge melden“ und
+    „Widerspruchsrecht“, das Frageformular den Verweis darauf. Die Anmeldung der Moderation gelingt in Konrads Browser, die Übersicht
+    zeigt 31 geprüfte Fragen, zehn mit veraltetem Zitat und nichts Wartendes.
+  - **Nicht geprüft:** das Geräte-Cookie am Host (es ist `HttpOnly`, von der Seite aus nicht zu sehen; belegt ist es lokal im
+    Unit-Test und im Browser-Test) und in WebKit; keine Sperre am Host ausgelöst; ob ein Mailprogramm die vorbereitete E-Mail ganz
+    übernimmt (geprüft ist nur der Link); der Aufruf von `gitleaks` im Hook (nicht installiert); der Abschnitt „Quelltext“ auf einer
+    gebauten Seite (nur die Ersetzung an der Textdatei); Ladezeiten nach dem Umbau; alles hinter dem Kurscode.
 - Am Host hinter der Anmeldung angesehen, 2026-11-17 gegen 17 Uhr, in Konrads Browser und nur lesend: Alle 31 Kurztitel sind
   gespeichert (Konrad hat die 29 Vorschläge bestätigt, einen gekürzt und zwei selbst geschrieben), sie stehen in den Titeln der
   öffentlichen Seiten. `/eidl/mod/zahlen/`: 0 Anfragen in den letzten sieben Tagen, 13 im Monat für 1,33 $ von 15 $, keine Fehlerzeile,
@@ -190,6 +229,10 @@ _Stand 2026-11-17._
   Am Abend desselben Tages noch eine geänderte Passage (Tausendertrennung), die Liste bleibt bei 18.
 - Die Kontaktadresse `mail@hai.konradvoelkel.com` (von Konrad am 2026-11-17 selbst getestet, sie kommt an), am 2026-11-04 mit einer Mail von außen bestätigt.
   Wohin sie zugestellt wird, steht nicht in diesem Repo.
+- Google Search Console: Domain-Property `sc-domain:hai.konradvoelkel.com`, angelegt am 2026-11-17 in Konrads Konto (sein Auftrag).
+  Bestätigt ohne eigenen Schritt („Ownership auto verified“, Verfahren „Domain name provider“), weil `konradvoelkel.com` dort schon
+  per DNS bestätigt ist: kein neuer DNS-Eintrag, keine Datei. Die Sitemap `https://hai.konradvoelkel.com/eidl/sitemap.xml` ist seit dem Ende der Vorschau am selben
+  Abend eingereicht (Status „Success“, 35 Seiten erkannt); `robots.txt` nennt sie ebenfalls.
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
   `og:`- und `twitter:`-Tags, seit 2026-11-05 auf dem Server. Der Hai mit Toupet ist Konrads Arbeitshypothese.
 - `research/2026-11-05-skriptluecken/`: Übersicht, was die Antworten offenlassen, gegen den ganzen Korpus geprüft. Konrad hat sie am 2026-11-06
@@ -292,8 +335,7 @@ _Stand 2026-11-17._
 
 ## Nächster Schritt
 
-Alles vom 2026-11-17 ist ausgespielt, der Host läuft auf `7ca0c6e`. Die Kurztitel sind bestätigt.
+Die Vorschau ist seit dem 2026-11-17 beendet. Die App am Host läuft auf `06fe244`, die statischen Seiten stammen aus dem Release-Bau vom selben Abend. Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
-Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes
-indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.
+Der Korpus ist neu gebaut und ausgespielt. Geprüftes ist seit dem Ende der Vorschau indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

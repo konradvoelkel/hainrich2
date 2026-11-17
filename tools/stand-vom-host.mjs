@@ -17,9 +17,15 @@ const { openStore } = await import(pathToFileURL(path.resolve('lib/store.js')).h
 const file = process.argv[2];
 if (!file) throw new Error('Aufruf: node tools/stand-vom-host.mjs <public.db>');
 const store = openStore(file);
-const fragen = store.visible().filter(q => q.herkunft === 'beispiel').map(q => ({
+const beispiele = store.questions().filter(q => q.herkunft === 'beispiel');
+const fragen = beispiele.filter(q => q.status === 'sichtbar').map(q => ({
   id: q.id, text: q.text, kapitel: q.kapitel, herkunft: q.herkunft, tag: q.tag, kurztitel: q.kurztitel, lizenz: q.lizenz,
   antworten: q.antworten.map(({ id, ...antwort }) => antwort),
 }));
+/**
+ * Zurückgezogene Beispielfragen nur mit ihrer Kennung: Der Bau lässt sie dann weg, statt abzubrechen. Was auf dem Server gelöscht ist,
+ * steht nirgends mehr; so eine Frage fehlt hier ganz, und der Bau verlangt, dass sie auch aus den Seeds verschwindet.
+ */
+const zurueckgezogen = beispiele.filter(q => q.status !== 'sichtbar').map(q => q.id);
 store.close();
-process.stdout.write(`${JSON.stringify({ stand: new Date().toISOString(), fragen })}\n`);
+process.stdout.write(`${JSON.stringify({ stand: new Date().toISOString(), fragen, zurueckgezogen })}\n`);

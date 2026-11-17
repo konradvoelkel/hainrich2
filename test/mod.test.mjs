@@ -239,6 +239,24 @@ test('die Frage lässt sich ändern, Startseite und Suche ziehen mit', async t =
   assert.equal(JSON.parse(c.read('daten/fragen.json'))[0].text, 'Was rechnet ein Neuron?');
 });
 
+test('jede Seite der Moderation führt zurück zur öffentlichen Site, eine zurückgezogene Frage hat keinen Link dorthin', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const kopf = /<header class="kopf"><a class="marke" href="\/eidl\/mod\/">Moderation<\/a><a href="\/eidl\/">Zum Forum<\/a>/;
+  assert.match(await (await c.get('/eidl/mod/')).text(), kopf, 'auch von der Anmeldung aus');
+  const cookie = await c.signIn();
+  const uebersicht = await (await c.get('/eidl/mod/', cookie)).text();
+  assert.match(uebersicht, kopf);
+  for (const id of ['s01', 's02']) assert.ok(uebersicht.includes(` · <a href="/eidl/f/${id}/">öffentliche Seite</a>`), id);
+  for (const seite of ['/eidl/mod/titel/', '/eidl/mod/zahlen/', '/eidl/mod/f/s01/']) assert.match(await (await c.get(seite, cookie)).text(), kopf, seite);
+  assert.ok((await (await c.get('/eidl/mod/titel/', cookie)).text()).includes('<a href="/eidl/f/s01/">öffentliche Seite</a>'));
+  for (const id of ['s01', 's02']) assert.ok(fs.existsSync(c.file(`f/${id}/index.html`)), 'der Link zeigt auf eine Seite, die es gibt');
+  await c.form('/eidl/mod/f/s02/', { aktion: 'zurueckziehen' }, { cookie });
+  const danach = await (await c.get('/eidl/mod/', cookie)).text();
+  assert.ok(!danach.includes('<a href="/eidl/f/s02/">öffentliche Seite</a>'), 'zurückgezogen: Die Seite gibt es nicht, also kein Link');
+  assert.ok(danach.includes('<a href="/eidl/f/s01/">öffentliche Seite</a>'));
+});
+
 test('Zurückziehen nimmt die Seite weg, die Vektoren bleiben bei ihren Fragen, Wiederherstellen bringt sie zurück', async t => {
   const c = await setup();
   t.after(c.close);

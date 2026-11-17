@@ -41,6 +41,20 @@ test('Anmelden setzt das Cookie, Abmelden beendet die Sitzung', async ({ page, c
   expect(problems).toEqual([]);
 });
 
+test('aus der Moderation führt der Kopf zurück ins Forum und jede sichtbare Frage zu ihrer öffentlichen Seite', async ({ page }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await expect(page.locator('.kopf a', { hasText: 'Zum Forum' })).toHaveAttribute('href', '/eidl/');
+  await page.locator('.fragen a', { hasText: 'öffentliche Seite' }).first().click();
+  await expect(page).toHaveURL(/\/eidl\/f\/[^/]+\/$/);
+  await expect(page.locator('.frage h1')).toBeVisible();
+  await page.goBack();
+  await page.locator('.kopf a', { hasText: 'Zum Forum' }).click();
+  await expect(page).toHaveURL(/\/eidl\/$/);
+  await expect(page.locator('#suche')).toBeVisible();
+  expect(problems).toEqual([]);
+});
+
 test('Bearbeiten und Prüfen erreichen die öffentliche Seite und die Suche', async ({ page }) => {
   const problems = watch(page);
   await signIn(page);

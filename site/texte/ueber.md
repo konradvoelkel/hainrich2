@@ -1,6 +1,6 @@
 # Über hAInrich2
 
-hAInrich2 ist ein Frage-Antwort-Forum zum Skript „Einführung in Deep Learning“. Die Fragen kommen von Studierenden, die Antworten schreibt ein Sprachmodell, und jede dieser Antworten trägt das wörtliche Zitat aus dem Skript, auf das sie sich stützt.
+hAInrich2 ist ein Frage-Antwort-Forum zum Skript „Einführung in Deep Learning“. Die Fragen kommen von Nutzern, die Antworten schreibt ein Sprachmodell, und jede dieser Antworten trägt das wörtliche Zitat aus dem Skript, auf das sie sich stützt.
 
 ## Woher der Name kommt
 

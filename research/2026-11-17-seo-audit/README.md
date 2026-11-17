@@ -273,7 +273,7 @@ des Korpus stehen lässt.
 
 ## 10. Nachtrag am späten 2026-11-17: warum s09, s11 und s15 fehlten
 
-Gebaut, nicht ausgespielt. Ein Subagent hat die Stufen von trafilatura 2.3.1 verfolgt, ich habe das Ergebnis am lokalen Bau
+Gebaut und am 17.11. um 23:04 ausgespielt (Commit `06fe244`). Ein Subagent hat die Stufen von trafilatura 2.3.1 verfolgt, ich habe das Ergebnis am lokalen Bau
 nachgemessen (der zeigt seit diesem Abend die Beispielfragen so, wie sie am Server stehen).
 
 - **Ursache:** Die eigene Extraktion von trafilatura liefert auf allen 31 Seiten die Frage vorn. Danach vergleicht es die Länge
@@ -290,7 +290,9 @@ nachgemessen (der zeigt seit diesem Abend die Beispielfragen so, wie sie am Serv
 - **Gemessen** am lokalen Bau mit `auszug.py`: Frage im Auszug 29 von 29, Auszug beginnt mit der Frage 29 von 29, Prüfvermerk 29 von
   29 und mit Datum. Der Subagent kam mit derselben Änderung auf Kopien der 31 Seiten vom Host auf 31 von 31. „Anfang der Antwort“ 27
   von 29 ist ein Fehler des Zählskripts: Steht unter den ersten vier Wörtern eine Formel, vergleicht es an ihr vorbei.
-- **Nicht geprüft:** andere Extraktoren und Suchmaschinen; die Schwellen gelten für diese Fassung von trafilatura; am Host gemessen
-  ist nichts davon.
+- **Am Host gemessen nach dem Ausspielen** (neuer Crawl, 99 Seiten, Rohdaten unter `work/seo-audit-2026-11-17/nach-d37/`): Frage im
+  Auszug 31 von 31, Auszug beginnt mit der Frage 31 von 31 (vorher 28), der Prüfvermerk steht auf allen 30 Seiten, die einen haben,
+  mit Datum im Auszug. Smoke 22 von 22 in drei Browsern.
+- **Nicht geprüft:** andere Extraktoren und Suchmaschinen; die Schwellen gelten für diese Fassung von trafilatura.
 - **Befund 9c:** Neben „Frage“ steht an einer Beispielfrage „von Konrad Völkel“. Im Abzeichen der Kopfzeile brach die Zeile bei
   375 px um (385 px Inhalt auf 307 px) und schob die Antwort eine Zeile tiefer.

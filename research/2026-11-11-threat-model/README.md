@@ -234,7 +234,7 @@ legt unter keiner anderen Kennung eine Datei an.
 
 Offen blieben danach A4 Stufe 2, A5, B1, B4, C2, C5 und D1.
 
-**Konrads Entscheidungen vom Abend des 2026-11-17 dazu (Plan D41 bis D44). Gebaut und getestet, noch nicht ausgespielt:**
+**Konrads Entscheidungen vom Abend des 2026-11-17 dazu (Plan D41 bis D44). Gebaut, getestet und am selben Abend um 23:04 ausgespielt (Commit `06fe244`):**
 
 | Befund | Entscheidung | Was gebaut ist |
 |---|---|---|
@@ -250,4 +250,8 @@ Was für C2 weiter gilt: Für ein Gerät **ohne** das Cookie ist die Grenze für
 Versuche sperren unbekannte Geräte so lange aus, bis der älteste aus dem Fenster fällt, und wer zwei Versuche in der Minute nachlegt,
 hält es geschlossen. Die Sperre dauert also nicht Sekunden und wächst nicht; sie trifft nur noch, wer sich von einem neuen Gerät
 anmelden will oder die Browserdaten gelöscht hat. Ein gestohlenes Geräte-Cookie gibt fünf Versuche je Viertelstunde an der Grenze
-für alle vorbei, keinen Zugang. Am Host ist nichts davon gelaufen.
+für alle vorbei, keinen Zugang.
+
+Am Host nach dem Ausspielen: Die Anmeldung gelingt in Konrads Browser, „Melden“ ist auf jeder Frageseite eine vorbereitete E-Mail,
+und der Datenschutz trägt die neuen Abschnitte. Das Geräte-Cookie selbst habe ich dort nicht gesehen (`HttpOnly`), und eine Sperre
+habe ich am Host nicht ausgelöst.

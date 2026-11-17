@@ -84,14 +84,17 @@ test('ohne WASM bleibt die Stichwortsuche', async ({ page }) => {
   await expect(page.locator('#treffer-skript li').first()).toBeVisible();
 });
 
-test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link, noindex', async ({ page }) => {
+test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link; in den Index darf sie nur ohne Vorschau und mit lauter geprüften Antworten', async ({ page }) => {
   await page.goto('/eidl/f/s04/');
   await expect(page.locator('.bot')).toHaveText('Bot');
   await expect(page.locator('.antwort .badge')).toHaveText(/^(un)?geprüft$/);
   await expect(page.locator('.hinweis')).toContainText('Prüfen Sie das Zitat');
   await expect(page.locator('.zitate figure').first().locator('blockquote')).not.toBeEmpty();
   await expect(page.locator('.zitate figcaption a').first()).toHaveAttribute('href', /^https:\/\/eidl-skript/);
-  await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', 'noindex');
+  /** I9 und Plan D33: Vorschau heißt immer noindex. Danach entscheidet, ob jede Antwort der Seite geprüft ist */
+  const vorschau = await page.locator('.vorschau').count();
+  const offen = await page.locator('.antwort .badge:not(.gut)').count();
+  await expect(page.locator('meta[name=robots]')).toHaveAttribute('content', vorschau || offen ? 'noindex' : 'index,follow');
   await expect(page.locator('#z1 details')).not.toHaveAttribute('open', '');
   await expect(page.locator('#z1 figcaption a')).toBeVisible();
   await page.locator('.marke-zitat').first().click();

@@ -62,11 +62,13 @@ if (passageVectors.length !== passages.length) throw new Error('vectors.json pas
  * deren Wortlaut das Skript nicht mehr hat.
  */
 function fromHost(file) {
-  const { stand, fragen } = readJson(file);
+  const { stand, fragen, zurueckgezogen = [] } = readJson(file);
   const byId = new Map(fragen.map(f => [f.id, f]));
-  return { quelle: `vom Server, Stand ${stand.slice(0, 10)}`, questions: seeds.map(seed => {
+  /** Was die Moderation zurückgezogen hat, baut auch der statische Bau nicht (Konrad zog am 2026-11-17 s19 und s27 zurück). Gelöschtes kennt der Stand nicht */
+  const weg = seeds.map(seed => seed.id).filter(id => zurueckgezogen.includes(id));
+  return { quelle: `vom Server, Stand ${stand.slice(0, 10)}${weg.length ? `, ohne ${weg.join(' und ')} (zurückgezogen)` : ''}`, questions: seeds.filter(seed => !weg.includes(seed.id)).map(seed => {
     const question = byId.get(seed.id);
-    if (!question || question.herkunft !== 'beispiel') throw new Error(`${file}: Die Beispielfrage ${seed.id} fehlt im Stand vom Server.`);
+    if (!question || question.herkunft !== 'beispiel') throw new Error(`${file}: Die Beispielfrage ${seed.id} fehlt im Stand vom Server und ist dort auch nicht zurückgezogen. Ist sie gelöscht, gehört sie aus seeds/fragen.json gestrichen.`);
     return question;
   }) };
 }

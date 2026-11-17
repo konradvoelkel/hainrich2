@@ -13,6 +13,7 @@
 #   VPS_APP    /srv/hainrich2/app
 #   VPS_KORPUS /srv/hainrich2/korpus
 #   KORPUS     corpus.json und vectors.json; Vorgabe ist $HAINRICH2_DATEN/work/korpus-aktuell wie bei site/build.mjs --korpus, HAINRICH2_DATEN aus der gitignorten .env.local
+#   WARTEN     wie viele Sekunden der letzte Schritt nach dem Neustart auf die erste Antwort wartet, Vorgabe 60
 #   DRY_RUN=1  zeigt, was rsync täte, lädt nichts hoch und startet nichts neu; der letzte Schritt liest dann nur den Zustand der Unit
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -21,6 +22,7 @@ cd "$(dirname "$0")/.."
 VPS_HOST=${VPS_HOST:?VPS_HOST=user@host in site/deploy.local.env setzen}
 VPS_APP=${VPS_APP:-/srv/hainrich2/app}
 VPS_KORPUS=${VPS_KORPUS:-/srv/hainrich2/korpus}
+WARTEN=${WARTEN:-60}
 KORPUS=${KORPUS:-${HAINRICH2_DATEN:?HAINRICH2_DATEN=<datenverzeichnis> in .env.local setzen}/work/korpus-aktuell}
 
 out=$(mktemp -d)
@@ -62,5 +64,16 @@ else
   # Die Unit ist vom Typ simple mit Restart=always: Ein Prozess, der beim Start stirbt, sieht zwischendurch aktiv aus. Die Zahl der
   # automatischen Neustarts verrät ihn.
   "${SSH[@]}" "$VPS_HOST" 'sudo systemctl restart hainrich2-web && sleep 5 && systemctl is-active --quiet hainrich2-web && [ "$(systemctl show -p NRestarts --value hainrich2-web)" = 0 ]'
-  echo 'deploy-app.sh: hainrich2-web neu gestartet, nach fünf Sekunden aktiv und ohne automatischen Neustart'
+  # Aktiv heißt nicht, dass er antwortet: Beim Start schreibt der Prozess erst alle Seiten neu und packt sie. Am 2026-11-17 kam die
+  # erste Antwort elf Sekunden nach dem Neustart (gemessen im Server-Repo, seit die Unit eine CPUQuota von einem Kern hat); die Prüfung
+  # oben war da schon grün. Erst die Anmeldeseite der Moderation zeigt, dass er Anfragen bedient. Sie kommt ohne Anmeldung mit 200.
+  schritt='Antwort'
+  url="$(sed -n 's/^SITE_ORIGIN=//p' site/site.env)$(sed -n 's/^SITE_BASE=//p' site/site.env)mod/"
+  stand "hainrich2-web ist neu gestartet und aktiv, antwortet aber nach $WARTEN Sekunden nicht unter $url: ssh $VPS_HOST journalctl -u hainrich2-web -n 50"
+  seit=$SECONDS
+  until [ "$(curl -s -o /dev/null --max-time 5 -w '%{http_code}' "$url" || true)" = 200 ]; do
+    [ $((SECONDS - seit)) -lt "$WARTEN" ] || exit 1
+    sleep 1
+  done
+  echo "deploy-app.sh: hainrich2-web neu gestartet, aktiv ohne automatischen Neustart, antwortet (rund $((SECONDS - seit + 5)) Sekunden nach dem Neustart)"
 fi

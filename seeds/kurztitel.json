@@ -17,7 +17,6 @@
  "s16": "Approximationstheorem: Warum trotzdem tiefe Netze?",
  "s17": "Autoencoder: Warum lernt er nicht die Identität?",
  "s18": "VAE: Wozu der Reparametrisierungstrick?",
- "s19": "Dokumentvektor aus Token-Vektoren: Warum summieren?",
  "s20": "word2vec auf Audio: Was sind Wörter und Kontext?",
  "s21": "Orthogonale Matrizen oder Skip Connections?",
  "s22": "BLEU: Warum so lange ein so simples Maß?",
@@ -25,7 +24,6 @@
  "s24": "Temperatur bei Softmax: Logits durch T teilen?",
  "s25": "GAN: Braucht der Generator einen Decoder als Start?",
  "s26": "Mischung aus Katze und Hund dekodieren: Was kommt?",
- "s27": "Wird die E-Mail beantwortet? Woher kommen die Labels?",
  "s28": "Destillation: Warum weiche statt harter Labels?",
  "s29": "SGD oder Adam: Was generalisiert besser, und warum?"
 }

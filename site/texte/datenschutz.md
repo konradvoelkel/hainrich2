@@ -10,7 +10,7 @@ Wer hier liest, bekommt keine Cookies. Diese Website verwendet kein Tracking, ke
 
 ## Die Suche
 
-Die Suche läuft vollständig in Ihrem Browser. Beim ersten Klick ins Suchfeld lädt er ein Sprachmodell und die Texte von diesem Server und legt sie in seinem Zwischenspeicher ab, damit er sie nicht jedes Mal neu laden muss. Was Sie eintippen, verlässt Ihren Rechner nicht.
+Die Suche läuft vollständig in Ihrem Browser. Beim ersten Klick/Fokus ins Suchfeld lädt er ein Sprachmodell und die Texte von diesem Server und legt sie in seinem Zwischenspeicher ab, damit er sie nicht jedes Mal neu laden muss. Was Sie in die Suche eintippen, verlässt Ihren Rechner nicht.
 
 ## Die Antworten
 

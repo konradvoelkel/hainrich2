@@ -126,13 +126,6 @@
   "hoersaal": false
  },
  {
-  "id": "s19",
-  "frage": "Wie bekomme ich aus vielen Token-Vektoren einen Vektor für das ganze Dokument? Warum soll Summieren besser sein als Aneinanderhängen?",
-  "kapitel": "word2vec",
-  "blick": "mathe",
-  "hoersaal": true
- },
- {
   "id": "s20",
   "frage": "Könnte man die word2vec-Idee auch auf Audio übertragen, also aus einer WAV-Datei Vektoren lernen? Was wären da die „Wörter“ und der „Kontext“?",
   "kapitel": "representation-learning-graphen",
@@ -179,13 +172,6 @@
   "frage": "Wenn ich 0,5·Katze + 0,5·Hund dekodiere, was kommt dann raus? Warum gibt es keinen Token für so eine Mischung?",
   "kapitel": "latente-raeume-geometrisch",
   "blick": "mathe",
-  "hoersaal": true
- },
- {
-  "id": "s27",
-  "frage": "Wie würde man vorhersagen, ob eine neue E-Mail beantwortet wird, wenn man nur das alte Postfach hat? Woher kommen da die Labels?",
-  "kapitel": "anwendungsbeispiele",
-  "blick": "praxis",
   "hoersaal": true
  },
  {

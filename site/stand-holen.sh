@@ -22,10 +22,10 @@ trap 'rm -f "$neu"' EXIT
 ssh "$VPS_HOST" "cd '$VPS_APP' && sudo -n -u hainrich2 /usr/bin/node --input-type=module - '$VPS_DATA/public.db'" < ../tools/stand-vom-host.mjs > "$neu"
 # Eine halbe oder leere Antwort ersetzt den alten Stand nicht
 node -e '
-  const { stand, fragen } = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
+  const { stand, fragen, zurueckgezogen = [] } = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"));
   if (!Array.isArray(fragen) || !fragen.length) throw new Error("kein Stand: keine Beispielfragen in der Antwort");
   const antworten = fragen.flatMap(f => f.antworten);
-  console.log(`stand-holen.sh: ${fragen.length} Beispielfragen vom ${stand.slice(0, 16).replace("T", " ")} UTC, ${antworten.filter(a => a.status === "geprüft").length} von ${antworten.length} Antworten geprüft, ${fragen.filter(f => f.kurztitel).length} mit Kurztitel`);
+  console.log(`stand-holen.sh: ${fragen.length} Beispielfragen vom ${stand.slice(0, 16).replace("T", " ")} UTC, ${antworten.filter(a => a.status === "geprüft").length} von ${antworten.length} Antworten geprüft, ${fragen.filter(f => f.kurztitel).length} mit Kurztitel${zurueckgezogen.length ? `; zurückgezogen: ${zurueckgezogen.join(", ")}` : ""}`);
 ' "$neu"
 chmod 644 "$neu"
 mv "$neu" "$ziel"
