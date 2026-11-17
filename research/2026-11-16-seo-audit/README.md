@@ -230,7 +230,8 @@ mit Unit-Test.
 **Nicht geprüft:** das Frageformular mit dem neuen Satz im Bild (die statische Site enthält `f/neu/` nicht, der Browser-Test der
 Moderation hat die Seite bedient), der Formelrand in Firefox und WebKit, ein Vorleseprogramm.
 
-**Entschieden von Konrad am 17.11., gebaut am selben Tag, noch nicht ausgespielt** (Plan D29 bis D33):
+**Entschieden von Konrad am 17.11., gebaut und um 14:55 ausgespielt** (Plan D29 bis D33, Commit `35aa8d4`). Am Host danach: 30 Seiten
+mit Prüfvermerk, alle 31 mit `QAPage`, Smoke 21 von 21 in drei Browsern; die Kurztitel warten als Vorschläge in der Moderation.
 
 | Befund | Entscheidung | Was gebaut ist |
 |---|---|---|
@@ -242,5 +243,6 @@ Moderation hat die Seite bedient), der Formelrand in Firefox und WebKit, ein Vor
 | 17 Betreiber und Lizenz | ja; dazu: eingereichte Fragen sind gemeinfrei | Betreiber im Fuß, Autor und CC BY-SA 4.0 an den Zitaten, CC0 1.0 für Fragen ab Zustimmung Version 3 |
 | Schalter für die Vorschau | bauen | `/mod/zahlen/`, nur admin |
 
-**Bleibt offen:** 6 (veraltete Zitate, kostet je Frage Konrads Klick). `cache-control` für Schrift, Logo und Icons ist am 17.11. an
-die Sitzung im Server-Repo gemeldet.
+**Bleibt offen:** 6 (veraltete Zitate, kostet je Frage Konrads Klick). `cache-control` für Schrift, Logo und Icons ist seit dem
+17.11., 14:19, im Server-Repo gesetzt und ausgespielt: Die 13 Dateien kommen mit einem Tag `max-age`, CSS, Skripte und Seiten bleiben
+bei `no-cache` (am Host nachgesehen).

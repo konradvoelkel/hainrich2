@@ -223,7 +223,7 @@ beides vorkommt, und verweist für Anthropic auf die Fristen im nächsten Abschn
 
 **A1** ist seit dem 2026-11-11 freigegeben und live, der Absatz darüber gibt den Stand vor der Freigabe wieder.
 
-**A3, A4 (Stufe 1), D2, D3 und D4, Plan D28, gebaut und getestet am 2026-11-17, noch nicht ausgespielt.** A3: Der Satz in
+**A3, A4 (Stufe 1), D2, D3 und D4, Plan D28, gebaut, getestet und am 2026-11-17 ausgespielt.** A3: Der Satz in
 `site/texte/datenschutz-fragen.md` nennt jetzt, was der Checker erkennt (Anrede mit Namen, Vorstellung, Grußformel, Wörter zu
 Gesundheit), und sagt, dass man sich auf ihn nicht verlassen kann. A4: An Frage und Antwort steht ein Link „Melden“ auf
 `impressum/#inhalte-melden`; den eigenen Schreibweg (Stufe 2) gibt es nicht. D2: Eine Antwort des Bots, die niemand geprüft hat, und

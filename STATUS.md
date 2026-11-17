@@ -9,7 +9,7 @@ _Stand 2026-11-17._
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, in einem per
   Digest gepinnten `node:24`-Container. Seit dem 2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem
   Runner `ci-eu`: Der nimmt nur private Repos und musste vor einer Veröffentlichung weg.
-- **Gebaut am 2026-11-17, nicht ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D28 bis D33):
+- **Gebaut und ausgespielt am 2026-11-17** (Konrads Entscheidungen vom selben Tag, Plan D28 bis D33; Commit `35aa8d4`):
   - _Härtungen (D28):_ Eine ungeprüfte Antwort des Bots verlinkt nur ins Skript, Formeln sind auf 20 em begrenzt, der Worker prüft
     Kennung und Länge jedes Auftrags. An Frage und Antwort steht „Melden“. Der Datenschutz sagt über den Checker nur noch, was er erkennt.
   - _Prüfvermerk (D29):_ „Geprüft am … von Konrad Völkel, Autor des Skripts“ an jeder geprüften Antwort des Bots, Absatz „Wer prüft“
@@ -25,8 +25,17 @@ _Stand 2026-11-17._
     abwartete, den alten Stand, und im Browser konnte die falsche Stimme stehen bleiben. Aufgefallen ist es, weil der Browser-Test dazu in
     Chromium in 2 von 4 Läufen scheiterte; danach liefen 5 von 5. Das ist ein Indiz, kein Beweis, einen eigenen Test für den Doppelklick
     gibt es nicht.
-  - Die Datenbank am Host bekommt die neuen Spalten beim ersten Start des neuen Codes. Bis zum Ausspielen gilt dort Zustimmung
-    Version 2, ohne Lizenz und ohne Kurztitel.
+  - _Ausgespielt_ auf Konrads Wort, nach beiden Probeläufen mit vorhergesagter Liste: `site/deploy.sh` um 14:55:09 mit 69 HTML-Seiten,
+    `style.css` und `stimmen.js` samt komprimierten Fassungen (284 Dateien, keine Löschung; ein Lauf mit Prüfsummen zeigte genau diese
+    284 als inhaltlich anders), `site/deploy-app.sh` um 14:55:37 mit 13 Dateien unter `lib/`, `server/web.mjs` und neu
+    `seeds/kurztitel.json`. `hainrich2-web` nach fünf Sekunden aktiv, ohne automatischen Neustart. Seitdem gilt Zustimmung Version 3.
+  - _Am Host nachgesehen, nur lesend:_ Smoke 21 von 21 in Chromium, Firefox und WebKit. Alle 31 Frageseiten tragen den Betreiber im
+    Fuß und „Melden“ an jedem Beitrag. 30 tragen den Prüfvermerk (22 mit dem 05.11., 8 mit dem 10.11., Tage in UTC; s21 mit dem 05.11.,
+    der Eingriff von der Konsole zählt also nicht), die 31. hat eine Antwort der Moderation und deshalb keinen. Alle 31 tragen `QAPage`;
+    bei s09 nennt es die Frage der H1 und zeigt auf `#b2`. `f/neu/` trägt `data-zustimmung="3"` und beide Sätze zu „gemeinfrei“, die
+    vier Rechtstext-Seiten die neuen Absätze, der alte Satz über den Checker ist weg. `style.css` und `stimmen.js` gleichen dem Bau.
+    `GET` auf die API gibt 405, `mod/` 200, alles bleibt `noindex`, die Sitemap leer. Keine Frage trägt „gemeinfrei“: Unter Version 3
+    ist noch keine freigegeben.
 - Am Host von Hand geändert, 2026-11-17 auf Konrads Wort: der Tippfehler „ortohogonale“ in der Antwort zu s21, über `store.editAnswer`
   mit der Rolle `konsole` im Verlauf, die Seite neu geschrieben. Nachgesehen: `f/s21/` trägt das Wort in keiner der drei Kodierungen mehr.
 - Abhängigkeiten, Stand 2026-11-16: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0), Playwright 1.65.1 (vorher 1.63.0) und das
@@ -138,7 +147,7 @@ _Stand 2026-11-17._
 
 - Das Repo ist nicht bereit für die Veröffentlichung (geprüft am 2026-11-17 gegen Playbook §5 Punkt 10 und §3.6, am Stand `6ba0447`).
   Vier Punkte stehen davor: Der Bericht `research/2026-11-11-threat-model/` beschreibt Schwächen, die offen sind (B1, B4, C2, C5, D1;
-  A5 prüft Konrad) oder erst mit dem nächsten Deploy schließen (A3, A4, D2 bis D4), und er steht in der Historie. Ob die GitHub-App
+  A5 prüft Konrad), und er steht in der Historie; A3, A4, D2 bis D4 sind seit dem Ausspielen am selben Tag zu. Ob die GitHub-App
   `konrads-ci-runner` noch auf dem Repo installiert ist, ließ sich von hier nicht sehen. Den Kurscode kann nur Konrad in der Historie
   suchen; den Scan aus I7 gibt es nicht. Fünf Messskripte unter `research/2026-11-04-*` nennen `/home/konrad/Sciebo/…`. Dazu kleiner:
   kein `gitleaks` auf dem Laptop (der letzte Lauf ist vom 10.11.), keine Kopfzeile zur Lizenz in den Quelldateien, kein Link auf den
@@ -164,9 +173,12 @@ _Stand 2026-11-17._
 
 - Aus dem Umbau vom 2026-11-17: Der Aufruf für den Kurztitel ist nie gegen die echte API gelaufen, nur gegen Attrappen. Ob das Modell
   die Länge einhält und ob `fallbacks` mit dieser Anfrage durchgeht, zeigt erst der erste echte Vorschlag; scheitert er, fehlt nur der
-  Vorschlag. Die Migration von `public.db` ist an einer nachgebauten alten Datenbank getestet, nicht an einer Kopie der echten. Die
-  Sätze zu CC0 in Zustimmung, Nutzungsbedingungen, Datenschutz und Impressum sind mein Entwurf, keine Rechtsberatung, und von Konrad
-  noch nicht gelesen. `QAPage` hat kein Werkzeug von Google gesehen (die Adresse geht an keinen Drittdienst).
+  Vorschlag. Die Migration von `public.db` lief am Host durch: Der Dienst startete, und die Prüfdaten stehen an 30 Seiten. Ob die 29
+  Titelvorschläge angekommen sind, sieht man nur hinter der Anmeldung unter `/eidl/mod/titel/`; das Journal von `hainrich2-web` habe ich
+  nicht gelesen. Hinter der Anmeldung und hinter dem Kurscode hat am Host seit dem Ausspielen niemand etwas ausgelöst: kein Feld für den
+  Kurztitel, kein Schalter, keine Frage unter Version 3. Die Sätze zu CC0 in Zustimmung, Nutzungsbedingungen, Datenschutz und Impressum
+  sind mein Entwurf, keine Rechtsberatung. Konrad hat sie mit seinem Wort zum Ausspielen freigegeben, nachdem ich das so angekündigt
+  hatte; ob er sie gelesen hat, weiß ich nicht. `QAPage` hat kein Werkzeug von Google gesehen (die Adresse geht an keinen Drittdienst).
 
 - Kapitelseiten und Kapitelbezug: Die Tests prüfen Markup, Sortierung im Beispiel und den Weg bis zur Moderation. Gemessen ist die
   Wirkung auf echte Fragen nicht. Die Stärke des Zuschlags (`KAPITEL_BONUS`, `KAPITEL_FAKTOR`, Platz 1 bei `fuse`) ist geschätzt.
@@ -203,9 +215,8 @@ _Stand 2026-11-17._
 
 ## Nächster Schritt
 
-Der Umbau vom 2026-11-17 wartet auf Konrads Wort zum Ausspielen. Text und Technik gehen zusammen: `site/deploy.sh` bringt Rechtstexte
-und Stylesheet, `site/deploy-app.sh` den Code, und ab dem Neustart gilt Zustimmung Version 3. Danach bestätigt er die Kurztitel unter
-`/eidl/mod/titel/`.
+Der Umbau vom 2026-11-17 ist ausgespielt. Konrad bestätigt die Kurztitel unter `/eidl/mod/titel/` und sieht dabei, ob die Vorschläge
+angekommen sind.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes
