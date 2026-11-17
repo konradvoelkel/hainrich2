@@ -493,3 +493,12 @@ test('Der Schalter beendet die Vorschau für alles, was der Server schreibt, und
   await expect(page.locator('.vorschau')).toHaveCount(1);
   expect(problems).toEqual([]);
 });
+
+test('Der Link „Moderation“ im Fuß führt von einer Frageseite zur Anmeldung', async ({ page }) => {
+  const problems = watch(page);
+  await page.goto('/eidl/f/s01/');
+  await page.click('.fuss a:has-text("Moderation")');
+  await expect(page).toHaveURL(/\/eidl\/mod\/$/);
+  await expect(page.locator('h1')).toHaveText('Anmelden');
+  expect(problems).toEqual([]);
+});

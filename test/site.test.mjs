@@ -427,3 +427,10 @@ test('D30: Das Frageformular sagt neben dem Haken, was gemeinfrei heißt', async
   assert.match(html, /Gemeinfrei heißt: Sie verzichten auf alle Rechte an Ihrer Frage, und das lässt sich nicht zurücknehmen/);
   assert.match(html, /data-zustimmung="3"/);
 });
+
+test('der Fuß führt zur Anmeldung der Moderation, von jeder Tiefe aus und ohne Empfehlung an Suchmaschinen', () => {
+  assert.match(questionPage(question(), site), /<a href="\.\.\/\.\.\/mod\/" rel="nofollow">Moderation<\/a><\/nav><\/footer>/);
+  assert.match(indexPage([question()], site), /<a href="mod\/" rel="nofollow">Moderation<\/a>/);
+  assert.match(notFoundPage(site), /<a href="\/eidl\/mod\/" rel="nofollow">Moderation<\/a>/);
+  assert.match(robotsTxt(site), /Disallow: \/eidl\/mod\//);
+});

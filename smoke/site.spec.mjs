@@ -212,6 +212,7 @@ test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2�
 test('an Frage und Antwort führt „Melden“ zum Impressum, und der Fuß nennt den Betreiber', async ({ page }) => {
   await page.goto('/eidl/f/s01/');
   await expect(page.locator('.fuss p')).toContainText('Ein privates Angebot von Konrad Völkel');
+  await expect(page.locator('.fuss a:has-text("Moderation")')).toHaveAttribute('href', '../../mod/');
   await expect(page.locator('.beitrag .melden')).toHaveCount(await page.locator('.beitrag').count());
   await page.locator('.frage .melden').click();
   await expect(page).toHaveURL(/\/eidl\/impressum\/#inhalte-melden$/);

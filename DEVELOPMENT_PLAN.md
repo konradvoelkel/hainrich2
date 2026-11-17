@@ -346,7 +346,9 @@ legt ein CLI auf dem VPS an, Passphrasen als scrypt-Hash, Sitzung als `HttpOnly`
 
 **Oberfläche `/mod/`,** auch auf dem Telefon bedienbar: Warteschlange neuer Fragen mit markierten
 Treffern und den ähnlichsten Fragen, die der Browser der Moderation selbst berechnet; Warteschlange
-ungeprüfter Antworten; `kein_beleg`; `quelle_geändert`; Meldungen.
+ungeprüfter Antworten; `kein_beleg`; `quelle_geändert`; Meldungen. Der Fuß jeder öffentlichen Seite verlinkt die Anmeldung als
+„Moderation“ (Konrad, 2026-11-17), mit `rel="nofollow"`; die Seite steht weiter in `robots.txt`. Sie war schon vorher offen im Netz
+erreichbar (Threat Model D1), der Link macht sie nur leichter zu finden.
 
 **`public.db`:** `questions` (kanonischer Text, Status, Kapitel, Herkunft, Tag; seit D30 und D31 auch Lizenz, Kurztitel und der Vorschlag dafür), `variants`,
 `answers` (Art `bot`, `moderation`, `nutzer`; Status; Modell; Prompt-Version; Skript-Stand; seit D29 der Tag der Prüfung),
