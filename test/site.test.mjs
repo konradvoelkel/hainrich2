@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { threadsOf, UNTERFOREN, unterforumOf } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
+import { askPage, excerpt, foreignSource, forumPage, indexPage, mailOf, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, sitemap, textPage } from '../lib/site.js';
 
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: false, ladegroesse: 'rund 25 MB' };
 const passage = { id: 'p1', page: 'kapitel', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
@@ -147,13 +147,15 @@ test('die Sitemap nennt nur Unterforen mit Geprüftem', () => {
   assert.doesNotMatch(sitemap([done], { ...site, vorschau: true }), /<url>/);
 });
 
-test('Bot, Nutzer und Moderation tragen ihre Namen, an einer Beispielfrage steht keiner', () => {
+test('Bot, Nutzer und Moderation tragen ihre Namen, an einer Beispielfrage steht, von wem sie ist', () => {
   const bot = questionPage(question(), site);
   assert.match(bot, /<a class="person" href="\.\.\/\.\.\/ueber\/"><img [^>]*><strong>hAInrich2<\/strong><\/a><span class="bot">Bot</);
-  assert.match(bot, /<strong>Frage<\/strong>/);
+  assert.match(bot, /<strong>Frage<\/strong><span class="von">von Konrad Völkel<\/span>/, 'wer sie gestellt hat, steht sichtbar da und nicht nur im Markup');
+  assert.match(bot, /<span class="badge">Beispielfrage<\/span>/);
   assert.doesNotMatch(bot, /Anonymer Nutzer/);
   const html = questionPage({ ...question(), herkunft: 'nutzer', antworten: [{ art: 'moderation', status: 'geprüft', text: 'Selbst geschrieben.', zitate: [] }] }, site);
   assert.match(html, /<strong>Anonymer Nutzer<\/strong>/);
+  assert.doesNotMatch(html, /Beispielfrage|class="von"/, 'an einer Frage von außen steht kein Name');
   assert.match(html, /<a class="person" href="https:\/\/www\.konradvoelkel\.com" rel="noopener"><img class="gesicht" src="\.\.\/\.\.\/moderation-konrad\.jpg"[^>]*><strong>Konrad Völkel<\/strong><\/a>/);
   assert.ok(fs.existsSync(new URL(`../site/brand/${MODERATION.bild}`, import.meta.url)));
   assert.doesNotMatch(html, /class="bot"/);
@@ -204,6 +206,23 @@ test('die Startseite nennt das Skript in ihrer einzigen H1 und führt zur Idee',
   assert.doesNotMatch(html, /<span>Fragen und Antworten/, 'die Kopfzeile wiederholt die H1 nicht');
   assert.match(forumPage(UNTERFOREN[0], [], site), /<span>Fragen und Antworten/);
   assert.ok(titleOf(html).length <= 65, titleOf(html));
+});
+
+test('D43: Das Widerspruchsrecht steht in einem eigenen Abschnitt, in jeder Fassung des Datenschutzes, und wer sich auf lit. f stützt, zeigt dorthin', () => {
+  const read = name => fs.readFileSync(new URL(`../site/texte/${name}.md`, import.meta.url), 'utf8');
+  const base = read('datenschutz');
+  assert.ok(base.indexOf('## Widerspruchsrecht') > base.indexOf('## Ihre Rechte'), 'hinter „Ihre Rechte“: Der Bau ersetzt alles zwischen „Eigene Beiträge“ und „Ihre Rechte“');
+  const abschnitt = base.slice(base.indexOf('## Widerspruchsrecht'));
+  assert.match(abschnitt, /^## Widerspruchsrecht\n\n\*\*Soweit Ihre Daten hier auf Grundlage von Art\. 6 Abs\. 1 lit\. f DSGVO verarbeitet werden, können Sie dem jederzeit widersprechen[^*]*\(Art\. 21 Abs\. 1 DSGVO\)\.\*\*/, 'hervorgehoben, wie Art. 21 Abs. 4 es will');
+  assert.match(abschnitt, /formlose Nachricht an die Adresse im \[Impressum\]/);
+  assert.equal(abschnitt.match(/^## /gm).length, 1, 'der letzte Abschnitt, mit nichts anderem darin');
+  for (const name of ['datenschutz-stimmen', 'datenschutz-fragen']) {
+    for (const absatz of read(name).split('\n\n').filter(a => /Rechtsgrundlage ist Art\. 6 Abs\. 1 lit\. f/.test(a))) assert.match(absatz, /\[Widerspruchsrecht\]\(#widerspruchsrecht\)/, name);
+  }
+  assert.match(textPage('datenschutz', base, site), /<h2 id="widerspruchsrecht">Widerspruchsrecht<\/h2>/);
+  assert.match(askPage({ ...site, fragen: true }), /Der Verarbeitung Ihrer Frage können Sie widersprechen, siehe <a href="\.\.\/\.\.\/datenschutz\/#widerspruchsrecht">Widerspruchsrecht<\/a>/, 'am Formular, also bevor jemand etwas schickt');
+  assert.match(base, /## Beiträge melden\n\n[^\n]*öffnet Ihr E-Mail-Programm[^\n]*die Seite selbst sendet dabei nichts/, 'was „Melden“ tut, steht im Datenschutz (Plan D42)');
+  assert.match(base, /zwei technisch notwendige Cookies[^\n]*180 Tage/, 'und das Geräte-Cookie der Moderation auch (Plan D41)');
 });
 
 test('die Seite „Über hAInrich2“ darf in den Index, die Rechtstexte nicht', () => {
@@ -272,6 +291,7 @@ test('Vorschau-Banner nur in der Vorschau', () => {
 
 test('Ausschnitt ohne Markdown und Formeln', () => {
   assert.equal(excerpt('Ein **Wort** mit $x^2$ und [Link](http://a.test).'), 'Ein Wort mit x^2 und Link.');
+  assert.equal(excerpt('3. Also:\n\n   ```{math}\n   :enumerated: false\n   a \\approx b.\n   ```\n\nWeiter.'), 'Also: a ≈ b. Weiter.', 'eine Formel als Direktive ist eine Formel');
   assert.equal(excerpt('Die Funktion $w \\cdot x + b$ liegt in $\\mathbb{R}$, nicht in $[0, 1]$.'), 'Die Funktion w · x + b liegt in ℝ, nicht in [0, 1].');
   assert.equal(excerpt('Ein Bruch $\\frac{a}{b}$ bleibt, eine Summe $\\sum_{i=1}^n x_i$ und ein Bruch im Bruch $\\frac{\\frac{a}{b}}{c}$ bleiben draußen.'), 'Ein Bruch a/b bleibt, eine Summe … und ein Bruch im Bruch … bleiben draußen.');
   assert.equal(excerpt('Es gilt $D(f \\circ g) = \\bigl((Df) \\circ g\\bigr) \\cdot Dg$ und $n_{\\text{out}} = \\left\\lfloor \\frac{n + 2p - k}{s} \\right\\rfloor + 1$, mit $A \\in \\mathbb{R}^{d \\times d}$, $A^\\top A = I$, $f \\colon \\mathbb{R}^n \\to \\mathbb{R}$.'),
@@ -308,6 +328,8 @@ test('die Frageseite führt weiter: zum Kapitel und zum Unterforum, mit Datum un
     'der Faden ist ein Artikel, und die Frage steht als Erstes in ihrer Karte: So nimmt ein Textextraktor sie mit');
   assert.match(html, /<a class="marke-zitat" href="#z1" aria-label="Zitat 1">\[1\]<\/a>/);
   assert.match(html, /<section class="zitate" data-nosnippet>/, 'die Trefferbeschreibung soll aus der Antwort kommen, nicht aus dem Skript');
+  assert.match(html, /<section class="zitate" data-nosnippet><h2>Originaltext aus dem Skript<\/h2>\s*<p class="lizenz">[^\n]*<\/p>\s*<aside><figure id="z1">[\s\S]*<\/figure><\/aside>\s*<\/section>/,
+    'die Zitate selbst stehen in einem aside, Überschrift und Lizenz davor: Sonst misst ein Extraktor seinen Auszug an ihnen und verwirft die Frage');
   assert.match(html, /<a class="sprung" href="#inhalt">Zum Inhalt<\/a>[\s\S]*<main id="inhalt">/);
 });
 
@@ -347,7 +369,7 @@ test('I9: Steht neben einer geprüften Antwort eine ungeprüfte, bleibt die Seit
 
 test('D29: Eine geprüfte Antwort sagt, wer geprüft hat und wann; das Datum der Frage steht nicht mehr neben „geprüft“', () => {
   const html = questionPage(geprueft(), site);
-  assert.match(html, /<p class="pruefung">Geprüft am <time datetime="2026-11-06">06\.11\.2026<\/time> von <a href="\.\.\/\.\.\/ueber\/#wer-prüft">Konrad Völkel<\/a>, Autor des Skripts\.<\/p>/);
+  assert.match(html, /<p class="pruefung">Geprüft am 06\.11\.2026 von <a href="\.\.\/\.\.\/ueber\/#wer-prüft">Konrad Völkel<\/a>, Autor des Skripts\.<\/p>/);
   const antwort = html.slice(html.indexOf('id="b2"'));
   assert.doesNotMatch(antwort.slice(0, antwort.indexOf('</header>')), /2026-11-04/);
   assert.doesNotMatch(questionPage(question(), site), /class="pruefung"/);
@@ -356,7 +378,22 @@ test('D29: Eine geprüfte Antwort sagt, wer geprüft hat und wann; das Datum der
   assert.match(eigene.slice(eigene.indexOf('id="b2"')), /<time datetime="2026-11-06">/);
 });
 
-test('A4: An der Frage und an jeder Antwort steht ein Link „Melden“, am Entwurf nicht', () => {
+test('D42: „Melden“ öffnet eine vorbereitete E-Mail, die den Beitrag nennt; ohne Skript, ohne Anfrage an den Server', () => {
+  const html = questionPage(geprueft(), { ...site, melden: 'mail@example.test' });
+  const links = [...html.matchAll(/<a class="melden" href="([^"]+)" aria-label="Beitrag (\d) melden" title="Öffnet eine vorbereitete E-Mail">Melden<\/a>/g)];
+  assert.deepEqual(links.map(l => l[2]), ['1', '2']);
+  const [frage, antwort] = links.map(l => new URL(l[1].replaceAll('&amp;', '&')));
+  assert.deepEqual([frage.protocol, frage.pathname], ['mailto:', 'mail@example.test']);
+  assert.equal(frage.searchParams.get('subject'), 'hAInrich2: Meldung zu f/s01/#b1');
+  assert.match(frage.searchParams.get('body'), /^Guten Tag,\r\n\r\nich melde diesen Beitrag:\r\nhttps:\/\/example\.test\/eidl\/f\/s01\/#b1\r\n\r\nGrund \(bitte stehen lassen, was zutrifft\):\r\n- Die Antwort ist fachlich falsch\./);
+  assert.match(antwort.searchParams.get('body'), /https:\/\/example\.test\/eidl\/f\/s01\/#b2\r\n/, 'jeder Beitrag nennt seine eigene Adresse');
+  assert.doesNotMatch(links[0][1], /[ \n<>]|\+/, 'kodiert, damit jedes Mailprogramm den Text ganz bekommt');
+  assert.ok(!html.includes('__ADRESSE__'));
+  assert.equal(mailOf('mail [at] hai [punkt] example [punkt] test'), 'mail@hai.example.test');
+  for (const keine of [undefined, '', 'Universitätsstr. 1', 'mail [at] example', 'a@b.c, d@e.f']) assert.equal(mailOf(keine), null, String(keine));
+});
+
+test('A4: An der Frage und an jeder Antwort steht ein Link „Melden“, am Entwurf nicht; ohne Adresse führt er zum Impressum', () => {
   const html = questionPage(geprueft(), site);
   assert.deepEqual(html.match(/<a class="melden" href="\.\.\/\.\.\/impressum\/#inhalte-melden" aria-label="Beitrag \d melden">Melden<\/a>/g).map(link => link.match(/Beitrag \d melden/)[0]),
     ['Beitrag 1 melden', 'Beitrag 2 melden'], 'der Name sagt, welcher Beitrag gemeint ist, und enthält die sichtbare Beschriftung');
@@ -410,6 +447,8 @@ test('D32: Eine geprüfte Frage trägt QAPage, mit dem Bot als Bot und dem Zitat
   assert.equal(antwort.dateModified, '2026-11-06');
   assert.ok(!JSON.stringify(blocks[1]).includes('upvoteCount'));
   assert.equal(person.name, 'Konrad Völkel');
+  assert.deepEqual([page.reviewedBy, page.lastReviewed], [{ '@id': person['@id'] }, '2026-11-06'], 'der Prüfvermerk steht auch im Markup');
+  assert.match(html, /<p class="pruefung">Geprüft am 06\.11\.2026 von /, 'und nennt denselben Tag wie die Seite, dort als Text: Ein Extraktor streicht <time>');
   for (const url of JSON.stringify(blocks).match(/"https?:[^"]+"/g)) assert.match(url, /^"https:\/\//);
 
   assert.deepEqual(allData(questionPage(question(), site)).map(b => b['@type']), ['BreadcrumbList']);
@@ -429,6 +468,11 @@ test('D32: Die Antwort der Moderation gilt, die des Bots daneben ist ein Vorschl
   assert.deepEqual([frage.acceptedAnswer.url, frage.acceptedAnswer.author], ['https://example.test/eidl/f/s01/#b3', { '@id': 'https://example.test/eidl/#betreiber' }]);
   assert.equal(frage.acceptedAnswer.dateModified, undefined, 'unbearbeitet');
   assert.deepEqual(frage.suggestedAnswer.map(a => a.url), ['https://example.test/eidl/f/s01/#b2']);
+  assert.equal(allData(questionPage(q, site))[1]['@graph'][0].lastReviewed, '2026-11-07', 'bei mehreren Antworten zählt die jüngste Prüfung');
+  const ohneDatum = geprueft();
+  for (const a of ohneDatum.antworten) delete a.geprueftAm;
+  const seite = allData(questionPage(ohneDatum, site))[1]['@graph'][0];
+  assert.deepEqual([seite.reviewedBy, 'lastReviewed' in seite], [{ '@id': 'https://example.test/eidl/#betreiber' }, false], 'ohne Prüfdatum kein erfundenes');
 });
 
 test('D31: Die Vorschläge für den Bestand gehören zu Beispielfragen, passen in die Grenzen und am Checker vorbei', async () => {
@@ -444,7 +488,6 @@ test('D31: Die Vorschläge für den Bestand gehören zu Beispielfragen, passen i
 });
 
 test('D30: Das Frageformular sagt neben dem Haken, was gemeinfrei heißt', async () => {
-  const { askPage } = await import('../lib/site.js');
   const html = askPage({ ...site, fragen: true, entwurf: true });
   assert.match(html, /Ich gebe meine Frage gemeinfrei \(CC0 1\.0\)/);
   assert.match(html, /Gemeinfrei heißt: Sie verzichten auf alle Rechte an Ihrer Frage, und das lässt sich nicht zurücknehmen/);

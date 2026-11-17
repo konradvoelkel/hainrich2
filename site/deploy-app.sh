@@ -4,7 +4,7 @@
 # Server-Repo (~/files/work/server, Rolle hainrich2). Die Datenbank fasst dieses Skript nie an, sie lebt auf dem Server.
 # Jeder echte Lauf braucht die Zustimmung des Eigentümers.
 #
-# Alle Schritte laufen über eine einzige SSH-Verbindung. `ufw limit` zählt neue Verbindungen auf Port 22 und wies am 2026-11-16 die
+# Alle Schritte laufen über eine einzige SSH-Verbindung. Der Server begrenzt neue SSH-Verbindungen je Zeit und wies am 2026-11-16 die
 # dritte ab, den Neustart: Die neuen Dateien lagen da schon unter dem alten Prozess. So trifft die Bremse nur noch den Anfang, bevor
 # etwas übertragen ist. Scheitert ein späterer Schritt, sagt die letzte Zeile, was schon auf dem Server liegt.
 #
@@ -12,15 +12,16 @@
 #   VPS_HOST   user@<server>, in der gitignorten site/deploy.local.env
 #   VPS_APP    /srv/hainrich2/app
 #   VPS_KORPUS /srv/hainrich2/korpus
-#   KORPUS     corpus.json und vectors.json, Vorgabe ist work/korpus-aktuell, wie bei site/build.mjs --korpus
+#   KORPUS     corpus.json und vectors.json; Vorgabe ist $HAINRICH2_DATEN/work/korpus-aktuell wie bei site/build.mjs --korpus, HAINRICH2_DATEN aus der gitignorten .env.local
 #   DRY_RUN=1  zeigt, was rsync täte, lädt nichts hoch und startet nichts neu; der letzte Schritt liest dann nur den Zustand der Unit
 set -euo pipefail
 cd "$(dirname "$0")/.."
 [ -f site/deploy.local.env ] && . site/deploy.local.env
+[ -f .env.local ] && . .env.local
 VPS_HOST=${VPS_HOST:?VPS_HOST=user@host in site/deploy.local.env setzen}
 VPS_APP=${VPS_APP:-/srv/hainrich2/app}
 VPS_KORPUS=${VPS_KORPUS:-/srv/hainrich2/korpus}
-KORPUS=${KORPUS:-/media/konrad/xtraspace/hainrich2/work/korpus-aktuell}
+KORPUS=${KORPUS:-${HAINRICH2_DATEN:?HAINRICH2_DATEN=<datenverzeichnis> in .env.local setzen}/work/korpus-aktuell}
 
 out=$(mktemp -d)
 ctl=$(mktemp -d)
@@ -43,7 +44,7 @@ node tools/app-files.mjs > "$out.liste"
 rsync -ar --relative --files-from="$out.liste" ./ "$out/"
 
 schritt='Verbindung'
-lage='nichts übertragen. Bei „Connection refused“ ist es fast immer ufw limit: eine Minute warten, nicht nachproben'
+lage='nichts übertragen. Bei „Connection refused“ ist es fast immer die Ratenbegrenzung für SSH am Server: eine Minute warten, nicht nachproben'
 "${SSH[@]}" "$VPS_HOST" true
 
 echo "deploy-app.sh: $out -> $VPS_HOST:$VPS_APP${DRY_RUN:+ (Probelauf)}"

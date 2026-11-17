@@ -9,7 +9,7 @@ ob `hainrich2-web` nach fünf Sekunden aktiv ist und keinen automatischen Neusta
 
 **Grenzen:** Der echte Lauf mit Neustart ist nicht gelaufen. Gemessen sind die Probeläufe gegen den Server und alle Fehlerwege gegen
 Attrappen; dass der Neustart über dieselbe Verbindung geht, zeigt am Server bisher nur der Probelauf, der an seiner Stelle den
-Zustand der Unit liest. Warum `ufw limit` am 16.11. die Verbindung für den Neustart abwies, ist nicht geklärt: Beide Deploys
+Zustand der Unit liest. Warum die Ratenbegrenzung für SSH am Server am 16.11. die Verbindung für den Neustart abwies, ist nicht geklärt: Beide Deploys
 zusammen waren vier Verbindungen in rund 16 Sekunden, das Log der Firewall habe ich nicht gelesen. Andere Sitzungen auf diesem
 Rechner zählen am Server unter derselben Adresse mit. Auch die eine Verbindung kann also abgewiesen werden, dann aber, bevor etwas
 übertragen ist.
@@ -48,7 +48,7 @@ scheitern. Zwölf Läufe, alle wie erwartet:
 | Skript | Lauf | scheitert bei | Status | letzte Zeile nennt |
 |---|---|---|---|---|
 | `deploy-app.sh` | echt | nichts | 0 | neu gestartet, aktiv, ohne automatischen Neustart |
-| `deploy-app.sh` | echt | Verbindung | 255 | nichts übertragen, Hinweis auf `ufw limit` |
+| `deploy-app.sh` | echt | Verbindung | 255 | nichts übertragen, Hinweis auf die Ratenbegrenzung für SSH |
 | `deploy-app.sh` | echt | Code | 12 | Code kann halb übertragen sein, noch einmal starten |
 | `deploy-app.sh` | echt | Korpus | 12 | Code übertragen, Korpus vielleicht nicht |
 | `deploy-app.sh` | echt | Neustart, Verbindung weg | 255 | Code und Korpus übertragen, Befehl zum Nachholen |
@@ -57,7 +57,7 @@ scheitern. Zwölf Läufe, alle wie erwartet:
 | `deploy-app.sh` | Probelauf | Verbindung | 255 | nichts übertragen |
 | `deploy-app.sh` | Probelauf | Code | 12 | Probelauf, nichts verändert |
 | `deploy.sh` | echt | nichts | 0 | Liste von rsync |
-| `deploy.sh` | echt | Übertragen | 12 | Hinweis auf `ufw limit`, sonst noch einmal starten |
+| `deploy.sh` | echt | Übertragen | 12 | Hinweis auf die Ratenbegrenzung für SSH, sonst noch einmal starten |
 | `deploy.sh` | Probelauf | Übertragen | 12 | Probelauf, nichts verändert |
 
 Je Lauf von `deploy-app.sh` prüft das Skript außerdem, dass alle Aufrufe denselben Socket nennen, dass die Verbindung am Ende

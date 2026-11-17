@@ -7,22 +7,23 @@
 # Umgebung:
 #   VPS_HOST        user@<server>, in der gitignorten site/deploy.local.env
 #   VPS_WWW         /srv/hainrich2/www
-#   HAINRICH2_SITE  /media/konrad/xtraspace/hainrich2/site, wie in site/serve.mjs
+#   HAINRICH2_SITE  der gebaute Baum; sonst $HAINRICH2_DATEN/site wie in site/serve.mjs, HAINRICH2_DATEN aus der gitignorten .env.local
 #   DRY_RUN=1       zeigt, was rsync täte, lädt nichts hoch
 set -euo pipefail
 cd "$(dirname "$0")"
 [ -f ./deploy.local.env ] && . ./deploy.local.env
+[ -f ../.env.local ] && . ../.env.local
 VPS_HOST=${VPS_HOST:?VPS_HOST=user@host in site/deploy.local.env setzen}
 VPS_WWW=${VPS_WWW:-/srv/hainrich2/www}
-out=${HAINRICH2_SITE:-/media/konrad/xtraspace/hainrich2/site}
+out=${HAINRICH2_SITE:-${HAINRICH2_DATEN:?HAINRICH2_DATEN=<datenverzeichnis> in .env.local setzen}/site}
 
-# --delete gegen einen leeren Baum leert den Docroot, und xtraspace ist ein Autofs-Volume.
+# --delete gegen einen leeren Baum leert den Docroot, und das Datenverzeichnis kann ein Volume sein, das gerade nicht eingehängt ist.
 if [ ! -f "$out/eidl/index.html" ] || [ ! -f "$out/robots.txt" ]; then
   echo "deploy.sh: kein fertiger Baum unter $out, erst node site/build.mjs" >&2
   exit 1
 fi
 
-# Dieses Skript braucht nur eine Verbindung. Weist `ufw limit` sie ab, ist nichts übertragen; bricht rsync später ab, kann der Docroot
+# Dieses Skript braucht nur eine Verbindung. Weist die Ratenbegrenzung für neue SSH-Verbindungen am Server sie ab, ist nichts übertragen; bricht rsync später ab, kann der Docroot
 # halb neu sein, und ein zweiter Lauf bringt ihn in Ordnung.
 ende() {
   local status=$?
@@ -30,7 +31,7 @@ ende() {
   if [ -n "${DRY_RUN:-}" ]; then
     echo "deploy.sh: gescheitert (Status $status): Probelauf, auf dem Server ist nichts verändert." >&2
   else
-    echo "deploy.sh: gescheitert (Status $status). Steht oben „Connection refused“, ist nichts übertragen, fast immer ufw limit: eine Minute warten, nicht nachproben. Sonst kann der Docroot halb übertragen sein: noch einmal starten." >&2
+    echo "deploy.sh: gescheitert (Status $status). Steht oben „Connection refused“, ist nichts übertragen, fast immer die Ratenbegrenzung für SSH am Server: eine Minute warten, nicht nachproben. Sonst kann der Docroot halb übertragen sein: noch einmal starten." >&2
   fi
 }
 trap ende EXIT

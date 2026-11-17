@@ -69,6 +69,28 @@ _Stand 2026-11-17._
   Fragetexte, Prüfdaten und alle 134 Zitate wie vor dem Ausspielen, Smoke 21 von 21 in drei Browsern. Freigegeben wurde am Host seit
   dem 05.11. keine Frage; dass eine Redaktion bei der Freigabe dort Nullen und danach einen neuen Vektor ergibt, hat also noch
   niemand gesehen. Der CI-Lauf zu `d977182` lief beim Ausspielen noch und endete sieben Minuten später grün.
+- **Gebaut am späten Abend des 2026-11-17, nicht ausgespielt** (Konrads Liste vom Abend, Plan D37 bis D40):
+  - `QAPage` trägt `reviewedBy` und `lastReviewed`; neben „Frage“ steht an einer Beispielfrage „von Konrad Völkel“.
+  - Die Zitate stehen in einem `<aside>`, das Prüfdatum ist Text. Gemessen mit trafilatura am lokalen Bau: Die Frage steht bei 29
+    von 29 Seiten am Anfang des Auszugs (am Host vor diesem Stand 28 von 31), und der Vermerk nennt sein Datum. Die Ursache steht in
+    Abschnitt 10 des Berichts `research/2026-11-17-seo-audit/`.
+  - Eine Formel als MyST-Direktive (```` ```{math} ````) wird im Korpus-Schnitt, im Suchausschnitt und in der Anzeige eine Formel.
+    Kein Suchausschnitt trägt mehr „{math}“; der Korpus ist nicht neu gebaut, zwei Passagen wechseln erst dann ihre Kennung.
+  - `setLicence` in `lib/store.js` für die zwei Testfragen (Konrad: gemeinfrei). **Am Host nicht gesetzt**, das geht erst nach dem
+    Ausspielen.
+  - Der lokale Bau zeigt die 29 Beispielfragen wie am Server: `site/stand-holen.sh` hat den Stand am 17.11. um 21:50 geholt (nur
+    gelesen: 29 Antworten geprüft, 29 Kurztitel, zehn bearbeitet), `site/build.mjs --stand` baut daraus.
+  - Aus dem Threat Model, auf Konrads Entscheidungen vom selben Abend (Plan D41 bis D44): ein Geräte-Cookie, damit fremde
+    Fehlversuche ein bekanntes Gerät nicht von der Moderation aussperren; „Melden“ öffnet eine vorbereitete E-Mail; der Datenschutz
+    hat eigene Abschnitte „Widerspruchsrecht“ und „Beiträge melden“ und nennt das zweite Cookie. **Die geänderten Rechtstexte hat
+    Konrad nicht gelesen.** Verschoben oder hingenommen sind B1, B4, C5 und D1.
+  - Für die Veröffentlichung: Orte in `.env.local`, Betriebsnotizen aus Plan und Status, README, Lizenzen, Provenienz, Abschnitt
+    „Quelltext“ hinter einem Schalter (leer, also nicht zu sehen), Pre-Push-Hook (eingerichtet in diesem Checkout).
+  - Tests: `npm test` 300 von 300. Gegen den lokalen Bau aus dem Stand vom Server: `npm run smoke` 22 von 22 in Chromium, Firefox und WebKit, `npm run
+    smoke:mod` 26 von 26 in Chromium und Firefox; im Bild angesehen bei 375 px und am Desktop. **Nicht geprüft:** der Aufruf von
+    `gitleaks` im Hook (nicht installiert), der Hook bei einem echten Push, der Abschnitt „Quelltext“ auf einer gebauten Seite (nur
+    die Ersetzung an der Textdatei), ob ein Mailprogramm die vorbereitete E-Mail ganz übernimmt (geprüft ist nur der Link), das
+    Geräte-Cookie in WebKit, und nichts davon am Host.
 - Am Host hinter der Anmeldung angesehen, 2026-11-17 gegen 17 Uhr, in Konrads Browser und nur lesend: Alle 31 Kurztitel sind
   gespeichert (Konrad hat die 29 Vorschläge bestätigt, einen gekürzt und zwei selbst geschrieben), sie stehen in den Titeln der
   öffentlichen Seiten. `/eidl/mod/zahlen/`: 0 Anfragen in den letzten sieben Tagen, 13 im Monat für 1,33 $ von 15 $, keine Fehlerzeile,
@@ -88,7 +110,7 @@ _Stand 2026-11-17._
   Timeouts gleich bucht: 19 Szenarien gegen einen Attrappen-Server, ohne echten Aufruf; nur die Logzeile nennt jetzt die Fehlerklasse.
   **Ausgespielt am 2026-11-16** mit beiden Deploys, Commit `92b6560`: In `www/` änderten sich nur `transformers.min.js` und seine drei
   komprimierten Fassungen (am Host SHA-256 `8b5a3171…34decb`), in `app/` nur `package.json` und die beiden Pakete. Der Neustart von
-  `hainrich2-web` kam erst um 01:56:53, rund zweieinhalb Minuten nach den Dateien: Die Verbindung dafür wies `ufw limit` ab, und
+  `hainrich2-web` kam erst um 01:56:53, rund zweieinhalb Minuten nach den Dateien: Die Verbindung dafür wies die Ratenbegrenzung für SSH am Server ab, und
   `site/deploy-app.sh` endete mit Status 255; nachgeholt mit einer einzelnen Verbindung. Danach `hainrich2-web` aktiv, Smoke 19/19 gegen
   den Host, die API weist `GET` mit 405 ab, die Anmeldeseite der Moderation kommt. **Einen echten Aufruf mit SDK 1.8.0 gab es noch
   nicht:** Der erste Entwurf nach dem Ausspielen ist der erste, und das Journal des Workers habe ich nicht gelesen.
@@ -125,12 +147,12 @@ _Stand 2026-11-17._
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
-  außerhalb des Repos auf `xtraspace`, die Token-IDs im Repo.
+  außerhalb des Repos im Datenverzeichnis, die Token-IDs im Repo.
 
 - `lib/`, `tools/`, `test/`: Korpus aus dem Skript, hybride Suche, Antworten mit Citations, Richter,
   Kostenbuch mit Deckel, Review-Seite.
 - `site/`, `lib/site.js`, `lib/rank.js`, `smoke/`: die Lese-Site, lokal gebaut nach
-  `/media/konrad/xtraspace/hainrich2/site/`. 39 Seiten, Suche im Browser, Impressum und
+  `$HAINRICH2_DATEN/site/`. 39 Seiten, Suche im Browser, Impressum und
   Datenschutz. 216 Unit-Tests, 18 Smoke-Tests und 23 Browser-Tests von Moderation, Fragepfad und Abstimmen grün (`npm test`, `npm run smoke`, `npm run smoke:mod`). Sie zeigt vorerst die
   Opus-Antworten als Platzhalter, jede Seite trägt ein Vorschau-Banner.
 - Forum-Optik mit vier Unterforen (`lib/forum.js`): Startseite, `f/<unterforum>/` und Beiträge mit Autorenspalte, seit 2026-11-05
@@ -166,14 +188,14 @@ _Stand 2026-11-17._
   22 neue und 3 geänderte Passagen, vor allem die Formen-Verteilung in `autograd-berechnungsgraph` (+14) und die Lernkurve in
   `universelle-approximation` (+6). In `antworten.json` kommen s19 und ein weiteres Zitat bei s17 auf die Opus-Liste, sie hat jetzt 18 Antworten.
   Am Abend desselben Tages noch eine geänderte Passage (Tausendertrennung), die Liste bleibt bei 18.
-- Die Kontaktadresse `mail@hai.konradvoelkel.com` (von Konrad am 2026-11-17 selbst getestet, sie kommt an): MX für `hai`, Fastmail stellt sie als
-  `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
+- Die Kontaktadresse `mail@hai.konradvoelkel.com` (von Konrad am 2026-11-17 selbst getestet, sie kommt an), am 2026-11-04 mit einer Mail von außen bestätigt.
+  Wohin sie zugestellt wird, steht nicht in diesem Repo.
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
   `og:`- und `twitter:`-Tags, seit 2026-11-05 auf dem Server. Der Hai mit Toupet ist Konrads Arbeitshypothese.
 - `research/2026-11-05-skriptluecken/`: Übersicht, was die Antworten offenlassen, gegen den ganzen Korpus geprüft. Konrad hat sie am 2026-11-06
   abgearbeitet, der Stand steht im Nachtrag.
 - `seeds/fragen.json`: 30 Beispielfragen. Die 90 Antworten liegen in
-  `/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json`.
+  `$HAINRICH2_DATEN/work/phase1/antworten.json`.
 
 - Moderation seit 2026-11-05 auf dem Server, `https://hai.konradvoelkel.com/eidl/mod/`: Anmelden, Fragen und Antworten
   bearbeiten, prüfen, zurückziehen, Verlauf, blättern mit Weiter und Zurück oder den Cursortasten. Dienst `hainrich2-web`, `public.db` auf dem VPS ist die Quelle für alles
@@ -201,14 +223,15 @@ _Stand 2026-11-17._
 
 ## Was nicht existiert
 
-- Das Repo ist nicht bereit für die Veröffentlichung (geprüft am 2026-11-17 gegen Playbook §5 Punkt 10 und §3.6, am Stand `6ba0447`).
-  Vier Punkte stehen davor: Der Bericht `research/2026-11-11-threat-model/` beschreibt Schwächen, die offen sind (B1, B4, C2, C5, D1;
-  A5 prüft Konrad), und er steht in der Historie; A3, A4, D2 bis D4 sind seit dem Ausspielen am selben Tag zu. Die GitHub-App
-  `konrads-ci-runner` ist seit dem 17.11. abgewählt, dieser Punkt ist zu. Den Kurscode kann nur Konrad in der Historie
-  suchen; den Scan aus I7 gibt es nicht. Fünf Messskripte unter `research/2026-11-04-*` nennen `/home/konrad/Sciebo/…`. Dazu kleiner:
-  kein `gitleaks` auf dem Laptop (der letzte Lauf ist vom 10.11.), keine Kopfzeile zur Lizenz in den Quelldateien, kein Link auf den
-  Quelltext auf der Site, `THIRD_PARTY_PROVENANCE.md` ohne `onnxruntime-node` und `sharp`, und auf GitHub sind Secret Scanning, Push
-  Protection und private Sicherheitsmeldungen erst mit dem Umschalten einstellbar. Sauber: keine Geheimnisse in der Historie nach
+- Das Repo ist nicht bereit für die Veröffentlichung (geprüft am 2026-11-17 gegen Playbook §5 Punkt 10 und §3.6, am Stand `6ba0447`;
+  am Abend desselben Tages vorbereitet, Plan D40). Davor steht noch: Der Bericht `research/2026-11-11-threat-model/` beschreibt
+  Schwächen, die offen sind (B1, B4, C2, C5, D1; A5 prüft Konrad), und er steht in der Historie. Den Kurscode kann nur Konrad in
+  der Historie suchen; den Scan aus I7 gibt es nicht. `gitleaks` ist auf dem Laptop nicht installiert, der letzte Lauf ist vom 10.11.;
+  der Pre-Push-Hook ruft es auf, sobald es da ist. Die Historie behält, was der Stand nicht mehr nennt: lokale Pfade und einige
+  Betriebsnotizen. Auf GitHub sind Secret Scanning, Push Protection und private Sicherheitsmeldungen erst mit dem Umschalten
+  einstellbar. Erledigt am 17.11.: keine Pfade eines Rechners mehr im Stand (ein Test hält das), Betriebsnotizen aus Plan und
+  Status genommen, Lizenzen im README je Bestandteil, Provenienz um `onnxruntime-node`, `sharp` und libvips ergänzt, Abschnitt
+  „Quelltext“ für die Über-Seite hinter einem Schalter, Pre-Push-Hook. Sauber schon vorher: keine Geheimnisse in der Historie nach
   Mustersuche, keine Serveradresse, eine einzige Autorenadresse, keine Datei über 1 MB.
 
 - Stimmen lassen sich nicht prüfen und die Moderation kann sie nicht zurücksetzen. Wer die Browserdaten löscht, stimmt noch einmal; nur die Grenze je Adresse

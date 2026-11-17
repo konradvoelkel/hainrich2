@@ -12,9 +12,10 @@ import { fileURLToPath } from 'node:url';
 import { renderMarkdown } from '../lib/render.js';
 import { blindView, summarize } from '../lib/compare.js';
 import { quoteUrl } from '../lib/segment.js';
+import { ort } from '../lib/orte.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const answersFile = process.argv[2] ?? '/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json';
+const answersFile = process.argv[2] ?? ort('work', 'phase1', 'antworten.json');
 const port = +(process.argv[3] ?? 8770);
 const ratingsFile = path.join(root, 'seeds/bewertung.json');
 const katexCss = path.join(root, 'node_modules/katex/dist/katex.min.css');

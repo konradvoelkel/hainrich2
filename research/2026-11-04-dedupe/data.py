@@ -59,7 +59,7 @@ cross=[
 ("What is the chain rule used for in training?","Wofür braucht man die Kettenregel beim Training?"),
 ("What is overfitting?","Was ist Überanpassung?"),
 ]
-root='/home/konrad/Sciebo/hhu/eidl-26/eidl-skript'
+root=os.environ['EIDL_SKRIPT']  # das Repo des Skripts
 chunks=[]
 for f in sorted(glob.glob(root+'/part-*/*.md')):
     t=open(f,encoding='utf8').read()

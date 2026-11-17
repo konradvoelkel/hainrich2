@@ -270,3 +270,27 @@ Ladezeiten nach dem Umbau und alles hinter dem Kurscode.
 
 **Beim Nachsehen aufgefallen, älter als dieser Umbau:** Ein Suchausschnitt trägt „{math}“, eine Direktive aus dem Skript, die der Schnitt
 des Korpus stehen lässt.
+
+## 10. Nachtrag am späten 2026-11-17: warum s09, s11 und s15 fehlten
+
+Gebaut, nicht ausgespielt. Ein Subagent hat die Stufen von trafilatura 2.3.1 verfolgt, ich habe das Ergebnis am lokalen Bau
+nachgemessen (der zeigt seit diesem Abend die Beispielfragen so, wie sie am Server stehen).
+
+- **Ursache:** Die eigene Extraktion von trafilatura liefert auf allen 31 Seiten die Frage vorn. Danach vergleicht es die Länge
+  seines Auszugs mit dem Text der ganzen Seite (`core.py`, Stufe „recall“): unter 3000 Zeichen und unter einem Fünftel wechselt es
+  das Verfahren, und der Ersatz (jusText) verwirft die kurze Überschrift. Die zwei Maße sind verschieden gereinigt: Der Auszug
+  enthält nie ein `<figure>`, der Seitentext zählt sie mit, und die Zitate aus dem Skript sind `<figure>` und machen 57 bis 78 %
+  dieses Texts aus. Zahlen (Auszug / Seitentext / ein Fünftel): s09 2217 / 11637 / 2327, s11 1657 / 9296 / 1859, s15 1494 / 7478 /
+  1496. Bei s15 fehlten zwei Zeichen; die knappsten guten Seiten lagen nur gut 100 Zeichen darüber. Deshalb half am 17.11. jede
+  kleine Änderung bei s15 und keine bei den anderen.
+- **Umbau:** Die Zitate stehen in einem `<aside>` innerhalb von `section.zitate`; ein `<aside>` zählt in keinem der zwei Maße.
+  Überschrift und Lizenzzeile des Abschnitts bleiben außerhalb und damit im Auszug.
+- **Nebenbefund:** trafilatura streicht `<time>` samt Inhalt, im Auszug stand „Geprüft am von Konrad Völkel“. Das Prüfdatum ist jetzt
+  Text; maschinenlesbar steht es als `lastReviewed` im `QAPage` (Befund 9b, zusammen mit `reviewedBy`).
+- **Gemessen** am lokalen Bau mit `auszug.py`: Frage im Auszug 29 von 29, Auszug beginnt mit der Frage 29 von 29, Prüfvermerk 29 von
+  29 und mit Datum. Der Subagent kam mit derselben Änderung auf Kopien der 31 Seiten vom Host auf 31 von 31. „Anfang der Antwort“ 27
+  von 29 ist ein Fehler des Zählskripts: Steht unter den ersten vier Wörtern eine Formel, vergleicht es an ihr vorbei.
+- **Nicht geprüft:** andere Extraktoren und Suchmaschinen; die Schwellen gelten für diese Fassung von trafilatura; am Host gemessen
+  ist nichts davon.
+- **Befund 9c:** Neben „Frage“ steht an einer Beispielfrage „von Konrad Völkel“. Im Abzeichen der Kopfzeile brach die Zeile bei
+  375 px um (385 px Inhalt auf 307 px) und schob die Antwort eine Zeile tiefer.

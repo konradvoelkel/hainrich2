@@ -1,6 +1,6 @@
 # Darstellung (Visual), Stand 2026-11-16
 
-Bilder: /media/konrad/xtraspace/hainrich2/work/seo-audit-2026-11-16/bilder/visual/ (Namen `<seite>-<phone|tablet|desktop>-<viewport|voll>.png`). Messwerte: `messung.json` im selben Ordner. 28 Seitenaufrufe, ein Browser, nichts abgeschickt.
+Bilder: $HAINRICH2_DATEN/work/seo-audit-2026-11-16/bilder/visual/ (Namen `<seite>-<phone|tablet|desktop>-<viewport|voll>.png`). Messwerte: `messung.json` im selben Ordner. 28 Seitenaufrufe, ein Browser, nichts abgeschickt.
 
 ## Was gut ist
 - Kein Seitenüberlauf (scrollWidth = Viewportbreite) auf allen 8 Seiten bei 360, 768, 1366.

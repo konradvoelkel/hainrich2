@@ -232,4 +232,22 @@ Mensch gesehen. D3: `maxSize` begrenzt jede Länge in einer Formel auf 20 em, in
 einen Auftrag ohne gültige Kennung und beendet einen mit fehlendem oder zu langem Text als Fehler, beides ohne Anfrage; `lib/spool.js`
 legt unter keiner anderen Kennung eine Datei an.
 
-Offen bleiben A4 Stufe 2, A5 (Konrads Prüfung), B1, B4, C2, C5 und D1.
+Offen blieben danach A4 Stufe 2, A5, B1, B4, C2, C5 und D1.
+
+**Konrads Entscheidungen vom Abend des 2026-11-17 dazu (Plan D41 bis D44). Gebaut und getestet, noch nicht ausgespielt:**
+
+| Befund | Entscheidung | Was gebaut ist |
+|---|---|---|
+| C2 | Ein Gerät, das sich schon einmal richtig angemeldet hat, soll nicht ausgesperrt werden können. Mehr nicht jetzt. | Geräte-Cookie nach gelungener Anmeldung, 180 Tage, signiert mit einem Schlüssel aus dem Hash der Passphrase. Ein Gerät damit zählt gegen seine eigene Grenze (fünf in 15 Minuten) statt gegen die für alle. Tests: Nach 30 fremden Fehlversuchen kommt das bekannte Gerät mit der richtigen Passphrase hinein, ein fremdes und ein gefälschtes Cookie nicht; von 40 gleichzeitigen Fehlversuchen mit Cookie werden fünf geprüft, und keiner zählt gegen die Grenze für alle. |
+| A4, Stufe 2 | Kein eigener Schreibweg, nur eine vorformulierte E-Mail, wie im Schwesterprojekt. | „Melden“ ist ein `mailto:` mit Betreff, Adresse des Beitrags und einer Liste von Gründen. Kein Request, kein Skript. |
+| A5 | Umsetzen. | Eigener Abschnitt „Widerspruchsrecht“ im Datenschutz, Verweise aus jedem Abschnitt mit Art. 6 Abs. 1 lit. f und am Frageformular, Stolperdraht im Bau. |
+| B1 | Verschoben, frühestens Februar bis April 2027. | nichts |
+| B4 | Hingenommen; beobachten, dann Grenzen anpassen oder ein billigeres Modell. | nichts |
+| C5 | Hingenommen; `CPUQuota` an der Unit im Server-Repo. | an die Sitzung dort gemeldet |
+| D1 | Bleibt. | nichts |
+
+Was für C2 weiter gilt: Für ein Gerät **ohne** das Cookie ist die Grenze für alle ein gleitendes Fenster von 15 Minuten. 30 falsche
+Versuche sperren unbekannte Geräte so lange aus, bis der älteste aus dem Fenster fällt, und wer zwei Versuche in der Minute nachlegt,
+hält es geschlossen. Die Sperre dauert also nicht Sekunden und wächst nicht; sie trifft nur noch, wer sich von einem neuen Gerät
+anmelden will oder die Browserdaten gelöscht hat. Ein gestohlenes Geräte-Cookie gibt fünf Versuche je Viertelstunde an der Grenze
+für alle vorbei, keinen Zugang. Am Host ist nichts davon gelaufen.

@@ -23,6 +23,10 @@ Was nicht dazuzählt:
   so gewollt. Die Grenzen je Adresse und Token bremsen, sie verhindern keinen Missbrauch mit vielen
   Adressen.
 - Stimmen lassen sich nicht prüfen. Wer die Browserdaten löscht, stimmt noch einmal.
+- Die Anmeldung der Moderation hat eine Grenze für alle Versuche zusammen. Wer sie von vielen Adressen aus füllt, sperrt Geräte aus,
+  die sich dort noch nie angemeldet haben, solange er nachlegt. Bekannte Geräte trifft das nicht.
+- Wer den Kurscode hat, kann das Monatsbudget für Antworten des Bots aufbrauchen. Mehr als der Deckel wird es nicht; bis zum
+  Monatsende gibt es dann keine neuen Antworten.
 - Fachliche Fehler in Antworten des Bots: Die bitte über die Kontaktadresse melden, die Moderation
   korrigiert sie.
 - Fehler im Skript selbst gehören zum Skript, nicht hierher.

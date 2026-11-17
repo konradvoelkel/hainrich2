@@ -7,9 +7,10 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ort } from '../lib/orte.js';
 
 const PORT = Number(process.argv[2] ?? 8771);
-const ROOT = path.resolve(process.argv[3] ?? process.env.HAINRICH2_SITE ?? '/media/konrad/xtraspace/hainrich2/site');
+const ROOT = path.resolve(process.argv[3] ?? process.env.HAINRICH2_SITE ?? ort('site'));
 const { HAINRICH2_MOD: MOD, HAINRICH2_LIVE: LIVE } = process.env;
 const LIVE_PATHS = /^\/eidl\/(?:index\.html|f\/.*|sitemap\.xml|daten\/fragen\.json)?$/;
 /** wie im Caddy-Block für den ganzen Host; no-referrer ändert, was der Browser als Origin schickt */

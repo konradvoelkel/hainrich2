@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Vor jedem Push das, was die CI danach fährt (.github/workflows/tests.yml): Pakete wie in package-lock.json, dann `npm test`.
+# Rund vier Minuten je Zweig. test/hook.test.mjs hält diese Datei gegen den Workflow: Ein Schritt dort, der hier fehlt, macht
+# npm test rot (Playbook §5 Punkt 7).
+#
+# Geprüft wird der Commit, der gepusht wird, nicht die Arbeitskopie: ein eigener Worktree je Zweigspitze, node_modules daneben
+# verlinkt, also ohne Netz. Sonst wäre der Hook mit uncommitteten Änderungen grün und der gepushte Stand rot, und hier arbeiten oft
+# mehrere Sitzungen in einem Checkout (Playbook §3.7). Eine .env.local gibt es im Worktree nicht: Die Tests brauchen keine Daten.
+#
+# Ist gitleaks installiert, sucht es in den neuen Commits nach Schlüsseln. Ohne gitleaks sagt der Hook das und prüft nur die Tests.
+#
+#   Einrichten, einmal je Checkout:   git config core.hooksPath .githooks
+#   Überspringen:                     git push --no-verify
+set -euo pipefail
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+# Was Git einem Hook mitgibt, darf in den Worktree nicht hineinreichen.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+
+# Aufräumen auch dann, wenn ein Schritt scheitert und set -e den Hook beendet.
+tmp=$(mktemp -d)
+aufraeumen() {
+  for wt in "$tmp"/wt-*; do
+    [ -d "$wt" ] && git -C "$root" worktree remove --force "$wt" >/dev/null 2>&1
+  done
+  rm -rf "$tmp"
+  git -C "$root" worktree prune
+}
+trap aufraeumen EXIT
+
+pruefe() {
+  local sha=$1 wt="$tmp/wt-$1"
+  git worktree add --quiet --detach "$wt" "$sha"
+  ln -s "$root/node_modules" "$wt/node_modules"
+  cd "$wt"
+  echo "pre-push: ${sha:0:7}: Pakete wie in package-lock.json"
+  npm ls --all >/dev/null
+  echo "pre-push: ${sha:0:7}: Unit-Tests"
+  npm test >"$tmp/test-$sha.log" 2>&1 || { tail -n 60 "$tmp/test-$sha.log"; echo "pre-push: ${sha:0:7}: npm test ist rot, nichts gepusht" >&2; return 1; }
+  grep -E '^# (tests|pass|fail) ' "$tmp/test-$sha.log" | tr '\n' ' '; echo
+  cd "$root"
+}
+
+# Nur was der Server noch nicht hat. Bei einem neuen Zweig gibt es kein „bisher“, dann zählt alles, was kein Remote kennt.
+geheimnisse() {
+  local lsha=$1 rsha=$2 bereich
+  if ! command -v gitleaks >/dev/null; then
+    echo "pre-push: gitleaks ist nicht installiert, die Suche nach Schlüsseln entfällt"
+    return 0
+  fi
+  if [ "$rsha" = "$null" ]; then bereich="$lsha --not --remotes"; else bereich="$rsha..$lsha"; fi
+  echo "pre-push: ${lsha:0:7}: gitleaks über $bereich"
+  gitleaks git --no-banner --redact --log-opts="$bereich" "$root"
+}
+
+null=0000000000000000000000000000000000000000
+geprueft=0
+while read -r _lref lsha _rref rsha; do
+  [ "$lsha" = "$null" ] && continue   # Löschen eines Zweigs: nichts zu prüfen
+  geheimnisse "$lsha" "$rsha"
+  pruefe "$lsha"
+  geprueft=$((geprueft + 1))
+done
+echo "pre-push: ok, $geprueft Zweig(e) geprüft"

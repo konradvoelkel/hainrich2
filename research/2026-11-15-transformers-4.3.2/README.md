@@ -62,7 +62,7 @@ es einen Konsolenfehler oder eine Anfrage an einen fremden Host.
 ## 5. Nachmachen
 
 ```bash
-node research/2026-11-15-transformers-4.3.2/node-vektoren.mjs /media/konrad/xtraspace/hainrich2/work/korpus-aktuell <ausgabe>
+node research/2026-11-15-transformers-4.3.2/node-vektoren.mjs $HAINRICH2_DATEN/work/korpus-aktuell <ausgabe>
 ```
 
 ```bash

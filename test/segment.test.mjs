@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parsePages, parseBlocks, cleanDirective, pagePassages, quoteUrl } from '../lib/segment.js';
+import { mathFences, parsePages, parseBlocks, cleanDirective, pagePassages, quoteUrl } from '../lib/segment.js';
 
 test('quoteUrl hängt die ersten Wörter als Text-Fragment an den Anker', () => {
   const url = quoteUrl({ link: 'https://x.de/k/#a', text: 'Das *ist* ein [Satz](https://y) mit vielen weiteren schönen Wörtern am Ende' });
@@ -58,6 +58,17 @@ test('Übungen und Literatur fallen weg, samt Unterabschnitten', () => {
 
 test('Startseite und Organisatorisches liefern nichts', () => {
   assert.deepEqual(pagePassages({ url: 'https://x.de/readme/', slug: 'readme', body: '# R\n\nText\n' }), []);
+});
+
+test('eine Formel als Direktive mit Backticks wird eine Formel, auch eingerückt in einer Liste und mit Optionen', () => {
+  const liste = '3. Jede einfache Funktion ist approximierbar. Also:\n\n   ```{math}\n   :enumerated: false\n   \\{f\\} \\approx \\{g\\}.\n   ```\n\nDanach geht es weiter.\n';
+  assert.equal(mathFences(liste), '3. Jede einfache Funktion ist approximierbar. Also:\n\n   $$\n   \\{f\\} \\approx \\{g\\}.\n   $$\n\nDanach geht es weiter.\n');
+  assert.deepEqual(parseBlocks(liste).map(b => b.kind), ['text', 'math', 'text']);
+  assert.deepEqual(parseBlocks('```{math}\n:label: eins\na = b\n```\n').map(b => [b.kind, b.text]), [['math', '$$\na = b\n$$']]);
+  const [passage] = pagePassages(page(`# K\n\n## A\n\n${'x'.repeat(300)}\n\n${liste}`));
+  assert.match(passage.text, /Also:\n\n {3}\$\$\n {3}\\\{f\\\} \\approx/);
+  assert.doesNotMatch(passage.text, /\{math\}|enumerated|```/);
+  assert.equal(mathFences('```python\nx = 1\n```\n'), '```python\nx = 1\n```\n', 'Code bleibt Code');
 });
 
 test('eine Formel bleibt beim Satz davor, auch über der Zielgröße', () => {

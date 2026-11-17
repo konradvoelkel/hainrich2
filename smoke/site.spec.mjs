@@ -206,32 +206,40 @@ test('strukturierte Daten stehen in der Seite, und die strenge CSP stört sich n
   expect(seen.problems).toEqual([]);
 });
 
-test('jede Frageseite: QAPage, wo es eins gibt, nennt die Frage der Seite, zeigt auf vorhandene Beiträge und nennt jede Quelle einmal', async ({ page }) => {
+test('jede Frageseite: QAPage genau dort, wo jede Antwort geprüft ist; es nennt die Frage, die Prüfung, vorhandene Beiträge und jede Quelle einmal', async ({ page }) => {
   const fragen = await page.request.get('/eidl/daten/fragen.json').then(r => r.json());
   expect(fragen.length).toBeGreaterThan(20);
-  let mitMarkup = 0;
   for (const { id } of fragen) {
     const html = await page.request.get(`/eidl/f/${id}/`).then(r => r.text());
     const blocks = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(m => JSON.parse(m[1]));
     expect(blocks[0]['@type'], id).toBe('BreadcrumbList');
-    /** die Frage als Erstes in ihrer Karte, sonst nimmt ein Textextraktor sie nicht mit (am Host erst nach dem Ausspielen dieses Stands) */
-    if (!process.env.SMOKE_URL) expect(html, id).toMatch(/<article class="beitrag frage" id="b1" aria-label="Frage"><h1>/);
-    const qa = blocks.find(b => b['@graph']?.[0]['@type'] === 'QAPage')?.['@graph'][0].mainEntity;
-    if (!qa) continue;
-    mitMarkup += 1;
+    /** die Frage als Erstes in ihrer Karte, sonst nimmt ein Textextraktor sie nicht mit */
+    expect(html, id).toMatch(/<article class="beitrag frage" id="b1" aria-label="Frage"><h1>/);
+    const karten = (html.match(/<article class="beitrag antwort"/g) ?? []).length;
+    const geprueft = karten > 0 && (html.match(/<span class="badge gut">/g) ?? []).length === karten;
+    const seite = blocks.find(b => b['@graph']?.[0]['@type'] === 'QAPage')?.['@graph'][0];
+    /** Plan D32 und I9: Markup nur, wo jede Antwort geprüft ist, und dort immer. Mit --modell gebaut ist lokal nichts geprüft */
+    expect(!!seite, id).toBe(geprueft);
+    if (!seite) continue;
+    /**
+     * Der Prüfvermerk in maschinenlesbarer Form: dieselbe Person, und kein älterer Tag als der jüngste Vermerk der Seite. Jünger darf er
+     * sein, die eigene Antwort der Moderation trägt ihr Datum in der Kopfzeile und keinen Vermerk
+     */
+    const tage = [...html.matchAll(/<p class="pruefung">Geprüft am (\d\d)\.(\d\d)\.(\d{4}) von/g)].map(([, tag, monat, jahr]) => `${jahr}-${monat}-${tag}`).sort();
+    expect(seite.reviewedBy, id).toEqual({ '@id': blocks.at(-1)['@graph'].at(-1)['@id'] });
+    if (tage.length) expect(seite.lastReviewed >= tage.at(-1), `${id}: ${seite.lastReviewed} gegen ${tage.at(-1)}`).toBe(true);
+    const qa = seite.mainEntity;
     const antworten = [qa.acceptedAnswer, ...(qa.suggestedAnswer ?? [])];
-    expect(qa.answerCount, id).toBe((html.match(/<article class="beitrag antwort"/g) ?? []).length);
+    expect(qa.answerCount, id).toBe(karten);
     expect(antworten.length, id).toBe(qa.answerCount);
     for (const antwort of antworten) {
       expect(html, id).toContain(`id="${new URL(antwort.url).hash.slice(1)}"`);
       const quellen = (antwort.citation ?? []).map(c => c.url);
-      if (!process.env.SMOKE_URL) expect(new Set(quellen).size, id).toBe(quellen.length);
+      expect(new Set(quellen).size, id).toBe(quellen.length);
       for (const url of quellen) expect(url, id).toMatch(/^https:\/\/[^:]*$/);
     }
     expect(html.includes('rel="license'), id).toBe(false);
   }
-  /** im lokalen Bau ist nichts geprüft, also gibt es dort kein QAPage; am Host tragen es alle geprüften Seiten */
-  if (process.env.SMOKE_URL) expect(mitMarkup).toBeGreaterThan(0);
 });
 
 test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2“', async ({ page }) => {
@@ -242,12 +250,20 @@ test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2�
   }
 });
 
-test('an Frage und Antwort führt „Melden“ zum Impressum, und der Fuß nennt den Betreiber', async ({ page }) => {
+test('an Frage und Antwort öffnet „Melden“ eine vorbereitete E-Mail mit der Adresse des Beitrags, und der Fuß nennt den Betreiber', async ({ page }) => {
   await page.goto('/eidl/f/s01/');
   await expect(page.locator('.fuss p')).toContainText('Ein privates Angebot von Konrad Völkel');
   await expect(page.locator('.fuss a:has-text("Moderation")')).toHaveAttribute('href', '../../mod/');
   await expect(page.locator('.beitrag .melden')).toHaveCount(await page.locator('.beitrag').count());
-  await page.locator('.frage .melden').click();
+  /** nicht geklickt: Ein Klick öffnete das Mailprogramm des Rechners. Geprüft wird, wohin der Link zeigt (Plan D42) */
+  const [frage, antwort] = (await page.locator('.beitrag .melden').evaluateAll(links => links.map(a => a.href))).map(href => new URL(href));
+  expect(frage.protocol).toBe('mailto:');
+  expect(frage.pathname).toMatch(/^mail@[\w.-]+$/);
+  expect(frage.searchParams.get('subject')).toBe('hAInrich2: Meldung zu f/s01/#b1');
+  expect(frage.searchParams.get('body')).toContain('/eidl/f/s01/#b1');
+  expect(antwort.searchParams.get('body')).toContain('/eidl/f/s01/#b2');
+  /** der Weg ohne Mailprogramm bleibt: „Inhalt melden“ im Fuß führt zum Impressum */
+  await page.locator('.fuss a:has-text("Inhalt melden")').click();
   await expect(page).toHaveURL(/\/eidl\/impressum\/#inhalte-melden$/);
   await expect(page.locator('#inhalte-melden')).toBeVisible();
 });

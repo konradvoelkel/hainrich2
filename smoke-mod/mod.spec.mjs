@@ -27,8 +27,15 @@ test('Anmelden setzt das Cookie, Abmelden beendet die Sitzung', async ({ page, c
   await signIn(page);
   const cookie = (await context.cookies()).find(c => c.name === '__Secure-sitzung');
   expect([cookie.httpOnly, cookie.secure, cookie.sameSite, cookie.path]).toEqual([true, true, 'Strict', '/eidl/']);
+  /** das Geräte-Cookie (Plan D41): nur unter mod/, ein halbes Jahr, und es überlebt das Abmelden, ohne anzumelden */
+  const geraet = (await context.cookies()).find(c => c.name === '__Secure-geraet');
+  expect([geraet.httpOnly, geraet.secure, geraet.sameSite, geraet.path]).toEqual([true, true, 'Strict', '/eidl/mod/']);
+  const tage = (geraet.expires - Date.now() / 1000) / 86400;
+  expect(tage > 179 && tage <= 180, `${tage} Tage`).toBe(true);
+  expect((await context.cookies('http://localhost/eidl/f/s01/')).map(c => c.name)).not.toContain('__Secure-geraet');
   await page.click('form[action*="abmelden"] button');
   await expect(page.locator('#passphrase')).toBeVisible();
+  expect((await context.cookies()).map(c => c.name)).toEqual(['__Secure-geraet']);
   await page.goto('/eidl/mod/f/s01/');
   await expect(page.locator('#passphrase')).toBeVisible();
   expect(problems).toEqual([]);

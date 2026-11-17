@@ -10,7 +10,7 @@ Dieses Angebot ist privat und steht in keiner Verbindung zur Heinrich-Heine-Univ
 
 ## Inhalte melden
 
-Rechtswidrige Inhalte, falsche Antworten und Löschwünsche melden Sie bitte per E-Mail an die oben genannte Adresse. Nennen Sie dabei die Adresse der Seite und den Grund.
+Rechtswidrige Inhalte, falsche Antworten und Löschwünsche melden Sie bitte per E-Mail an die oben genannte Adresse. Nennen Sie dabei die Adresse der Seite und den Grund. Der Link „Melden“ an jedem Beitrag bereitet diese E-Mail vor.
 
 ## Antworten des Bots
 

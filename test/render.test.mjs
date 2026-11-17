@@ -67,3 +67,9 @@ test('D3: Eine Formel kann keine Fläche über die Seite legen', () => {
   }
   assert.match(styles(renderMarkdown('$\\rule{4000em}{4000em}$')), /20em/);
 });
+
+test('eine Formel als MyST-Direktive in einem Zitat wird gesetzt und steht nicht als Code da', () => {
+  const html = renderMarkdown('3. Also:\n\n   ```{math}\n   :enumerated: false\n   \\{f\\} \\approx \\{g\\}.\n   ```\n');
+  assert.match(html, /katex-display/);
+  assert.doesNotMatch(html, /\{math\}|enumerated|<pre>/);
+});

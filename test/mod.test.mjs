@@ -6,10 +6,11 @@ import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { DatabaseSync } from 'node:sqlite';
-import { hashPassphrase } from '../lib/auth.js';
+import { checkDevice, DEVICE_SECONDS, hashPassphrase, issueDevice } from '../lib/auth.js';
 import { createHandler, MOD_CSP } from '../lib/mod.js';
 import { publishAll } from '../lib/publish.js';
 import { openStore } from '../lib/store.js';
+import { questionPage } from '../lib/site.js';
 
 const PASSPHRASE = 'nur-fuer-den-test';
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: true, ladegroesse: 'rund 1 MB' };
@@ -32,7 +33,7 @@ async function setup({ passages = null } = {}) {
   const server = http.createServer(createHandler({ store, live, passages }));
   await new Promise(done => server.listen(0, '127.0.0.1', done));
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const form = (url, fields, { cookie, from = origin, fetchSite } = {}) => fetch(`${origin}${url}`, {
+  const form = (url, fields, { cookie, from = origin, fetchSite, adresse } = {}) => fetch(`${origin}${url}`, {
     method: 'POST',
     redirect: 'manual',
     body: new URLSearchParams(fields),
@@ -41,6 +42,8 @@ async function setup({ passages = null } = {}) {
       ...(from ? { Origin: from } : {}),
       ...(fetchSite ? { 'Sec-Fetch-Site': fetchSite } : {}),
       ...(cookie ? { Cookie: cookie } : {}),
+      /** wie hinter Caddy: Die Adresse des Besuchers steht als Letztes in X-Forwarded-For */
+      ...(adresse ? { 'X-Forwarded-For': adresse } : {}),
     },
   });
   const get = (url, cookie) => fetch(`${origin}${url}`, { redirect: 'manual', headers: cookie ? { Cookie: cookie } : {} });
@@ -115,6 +118,64 @@ test('richtige Anmeldungen verbrauchen nichts, auch nicht von der Grenze für al
   const c = await setup();
   t.after(c.close);
   for (let i = 0; i < 31; i++) assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE })).status, 303);
+});
+
+/** 30 Fehlversuche von sechs fremden Adressen: Danach ist die Grenze für alle erreicht */
+const aussperren = async c => {
+  for (let i = 0; i < 30; i++) assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: 'falsch' }, { adresse: `203.0.113.${Math.floor(i / 5) + 1}` })).status, 401);
+};
+const geraetOf = res => res.headers.getSetCookie().find(c => c.startsWith('__Secure-geraet=')).split(';')[0];
+
+test('D41: Nach einer Anmeldung bekommt das Gerät ein Cookie für ein halbes Jahr, nur für die Moderation; die Sitzung bleibt das erste', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const res = await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE });
+  const [sitzung, geraet] = res.headers.getSetCookie();
+  assert.match(sitzung, /^__Secure-sitzung=[^;]+; Path=\/eidl\/; HttpOnly; Secure; SameSite=Strict; Max-Age=43200$/);
+  assert.match(geraet, /^__Secure-geraet=[\w.-]+; Path=\/eidl\/mod\/; HttpOnly; Secure; SameSite=Strict; Max-Age=15552000$/);
+  assert.equal((await c.get('/eidl/mod/', geraet.split(';')[0])).status, 200);
+  assert.match(await (await c.get('/eidl/mod/', geraet.split(';')[0])).text(), /<h1>Anmelden<\/h1>/, 'das Geräte-Cookie meldet niemanden an');
+});
+
+test('D41: Sind die Versuche für alle verbraucht, kommt ein bekanntes Gerät mit der richtigen Passphrase hinein, ein fremdes nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const geraet = geraetOf(await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE }));
+  await aussperren(c);
+  assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE }, { adresse: '198.51.100.7' })).status, 429, 'ohne Cookie ausgesperrt, auch mit der richtigen Passphrase');
+  const gefaelscht = geraet.replace(/.$/, last => (last === 'A' ? 'B' : 'A'));
+  assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE }, { adresse: '198.51.100.8', cookie: gefaelscht })).status, 429, 'ein gefälschtes Cookie zählt wie keines');
+  assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE }, { adresse: '198.51.100.9', cookie: geraet })).status, 303);
+});
+
+test('D41: Gleichzeitige Fehlversuche mit Geräte-Cookie: fünf werden geprüft, und keiner zählt gegen die Grenze für alle', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const geraet = geraetOf(await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE }));
+  /** jede Anfrage von einer anderen Adresse: Es bremst nur die Grenze des Geräts */
+  const results = await Promise.all(Array.from({ length: 40 }, (_, i) => c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: `falsch-${i}` }, { adresse: `192.0.2.${i + 1}`, cookie: geraet })));
+  assert.equal(results.filter(r => r.status === 401).length, 5);
+  assert.equal(results.filter(r => r.status === 429).length, 35);
+  assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: PASSPHRASE }, { adresse: '198.51.100.9', cookie: geraet })).status, 429, 'auch das Gerät hat eine Grenze: Ein gestohlenes Cookie ist kein Freibrief');
+  /** die Grenze für alle ist unberührt: 30 Fremde können noch scheitern, erst der 31. wird abgewiesen */
+  await aussperren(c);
+  assert.equal((await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: 'falsch' }, { adresse: '198.51.100.10' })).status, 429);
+});
+
+test('D41: Das Geräte-Cookie gilt für seine Passphrase und seine Frist, und nur unverändert', async () => {
+  const jetzt = Date.UTC(2026, 10, 17);
+  const hashOf = name => ({ konrad: 'hash-eins' })[name];
+  const cookie = issueDevice('konrad', 'hash-eins', jetzt);
+  assert.match(checkDevice(cookie, hashOf, jetzt), /^[\w-]{16}$/);
+  assert.equal(checkDevice(cookie, hashOf, jetzt + DEVICE_SECONDS * 1000 - 1000), checkDevice(cookie, hashOf, jetzt), 'bis zum letzten Tag dieselbe Kennung');
+  assert.equal(checkDevice(cookie, hashOf, jetzt + DEVICE_SECONDS * 1000), null, 'abgelaufen');
+  assert.equal(checkDevice(cookie, () => 'hash-zwei', jetzt), null, 'eine neue Passphrase macht alle alten Cookies ungültig');
+  assert.equal(checkDevice(cookie, () => undefined, jetzt), null, 'das Konto gibt es nicht mehr');
+  const [name, id, until, signatur] = cookie.split('.');
+  assert.equal(checkDevice([name, id, +until + 1, signatur].join('.'), hashOf, jetzt), null, 'die Frist lässt sich nicht verlängern');
+  assert.equal(checkDevice([Buffer.from('anna').toString('base64url'), id, until, signatur].join('.'), () => 'hash-eins', jetzt), null, 'und der Name nicht tauschen');
+  for (const unsinn of [undefined, '', 'a.b', `${cookie}.x`, 'a.b.c.d']) assert.equal(checkDevice(unsinn, hashOf, jetzt), null);
+  assert.notEqual(issueDevice('konrad', 'hash-eins', jetzt), cookie, 'jedes Gerät bekommt seine eigene Kennung');
 });
 
 test('POST von fremder Seite oder ohne Origin wird abgewiesen', async t => {
@@ -427,7 +488,7 @@ test('D29: Mit der Prüfung bekommt die Antwort ihr Datum, zurückgesetzt verlie
   assert.equal(c.store.question('s01').antworten[0].geprueftAm, null);
   await c.form('/eidl/mod/f/s01/', { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'pruefen' }, { cookie });
   assert.equal(c.store.question('s01').antworten[0].geprueftAm, today);
-  assert.match(c.read('f/s01/index.html'), new RegExp(`Geprüft am <time datetime="${today}">[0-9.]+</time> von <a href="../../ueber/#wer-prüft">Konrad Völkel</a>, Autor des Skripts`));
+  assert.match(c.read('f/s01/index.html'), new RegExp(`Geprüft am ${today.split('-').reverse().join('\\.')} von <a href="../../ueber/#wer-prüft">Konrad Völkel</a>, Autor des Skripts`));
   await c.form('/eidl/mod/f/s01/', { aktion: 'zuruecksetzen' }, { cookie });
   assert.equal(c.store.question('s01').antworten[0].geprueftAm, null);
   assert.doesNotMatch(c.read('f/s01/index.html'), /class="pruefung"/);
@@ -477,6 +538,25 @@ test('D30: Eine Frage von außen ohne Erklärung bekommt bei der Migration keine
   const wieder = openStore(file);
   assert.deepEqual(wieder.questions().map(q => [q.id, q.lizenz]), [['s01', 'CC0-1.0'], ['abc', null]]);
   wieder.close();
+  fs.rmSync(dir, { recursive: true });
+});
+
+test('D30: Die Konsole erklärt eine Frage von außen nachträglich für gemeinfrei, mit Revision; an Beispielfragen und fremden Lizenzen scheitert sie', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-'));
+  const store = openStore(path.join(dir, 'public.db'));
+  store.importQuestions([{ id: 's01', text: 'Eins?', kapitel: 'Tensoren', herkunft: 'beispiel', tag: '2026-11-04', antworten: [] }], [[1, 0]], { base: '/eidl/' });
+  store.addQuestion({ id: 'abc', text: 'Von außen?', kapitel: 'Tensoren', tag: '2026-11-06' });
+  assert.equal(store.setLicence('abc', 'CC0-1.0', 'konsole'), true);
+  assert.equal(store.question('abc').lizenz, 'CC0-1.0');
+  assert.equal(store.setLicence('abc', 'CC0-1.0', 'konsole'), false, 'zweimal dasselbe ändert nichts');
+  assert.deepEqual(store.revisions('abc').map(r => [r.feld, r.vorher, r.nachher, r.rolle]), [['lizenz', null, 'CC0-1.0', 'konsole']]);
+  assert.match(questionPage(store.question('abc'), { ...store.site(), origin: 'https://example.test', skript: 'https://skript.test/' }), /Diese Frage ist gemeinfrei/);
+  assert.throws(() => store.setLicence('abc', 'MIT', 'konsole'), /kennt das Forum nicht/);
+  assert.throws(() => store.setLicence('s01', null, 'konsole'), /Beispielfragen/);
+  assert.throws(() => store.setLicence('fehlt', 'CC0-1.0', 'konsole'), /gibt es nicht/);
+  assert.equal(store.setLicence('abc', null, 'konsole'), true, 'und nimmt es zurück');
+  assert.equal(store.question('abc').lizenz, null);
+  store.close();
   fs.rmSync(dir, { recursive: true });
 });
 

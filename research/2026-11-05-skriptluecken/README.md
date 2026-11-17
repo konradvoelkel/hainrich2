@@ -79,7 +79,7 @@ keine Grenzwertrechnung), s26 (Gleichstand zweier Abstände), s27 (Wahl des LLM,
 Nach einem Umbau des Skripts oder neuen Antworten:
 
 ```bash
-node research/2026-11-05-skriptluecken/pruefen.mjs /media/konrad/xtraspace/hainrich2/work/phase1
+node research/2026-11-05-skriptluecken/pruefen.mjs $HAINRICH2_DATEN/work/phase1
 ```
 
 Die Kandidaten in `kandidaten.json` sind von Hand gesetzt, das Einstufen ist Lesearbeit. Der automatische Lückenbericht aus Plan

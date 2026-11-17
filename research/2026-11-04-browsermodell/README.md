@@ -64,7 +64,7 @@ Der schlechteste Fall ist „Teacher-Modell“: `Teacher` steht nicht im Skript 
 den Vorrang der Skript-Tokens lag der Wert für Passagen bei 40,1 %, die Kennzahlen blieben trotzdem im
 Rauschen. 21.000 Tokens brachten keinen messbaren Gewinn und liegen über 30 MB.
 
-Dateien, nicht im Repo: `/media/konrad/xtraspace/hainrich2/models/trim/e5s-16384/`
+Dateien, nicht im Repo: `$HAINRICH2_DATEN/models/trim/e5s-16384/`
 
 ```
 f37dfa6645b390114197d006274c4f330a71b12c973f55194f64a301aaef20d4  onnx/model_quantized.onnx (28.585.433 Byte, gzip 21.027.577)
@@ -139,7 +139,7 @@ die Passage.
 
 ## Ausführen
 
-Arbeitsverzeichnis `/media/konrad/xtraspace/hainrich2/work`, Modelle unter `../models`. Reihenfolge:
+Arbeitsverzeichnis `$HAINRICH2_DATEN/work`, Modelle unter `../models`. Reihenfolge:
 `data.py` aus der ersten Messung, `extend.py set.json set2.json`, `embed.mjs` je Modell, `analyze2.py`,
 `cand2.py`, `trim.py`, `parity.py`, dann aus `hainrich/tools` heraus `latency.mjs` und `dump.mjs` mit
 `mixed.py`.

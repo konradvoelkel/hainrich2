@@ -2,7 +2,8 @@
 // deshalb laufen Thread-Messungen ungedrosselt.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
 import { createRequire } from 'node:module'; import { fileURLToPath } from 'node:url';
-const H = '/home/konrad/Sciebo/hhu/hainrich', W = '/media/konrad/xtraspace/hainrich2/work', M = '/media/konrad/xtraspace/hainrich2/models';
+/** HAINRICH1: das Repo des Vorgängers, HAINRICH2_DATEN: das Datenverzeichnis (.env.example) */
+const H = process.env.HAINRICH1, W = `${process.env.HAINRICH2_DATEN}/work`, M = `${process.env.HAINRICH2_DATEN}/models`;
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { chromium } = createRequire(H + '/tools/package.json')('@playwright/test');
 const type = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.wasm': 'application/wasm', '.json': 'application/json' };

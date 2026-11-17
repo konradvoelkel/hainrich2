@@ -31,3 +31,7 @@ Im Grunde ist das eher ein gemeinsames FAQ-Wiki, in dem es vielleicht nebensäch
 ## Ein Prototyp
 
 hAInrich2 ist ein Prototyp. Ob und wie die Idee weiterverfolgt wird, ist offen, und das Forum kann sich ändern oder wieder verschwinden. Es ist ein privates Angebot von Konrad Völkel, nicht der Heinrich-Heine-Universität.
+
+## Quelltext
+
+hAInrich2 ist freie Software unter der GNU Affero General Public License, Version 3 oder später. Der Quelltext dieser Website, also auch der des Bots und der Moderation, liegt unter [__QUELLTEXT_KURZ__](__QUELLTEXT__). Fragen, Antworten und das Skript haben eigene Lizenzen, sie stehen im [Impressum](../impressum/).

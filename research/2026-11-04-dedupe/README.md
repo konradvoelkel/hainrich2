@@ -62,7 +62,7 @@ Die Client-Kandidaten aus dem Plan sind hier nicht gemessen.
 Aus diesem Verzeichnis, die Pfade zu Skript und hAInrich stehen fest in den Skripten:
 
 ```bash
-/media/konrad/xtraspace/uv/venvs/eidl-skript/bin/python data.py
+"$EIDL_VENV/bin/python" data.py
 ```
 
 ```bash
@@ -70,11 +70,11 @@ node minilm.mjs
 ```
 
 ```bash
-/media/konrad/xtraspace/uv/venvs/eidl-skript/bin/python e5.py
+"$EIDL_VENV/bin/python" e5.py
 ```
 
 ```bash
-/media/konrad/xtraspace/uv/venvs/eidl-skript/bin/python analyze.py
+"$EIDL_VENV/bin/python" analyze.py
 ```
 
 `cand.py` rechnet die Kandidatensuche. `judge.py <modell>` und `answer.py <modell>…` brauchen einen

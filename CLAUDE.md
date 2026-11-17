@@ -31,12 +31,19 @@ Ob sich das veröffentlichte Skript seit dem Korpus geändert hat und welche Ant
 node tools/skriptstand.mjs
 ```
 
-Die Site bauen, dann gegen den fertigen Baum testen. `--modell` zeigt vorerst nur Platzhalter, bis der
-Blindvergleich entschieden ist:
+Den Stand der Beispielfragen vom Server holen (liest nur), die Site daraus bauen, dann gegen den fertigen Baum testen. Was ausgespielt
+wird, trägt beide Schalter `--stimmen --fragen`:
 
 ```bash
-node site/build.mjs --modell claude-opus-5-5
+site/stand-holen.sh
 ```
+
+```bash
+( . ./.env.local; node site/build.mjs --stand "$HAINRICH2_DATEN/work/stand-vom-host.json" --stimmen --fragen )
+```
+
+Ohne `--stand` nimmt `--modell <id>` die Antworten aus Phase 1, wie das Modell sie schrieb, alle als ungeprüft: Die Prüfung steht nur
+in `public.db` auf dem Server.
 
 ```bash
 npm run smoke
@@ -62,7 +69,7 @@ DRY_RUN=1 site/deploy-app.sh
 Echte API-Läufe brauchen den Key in einer Subshell und laufen durch `lib/budget.js`:
 
 ```bash
-( set -a; . ~/.config/hainrich2/anthropic.env; set +a; node tools/try-answers.mjs <arbeitsverzeichnis> claude-opus-5-5 -- "Frage" )
+( . ./.env.local; set -a; . "$ANTHROPIC_ENV"; set +a; node tools/try-answers.mjs <arbeitsverzeichnis> claude-opus-5-5 -- "Frage" )
 ```
 
 Den Hash zum Kurscode für den Vault macht Konrad selbst, die Eingabe ist verdeckt:
@@ -72,15 +79,15 @@ node tools/kurscode-hash.mjs
 ```
 
 Die Antworten aus Phase 1 und der Korpus, aus dem sie zitieren, liegen eingefroren unter
-`/media/konrad/xtraspace/hainrich2/work/phase1/`. Der Korpus, der live ist, liegt hinter dem Verweis `work/korpus-aktuell` (Plan D25).
+`$HAINRICH2_DATEN/work/phase1/`. Der Korpus, der live ist, liegt hinter dem Verweis `work/korpus-aktuell` (Plan D25).
 Ein neues Skript zieht so nach: Korpus in ein eigenes Verzeichnis bauen, prüfen, den Verweis umstellen, die Site bauen, beides ausspielen.
 
 ```bash
-node tools/build-corpus.mjs /media/konrad/xtraspace/hainrich2/work/korpus-<datum>
+( . ./.env.local; node tools/build-corpus.mjs "$HAINRICH2_DATEN/work/korpus-<datum>" )
 ```
 
 ```bash
-ln -sfn korpus-<datum> /media/konrad/xtraspace/hainrich2/work/korpus-aktuell
+( . ./.env.local; ln -sfn korpus-<datum> "$HAINRICH2_DATEN/work/korpus-aktuell" )
 ```
 
 ## Was beißt
@@ -106,9 +113,11 @@ ln -sfn korpus-<datum> /media/konrad/xtraspace/hainrich2/work/korpus-aktuell
 10. **Die Rechtstexte zum Fragepfad liegen getrennt.** `site/texte/datenschutz.md` ist die freigegebene Fassung, `--fragen` tauscht einen
     Abschnitt gegen `datenschutz-fragen.md`. Wer den Fragepfad ändert, prüft beide; ein neuer Zustimmungstext erhöht
     `ZUSTIMMUNG.version` in `lib/fragen.js`.
-11. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen auf
-   `/media/konrad/xtraspace/hainrich2/`, nicht im Repo.
-12. **`phase1` wird nie getauscht.** `site/build.mjs` prüft die Zitate in `antworten.json` gegen den Korpus daneben (I4) und bricht
-   sonst ab. Die Suche im Browser (`--korpus`), `site/deploy-app.sh` und `tools/skriptstand.mjs` nehmen `work/korpus-aktuell`.
+11. **Große Daten bleiben draußen.** Modelle, Arbeitsdaten und die gebaute Site liegen unter `$HAINRICH2_DATEN`, nicht im Repo. Wo
+   das auf diesem Rechner ist, steht in der gitignorten `.env.local` (Vorlage `.env.example`), ebenso der Ort der Key-Datei;
+   `lib/orte.js` und die Skripte unter `site/` lesen sie. Kein Pfad dieses Rechners gehört in eine versionierte Datei.
+12. **`phase1` wird nie getauscht.** `site/build.mjs --modell` prüft die Zitate in `antworten.json` gegen den Korpus daneben (I4) und
+   bricht sonst ab; mit `--stand` kommen die Antworten vom Server, und nur die der Beispielfragen (was im Docroot liegt, überlebt ein
+   Löschen in der Moderation). Die Suche im Browser (`--korpus`), `site/deploy-app.sh` und `tools/skriptstand.mjs` nehmen `work/korpus-aktuell`.
 13. **Zwischen Prüfen und Zählen einer Bremse steht kein `await`, und kein API-Aufruf geht hinaus, bevor er im Kostenbuch steht.** Sonst
     kommen gleichzeitige Versuche alle durch, und ein Abbruch kostet Geld, das niemand zählt (Plan D26). Zu jeder neuen Bremse gehört ein Test mit `Promise.all`.

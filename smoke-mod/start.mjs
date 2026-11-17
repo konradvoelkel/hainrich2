@@ -20,8 +20,9 @@ import { openSpool } from '../lib/spool.js';
 import { createVoting } from '../lib/stimmen.js';
 import { openStore } from '../lib/store.js';
 import { KURSCODE, MOD_PORT, PASSPHRASE, PORT } from './konstanten.mjs';
+import { ort } from '../lib/orte.js';
 
-const built = process.env.HAINRICH2_SITE ?? '/media/konrad/xtraspace/hainrich2/site';
+const built = process.env.HAINRICH2_SITE ?? ort('site');
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-mod-'));
 const live = path.join(dir, 'live');
 process.on('exit', () => fs.rmSync(dir, { recursive: true, force: true }));

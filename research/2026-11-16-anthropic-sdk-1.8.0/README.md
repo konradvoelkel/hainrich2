@@ -107,7 +107,7 @@ Firefox und WebKit habe ich nicht wiederholt: Das SDK steht weder in der gebaute
 Einmal mit der alten und einmal mit der neuen Fassung in `node_modules`, in getrennte Verzeichnisse:
 
 ```bash
-unshare -rn sh -c 'ip link set lo up && node research/2026-11-16-anthropic-sdk-1.8.0/attrappe.mjs /media/konrad/xtraspace/hainrich2/work/korpus-aktuell <ausgabe>'
+unshare -rn sh -c 'ip link set lo up && node research/2026-11-16-anthropic-sdk-1.8.0/attrappe.mjs $HAINRICH2_DATEN/work/korpus-aktuell <ausgabe>'
 ```
 
 ```bash

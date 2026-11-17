@@ -12,9 +12,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pagePassages, parsePages } from '../lib/segment.js';
 import { changedPassages, SKRIPT_SITE, staleAnswers } from '../lib/skriptstand.js';
+import { ort } from '../lib/orte.js';
 
-const dir = process.argv[2] ?? '/media/konrad/xtraspace/hainrich2/work/korpus-aktuell';
-const answersFile = process.argv[3] ?? '/media/konrad/xtraspace/hainrich2/work/phase1/antworten.json';
+const dir = process.argv[2] ?? ort('work', 'korpus-aktuell');
+const answersFile = process.argv[3] ?? ort('work', 'phase1', 'antworten.json');
 const corpus = JSON.parse(fs.readFileSync(path.join(dir, 'corpus.json'), 'utf8'));
 
 let response;

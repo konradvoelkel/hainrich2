@@ -17,12 +17,16 @@ wasm/
 test-results/
 playwright-report/
 
+# where this machine keeps models, working data and the built site (lib/orte.js); .env.local is covered below
+.daten/
+
 # runtime data and secrets
 *.db
 *.db-wal
 *.db-shm
 .env
 .env.*
+!.env.example
 
 # derived measurement data; the scripts regenerate it
 research/**/set.json

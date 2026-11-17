@@ -1,10 +1,15 @@
 /**
- * Baut die öffentliche Site: node site/build.mjs --modell <id> [--release] [--stimmen] [--fragen] [--ziel <verzeichnis>].
+ * Baut die öffentliche Site: node site/build.mjs (--stand <datei> | --modell <id>) [--release] [--stimmen] [--fragen] [--ziel <verzeichnis>].
  * Allowlist statt Kopie des Repos (Playbook §3.10). Ohne --release trägt jede Seite ein Vorschau-Banner. --fragen nimmt die Rechtstexte
  * für den Fragepfad auf, --stimmen den Absatz zum Abstimmen. Text und Technik gehen am selben Tag live, also gehört jeder der beiden
  * Schalter zu seinem Gegenstück auf dem Server: Kurscode-Hash und `hainrich2_stimmen`.
  * --daten liefert die Antworten und den Korpus, aus dem sie zitieren, --korpus den Korpus für die Suche im Browser. Getrennt, weil der
  * erste mit den Antworten eingefroren ist und der zweite dem Skript folgt; auf dem Server kommen die Frageseiten ohnehin aus `live/`.
+ *
+ * Woher die Antworten kommen: Mit --stand so, wie sie auf dem Server stehen (site/stand-holen.sh), also bearbeitet, geprüft und mit
+ * Kurztitel. Mit --modell aus Phase 1, wie das Modell sie schrieb, und jede als ungeprüft: Die Prüfung steht nur in `public.db`, und
+ * am 2026-11-17 lauteten 18 der 29 geprüften Antworten anders als ihr Entwurf aus Phase 1 (zehn bearbeitet, acht neu erzeugt). Ein
+ * Prüfvermerk an jenen Texten wäre falsch.
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -12,22 +17,25 @@ import path from 'node:path';
 import { promisify, parseArgs } from 'node:util';
 import zlib from 'node:zlib';
 import { createEmbedder, MODEL_DIR, MODEL_ID } from '../lib/embedder.js';
+import { ort } from '../lib/orte.js';
 import { KAPITEL, UNTERFOREN } from '../lib/forum.js';
-import { excerpt, foreignSource, forumPage, indexPage, kapitelPage, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
+import { excerpt, foreignSource, forumPage, indexPage, kapitelPage, mailOf, MODERATION, notFoundPage, OG_CARD, publicQuestion, questionPage, robotsTxt, searchEntry, sitemap, textPage } from '../lib/site.js';
 import { quoteUrl } from '../lib/segment.js';
 
 const here = path.dirname(new URL(import.meta.url).pathname);
 const repo = path.dirname(here);
 const { values: args } = parseArgs({ options: {
   modell: { type: 'string' },
+  stand: { type: 'string' },
   release: { type: 'boolean', default: false },
   fragen: { type: 'boolean', default: false },
   stimmen: { type: 'boolean', default: false },
-  ziel: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/site' },
-  daten: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/work/phase1' },
-  korpus: { type: 'string', default: '/media/konrad/xtraspace/hainrich2/work/korpus-aktuell' },
+  ziel: { type: 'string', default: ort('site') },
+  daten: { type: 'string', default: ort('work', 'phase1') },
+  korpus: { type: 'string', default: ort('work', 'korpus-aktuell') },
 } });
-if (!args.modell) throw new Error('--modell fehlt: Welche Antworten die Site zeigt, entscheidet der Blindvergleich.');
+if (!args.modell && !args.stand) throw new Error('--stand <datei> oder --modell <id> fehlt: die Antworten vom Server (site/stand-holen.sh) oder die eines Modells aus Phase 1.');
+if (args.modell && args.stand) throw new Error('--stand und --modell schließen sich aus: Der Stand vom Server bringt seine Antworten mit.');
 
 /** aus dem Messbericht, research/2026-11-04-browsermodell */
 const MODEL_SHA = {
@@ -43,17 +51,37 @@ if (!env.SITE_KONTAKT || !env.SITE_ANSCHRIFT) throw new Error('site.env: SITE_KO
 
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const seeds = readJson(path.join(repo, 'seeds/fragen.json'));
-/** `phase1` ist eingefroren und kennt auch Fragen, die es nicht mehr gibt (s30, Konrad am 2026-11-17): Es zählen nur die Antworten zu den Seeds */
-const known = new Set(seeds.map(seed => seed.id));
-const rows = readJson(path.join(args.daten, 'antworten.json')).filter(r => r.model === args.modell && known.has(r.seed));
-const { passages: cited, fetched } = readJson(path.join(args.daten, 'corpus.json'));
 const { passages, fetched: korpusFetched } = readJson(path.join(args.korpus, 'corpus.json'));
 const passageVectors = readJson(path.join(args.korpus, 'vectors.json'));
 if (passageVectors.length !== passages.length) throw new Error('vectors.json passt nicht zu corpus.json');
-if (rows.length !== seeds.length) throw new Error(`${args.modell}: ${rows.length} Antworten für ${seeds.length} Fragen`);
 
-const day = fetched.slice(0, 10);
-const questions = seeds.map(seed => publicQuestion(seed, rows.find(r => r.seed === seed.id), cited, day));
+/**
+ * Die Seeds bestimmen, welche Fragen es gibt, auch mit --stand: Eine Frage, die hier gestrichen ist, kommt nicht über den Stand zurück,
+ * und eine, die auf dem Server fehlt, bricht den Bau, statt still zu verschwinden. Die Zitate im Stand prüft der Bau nicht gegen einen
+ * Korpus (I4): Der Server hat sie beim Start auf den ausgespielten Korpus umgezogen (Plan D36), und `tools/skriptstand.mjs` nennt die,
+ * deren Wortlaut das Skript nicht mehr hat.
+ */
+function fromHost(file) {
+  const { stand, fragen } = readJson(file);
+  const byId = new Map(fragen.map(f => [f.id, f]));
+  return { quelle: `vom Server, Stand ${stand.slice(0, 10)}`, questions: seeds.map(seed => {
+    const question = byId.get(seed.id);
+    if (!question || question.herkunft !== 'beispiel') throw new Error(`${file}: Die Beispielfrage ${seed.id} fehlt im Stand vom Server.`);
+    return question;
+  }) };
+}
+
+function fromPhase1() {
+  /** `phase1` ist eingefroren und kennt auch Fragen, die es nicht mehr gibt (s30, Konrad am 2026-11-17): Es zählen nur die Antworten zu den Seeds */
+  const known = new Set(seeds.map(seed => seed.id));
+  const rows = readJson(path.join(args.daten, 'antworten.json')).filter(r => r.model === args.modell && known.has(r.seed));
+  const { passages: cited, fetched } = readJson(path.join(args.daten, 'corpus.json'));
+  if (rows.length !== seeds.length) throw new Error(`${args.modell}: ${rows.length} Antworten für ${seeds.length} Fragen`);
+  const day = fetched.slice(0, 10);
+  return { quelle: `mit ${args.modell}`, questions: seeds.map(seed => publicQuestion(seed, rows.find(r => r.seed === seed.id), cited, day)) };
+}
+
+const { quelle, questions } = args.stand ? fromHost(args.stand) : fromPhase1();
 
 const staging = fs.mkdtempSync(`${args.ziel}.bau-`);
 const base = path.join(staging, env.SITE_BASE);
@@ -128,14 +156,20 @@ const site = {
   origin: env.SITE_ORIGIN,
   base: env.SITE_BASE,
   skript: env.SITE_SKRIPT,
+  /** „Melden“ öffnet eine vorbereitete E-Mail an die Kontaktadresse (Plan D42); der Server liest dieselbe Zeile beim Start */
+  melden: mailOf(env.SITE_KONTAKT),
   vorschau: !args.release,
   fragen: args.fragen,
   ladegroesse: `rund ${Math.round(loadBytes / 1e6)} MB`,
 };
 
-/** Markdown macht aus __X__ Fettdruck, ein vergessener Platzhalter fiele hinter renderMarkdown also keinem Stolperdraht mehr auf */
+/**
+ * Der Abschnitt „Quelltext“ der Über-Seite erscheint erst, wenn `SITE_QUELLTEXT` eine Adresse nennt (AGPL §13, site/site.env).
+ * Markdown macht aus __X__ Fettdruck, ein vergessener Platzhalter fiele hinter renderMarkdown also keinem Stolperdraht mehr auf */
 const fill = text => {
-  const filled = text
+  const filled = (env.SITE_QUELLTEXT ? text : text.replace(/\n## Quelltext\n[\s\S]*?(?=\n## |$)/, ''))
+    .replaceAll('__QUELLTEXT_KURZ__', (env.SITE_QUELLTEXT ?? '').replace(/^https:\/\//, ''))
+    .replaceAll('__QUELLTEXT__', env.SITE_QUELLTEXT ?? '')
     .replaceAll('__KONTAKT__', env.SITE_KONTAKT)
     .replaceAll('__ANSCHRIFT__', `  \n${env.SITE_ANSCHRIFT.replaceAll('|', '  \n')}`);
   const open = filled.match(/__[A-Z][A-Z_]+__/g);
@@ -157,6 +191,16 @@ const text = name => fs.readFileSync(path.join(here, 'texte', `${name}.md`), 'ut
 if (!text('datenschutz').includes('## Eigene Beiträge')) throw new Error('datenschutz.md: Abschnitt „Eigene Beiträge“ nicht gefunden');
 const voting = args.stimmen ? text('datenschutz').replace('## Eigene Beiträge', `${text('datenschutz-stimmen')}## Eigene Beiträge`) : text('datenschutz');
 const privacy = args.fragen ? voting.replace(/## Eigene Beiträge[\s\S]*?(?=## Ihre Rechte)/, text('datenschutz-fragen')) : voting;
+/**
+ * Art. 21 Abs. 4 DSGVO will den Hinweis auf das Widerspruchsrecht ausdrücklich und getrennt (Plan D43). Er steht in einem eigenen
+ * Abschnitt hinter „Ihre Rechte“, und jeder Abschnitt, der sich auf Art. 6 Abs. 1 lit. f stützt, muss es selbst sagen oder dorthin
+ * zeigen. Das Ersetzen oben darf ihn in keiner Fassung verschlucken.
+ */
+const abschnitte = privacy.split(/^## /m).slice(1);
+if (!abschnitte.some(a => a.startsWith('Widerspruchsrecht\n') && /Art\. 21/.test(a))) throw new Error('Datenschutz: Abschnitt „Widerspruchsrecht“ fehlt in dieser Fassung');
+for (const abschnitt of abschnitte) {
+  if (/lit\. f/.test(abschnitt) && !/^Widerspruchsrecht\n/.test(abschnitt) && !/#widerspruchsrecht|^Beiträge melden\n/.test(abschnitt)) throw new Error(`Datenschutz: „${abschnitt.split('\n')[0]}“ nennt Art. 6 Abs. 1 lit. f ohne Hinweis auf das Widerspruchsrecht`);
+}
 write('404.html', notFoundPage(site));
 write('ueber/index.html', textPage('ueber', fill(text('ueber')), site, { robots: 'index,follow', description: 'Ein Forum zum Skript „Einführung in Deep Learning“: Ein Sprachmodell antwortet mit Zitat, eine Moderation prüft, alle können lesen. Ein Prototyp.' }));
 write('impressum/index.html', textPage('impressum', fill(text('impressum')), site));
@@ -188,4 +232,4 @@ fs.rmSync(args.ziel, { recursive: true, force: true });
 fs.renameSync(staging, args.ziel);
 fs.chmodSync(args.ziel, 0o755);
 
-console.log(`${pages.length} Seiten, ${questions.length} Fragen mit ${args.modell}, Suche über ${passages.length} Passagen vom ${korpusFetched.slice(0, 10)}, erster Klick ${(loadBytes / 1e6).toFixed(1)} MB Brotli, ${args.ziel}`);
+console.log(`${pages.length} Seiten, ${questions.length} Fragen ${quelle}, Suche über ${passages.length} Passagen vom ${korpusFetched.slice(0, 10)}, erster Klick ${(loadBytes / 1e6).toFixed(1)} MB Brotli, ${args.ziel}`);

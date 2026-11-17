@@ -1,6 +1,7 @@
 // node judge_claude.mjs <cases.json> <out.json> [modell]. Liest ANTHROPIC_API_KEY aus der Umgebung. Bricht bei 0,50 $ ab.
 import fs from 'node:fs'; import { createRequire } from 'node:module';
-const require = createRequire('/media/konrad/xtraspace/hainrich2/work/node/package.json');
+/** HAINRICH2_DATEN: das Datenverzeichnis (.env.example), die Pakete lagen damals unter work/node */
+const require = createRequire(`${process.env.HAINRICH2_DATEN}/work/node/package.json`);
 const { default: Anthropic } = await import(require.resolve('@anthropic-ai/sdk'));
 const [casesFile, outFile, model = 'claude-haiku-5-5'] = process.argv.slice(2);
 const IN = 0.10 / 1e6, OUT = 0.50 / 1e6, STOP = 0.50;

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-const R='/home/konrad/Sciebo/hhu/hainrich';
+const R=process.env.HAINRICH1; // das Repo des Vorgängers
 const require=createRequire(R+'/tools/package.json');
 const transformers=await import(require.resolve('@huggingface/transformers'));
 const {createEmbedder}=await import(R+'/modules/model.js');

@@ -22,6 +22,7 @@ import { createPublisher, publishAll } from '../lib/publish.js';
 import { quoteUrl } from '../lib/segment.js';
 import { openSpool } from '../lib/spool.js';
 import { createVoting, FLUSH_MS } from '../lib/stimmen.js';
+import { mailOf } from '../lib/site.js';
 import { openStore } from '../lib/store.js';
 
 const { HAINRICH2_DB: db, HAINRICH2_LIVE: live, HAINRICH2_PENDING: pendingFile, HAINRICH2_KURSCODE: code, HAINRICH2_SCHLANGE: schlange, HAINRICH2_STIMMEN: stimmen, HAINRICH2_KOSTEN: kosten, HAINRICH2_KORPUS: korpus = new URL('../../korpus', import.meta.url).pathname, HAINRICH2_PORT: port = '8773' } = process.env;
@@ -36,6 +37,9 @@ const open = !!(pendingFile && code);
 store.setSite('fragen', open);
 store.setSite('entwurf', open && !!schlange);
 store.setSite('stimmen', !!stimmen);
+/** „Melden“ öffnet eine vorbereitete E-Mail an die Kontaktadresse (Plan D42). Sie steht in derselben Datei wie für den Bau; fehlt die Datei, führt „Melden“ wie früher zum Impressum */
+const siteEnv = new URL('../site/site.env', import.meta.url);
+store.setSite('melden', fs.existsSync(siteEnv) ? mailOf(fs.readFileSync(siteEnv, 'utf8').match(/^SITE_KONTAKT=(.*)$/m)?.[1]) : null);
 /** Vorschläge für die Kurztitel des Bestands (Plan D31), nur wo noch nichts steht. Öffentlich wird davon nichts, bis die Moderation speichert */
 const titelFile = new URL('../seeds/kurztitel.json', import.meta.url);
 if (fs.existsSync(titelFile)) store.suggestTitles(JSON.parse(fs.readFileSync(titelFile, 'utf8')));
