@@ -29,10 +29,13 @@ _Stand 2026-11-05._
   Suche sagt ihre Treffer an, das Frageformular hält den Fokus und sagt, wer fragen kann, breite Formeln zeigen ihren Rand, lange
   Zitate sind eingeklappt (s09 bei 360 px von 7760 auf 3839 px), und
   `test/vorschau.test.mjs` hält das Ende der Vorschau für die dynamischen Seiten fest. 234 Unit-Tests, Smoke 20/20 in drei Browsern,
-  `smoke:mod` 23/23 in Chromium und Firefox. Am Host steht weiter der Stand `92b6560`. **Probeläufe am 17.11.**, beide mit Status 0:
-  `site/deploy.sh` brächte 69 HTML-Seiten, `app.js`, `fragen.js`, `style.css`, `daten/passagen.json` und neu `zitate.js`, keine
-  Löschung; `site/deploy-app.sh` brächte nur `lib/site.js`. Dabei gefunden und behoben: zwei Suchausschnitte verloren den Unterstrich
-  eines Index („(Ax)j“).
+  `smoke:mod` 23/23 in Chromium und Firefox. Beim Probelauf am 17.11. gefunden und behoben: zwei Suchausschnitte verloren den
+  Unterstrich eines Index („(Ax)j“). **Ausgespielt am 2026-11-17** mit beiden Deploys, Commit `e454d4c`: `site/deploy.sh` brachte 69
+  HTML-Seiten, `app.js`, `fragen.js`, `style.css`, `daten/passagen.json` und neu `zitate.js`, keine Löschung; `site/deploy-app.sh`
+  brachte nur `lib/site.js` und startete `hainrich2-web` um 11:57:34 neu, der erste echte Lauf über eine SSH-Verbindung. Danach am
+  Host: Dienst aktiv ohne automatischen Neustart, `live/` neu geschrieben, Smoke 20/20 in Chromium, s09 verlinkt ihr Kapitel und
+  hat sieben eingeklappte Zitate, `f/neu/` zeigt den neuen Satz, `GET` auf die API gibt 405. **Nicht geprüft am Host:** Firefox und
+  WebKit, das Frageformular hinter dem Kurscode, eine Stimme.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt

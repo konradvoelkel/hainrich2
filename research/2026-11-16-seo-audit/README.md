@@ -194,8 +194,8 @@ Jeder Schritt hängt an dem davor, und keiner wirkt in der Suche, solange die Vo
 
 ## 7. Umgesetzt am 2026-11-16
 
-Nach dem Audit umgebaut, im Arbeitsbaum, **nicht ausgespielt**. Am Host ist davon nichts zu sehen, bis `site/deploy.sh` und danach
-`site/deploy-app.sh` laufen: erst das Stylesheet, dann die Vorlagen, sonst steht der Sprunglink kurz ungestaltet oben.
+Nach dem Audit umgebaut und **am 17.11. ausgespielt** (Commit `e454d4c`), erst `site/deploy.sh`, dann `site/deploy-app.sh`: erst
+das Stylesheet, dann die Vorlagen, sonst steht der Sprunglink kurz ungestaltet oben. Am Host danach Smoke 20 von 20 in Chromium.
 
 | Befund | Stand | Wie geprüft |
 |---|---|---|
