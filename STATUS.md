@@ -1,14 +1,34 @@
 # Status
 
-_Stand 2026-11-05._
+_Stand 2026-11-17._
 
 ## Was existiert
 
 - Git-Repo auf `main`, Remote `origin` ist das private `konradvoelkel/hainrich2` auf GitHub.
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.
-- CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, auf Konrads
-  eigenem Runner `ci-eu` (Repo `ci-server`) in einem per Digest gepinnten `node:24`-Container. Der Runner nimmt nur private
-  Repos; wird dieses öffentlich, muss er vorher weg.
+- CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, in einem per
+  Digest gepinnten `node:24`-Container. Seit dem 2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem
+  Runner `ci-eu`: Der nimmt nur private Repos und musste vor einer Veröffentlichung weg.
+- **Gebaut am 2026-11-17, nicht ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D28 bis D33):
+  - _Härtungen (D28):_ Eine ungeprüfte Antwort des Bots verlinkt nur ins Skript, Formeln sind auf 20 em begrenzt, der Worker prüft
+    Kennung und Länge jedes Auftrags. An Frage und Antwort steht „Melden“. Der Datenschutz sagt über den Checker nur noch, was er erkennt.
+  - _Prüfvermerk (D29):_ „Geprüft am … von Konrad Völkel, Autor des Skripts“ an jeder geprüften Antwort des Bots, Absatz „Wer prüft“
+    unter `ueber/`, Spalte `geprueft_am` mit Nachtrag aus dem Verlauf. Eine Frageseite ist erst indexierbar, wenn jede Antwort geprüft ist.
+  - _Lizenz (D30):_ Zustimmung Version 3, Fragen werden mit dem Absenden gemeinfrei (CC0 1.0); Vermerk an der Frage, Betreiber im Fuß,
+    Autor und CC BY-SA 4.0 an den Zitaten.
+  - _Kurztitel (D31):_ Feld an der Frage und bei der Freigabe, Sammelseite `/mod/titel/`, 30 Vorschläge für die Beispielfragen in
+    `seeds/kurztitel.json`, ein eigener Aufruf des Worker nach der Freigabe oder auf Knopfdruck, mit eigenem Tagesdeckel.
+  - _`QAPage` (D32)_ an geprüften Frageseiten, und _der Schalter für die Vorschau (D33)_ unter `/mod/zahlen/`.
+  - Tests gegen den lokalen Bau: `npm test` 266 von 266; `npm run smoke` 21 von 21 in Chromium, Firefox und WebKit; `npm run smoke:mod`
+    25 von 25 in Chromium und Firefox. Unter WebKit bestehen dort 9 von 25, die übrigen scheitern an der Anmeldung (siehe „Nicht geprüft“).
+  - _Abstimmen:_ `site/stimmen.js` arbeitet Klicks nacheinander ab. Vorher las ein zweiter Klick, der die Antwort auf den ersten nicht
+    abwartete, den alten Stand, und im Browser konnte die falsche Stimme stehen bleiben. Aufgefallen ist es, weil der Browser-Test dazu in
+    Chromium in 2 von 4 Läufen scheiterte; danach liefen 5 von 5. Das ist ein Indiz, kein Beweis, einen eigenen Test für den Doppelklick
+    gibt es nicht.
+  - Die Datenbank am Host bekommt die neuen Spalten beim ersten Start des neuen Codes. Bis zum Ausspielen gilt dort Zustimmung
+    Version 2, ohne Lizenz und ohne Kurztitel.
+- Am Host von Hand geändert, 2026-11-17 auf Konrads Wort: der Tippfehler „ortohogonale“ in der Antwort zu s21, über `store.editAnswer`
+  mit der Rolle `konsole` im Verlauf, die Seite neu geschrieben. Nachgesehen: `f/s21/` trägt das Wort in keiner der drei Kodierungen mehr.
 - Abhängigkeiten, Stand 2026-11-16: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0), Playwright 1.65.1 (vorher 1.63.0) und das
   Anthropic SDK 1.8.0 (vorher 1.4.0). `research/2026-11-15-transformers-4.3.2/` belegt, dass 4.3.2 dieselben Vektoren rechnet: 466 Passagen
   und 30 Seed-Fragen in Node, die Fragen und die Trefferlisten in Chromium, Firefox und WebKit, jeweils Byte für Byte.
@@ -33,9 +53,10 @@ _Stand 2026-11-05._
   Unterstrich eines Index („(Ax)j“). **Ausgespielt am 2026-11-17** mit beiden Deploys, Commit `e454d4c`: `site/deploy.sh` brachte 69
   HTML-Seiten, `app.js`, `fragen.js`, `style.css`, `daten/passagen.json` und neu `zitate.js`, keine Löschung; `site/deploy-app.sh`
   brachte nur `lib/site.js` und startete `hainrich2-web` um 11:57:34 neu, der erste echte Lauf über eine SSH-Verbindung. Danach am
-  Host: Dienst aktiv ohne automatischen Neustart, `live/` neu geschrieben, Smoke 20/20 in Chromium, s09 verlinkt ihr Kapitel und
-  hat sieben eingeklappte Zitate, `f/neu/` zeigt den neuen Satz, `GET` auf die API gibt 405. **Nicht geprüft am Host:** Firefox und
-  WebKit, das Frageformular hinter dem Kurscode, eine Stimme.
+  Host: Dienst aktiv ohne automatischen Neustart, `live/` neu geschrieben, Smoke 20/20 in Chromium, Firefox und WebKit, s09 verlinkt
+  ihr Kapitel und hat sieben eingeklappte Zitate, `f/neu/` zeigt den neuen Satz, `GET` auf die API gibt 405. **Nicht geprüft am
+  Host:** das Frageformular hinter dem Kurscode, eine Stimme. Lokal scheiterten in `smoke:mod` unter WebKit 14 von 23 Tests, wie schon
+  am 06.11. (13 von 22); in Chromium und Firefox laufen alle. Die Ursache steht seit dem 17.11. in `research/2026-11-17-webkit-cookie/`.
 - `research/2026-11-04-dedupe/`: Messskripte und Ergebnisse zu Duplikaterkennung, Skript-Suche und
   Antworten mit lokalen Modellen.
 - `research/2026-11-04-browsermodell/`: Modellwahl für den Browser. Das geschnittene Modell liegt
@@ -80,7 +101,7 @@ _Stand 2026-11-05._
   22 neue und 3 geänderte Passagen, vor allem die Formen-Verteilung in `autograd-berechnungsgraph` (+14) und die Lernkurve in
   `universelle-approximation` (+6). In `antworten.json` kommen s19 und ein weiteres Zitat bei s17 auf die Opus-Liste, sie hat jetzt 18 Antworten.
   Am Abend desselben Tages noch eine geänderte Passage (Tausendertrennung), die Liste bleibt bei 18.
-- Die Kontaktadresse `mail@hai.konradvoelkel.com`: MX für `hai`, Fastmail stellt sie als
+- Die Kontaktadresse `mail@hai.konradvoelkel.com` (von Konrad am 2026-11-17 selbst getestet, sie kommt an): MX für `hai`, Fastmail stellt sie als
   `hai+mail@konradvoelkel.com` zu. Mit einer Mail von außen bestätigt (2026-11-04).
 - Logo und Ableitungen in `site/brand/`, erzeugt von `tools/render_brand.py` (Hai, Heine, Violett 295°), mit Vorschaukarte,
   `og:`- und `twitter:`-Tags, seit 2026-11-05 auf dem Server. Der Hai mit Toupet ist Konrads Arbeitshypothese.
@@ -115,6 +136,16 @@ _Stand 2026-11-05._
 
 ## Was nicht existiert
 
+- Das Repo ist nicht bereit für die Veröffentlichung (geprüft am 2026-11-17 gegen Playbook §5 Punkt 10 und §3.6, am Stand `6ba0447`).
+  Vier Punkte stehen davor: Der Bericht `research/2026-11-11-threat-model/` beschreibt Schwächen, die offen sind (B1, B4, C2, C5, D1;
+  A5 prüft Konrad) oder erst mit dem nächsten Deploy schließen (A3, A4, D2 bis D4), und er steht in der Historie. Ob die GitHub-App
+  `konrads-ci-runner` noch auf dem Repo installiert ist, ließ sich von hier nicht sehen. Den Kurscode kann nur Konrad in der Historie
+  suchen; den Scan aus I7 gibt es nicht. Fünf Messskripte unter `research/2026-11-04-*` nennen `/home/konrad/Sciebo/…`. Dazu kleiner:
+  kein `gitleaks` auf dem Laptop (der letzte Lauf ist vom 10.11.), keine Kopfzeile zur Lizenz in den Quelldateien, kein Link auf den
+  Quelltext auf der Site, `THIRD_PARTY_PROVENANCE.md` ohne `onnxruntime-node` und `sharp`, und auf GitHub sind Secret Scanning, Push
+  Protection und private Sicherheitsmeldungen erst mit dem Umschalten einstellbar. Sauber: keine Geheimnisse in der Historie nach
+  Mustersuche, keine Serveradresse, eine einzige Autorenadresse, keine Datei über 1 MB.
+
 - Stimmen lassen sich nicht prüfen und die Moderation kann sie nicht zurücksetzen. Wer die Browserdaten löscht, stimmt noch einmal; nur die Grenze je Adresse
   bremst das.
 - Für die geschlossene Alpha mit den aktuellen Studierenden bleibt der Laptop-Key auf dem VPS, den eigenen Key setzt Konrad erst danach (2026-11-06). Die Grenzen sind dafür angehoben (D24): 50 Anfragen am Tag, der Monatsdeckel von 15 $ reicht bei rund 8 ct je Anfrage für etwa 180. Darüber bleibt die Frage ohne Entwurf, die Texte sagen das noch nicht. Die Rechtstexte hat er freigegeben, die Fragen zu Anthropic geprüft: Die Umsetzung stimmt (Plan §11.3).
@@ -130,6 +161,12 @@ _Stand 2026-11-05._
 - Kein Web-Manifest, es bräuchte `manifest-src` in der CSP. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
 
 ## Nicht geprüft
+
+- Aus dem Umbau vom 2026-11-17: Der Aufruf für den Kurztitel ist nie gegen die echte API gelaufen, nur gegen Attrappen. Ob das Modell
+  die Länge einhält und ob `fallbacks` mit dieser Anfrage durchgeht, zeigt erst der erste echte Vorschlag; scheitert er, fehlt nur der
+  Vorschlag. Die Migration von `public.db` ist an einer nachgebauten alten Datenbank getestet, nicht an einer Kopie der echten. Die
+  Sätze zu CC0 in Zustimmung, Nutzungsbedingungen, Datenschutz und Impressum sind mein Entwurf, keine Rechtsberatung, und von Konrad
+  noch nicht gelesen. `QAPage` hat kein Werkzeug von Google gesehen (die Adresse geht an keinen Drittdienst).
 
 - Kapitelseiten und Kapitelbezug: Die Tests prüfen Markup, Sortierung im Beispiel und den Weg bis zur Moderation. Gemessen ist die
   Wirkung auf echte Fragen nicht. Die Stärke des Zuschlags (`KAPITEL_BONUS`, `KAPITEL_FAKTOR`, Platz 1 bei `fuse`) ist geschätzt.
@@ -158,13 +195,17 @@ _Stand 2026-11-05._
   am selben Tag live; die Kapitelseiten liefen seit dem 2026-11-12 ohne diesen Satz.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
-- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün, unter WebKit scheitern 14 von 23 an der Anmeldung (2026-11-15, mit Playwright 1.63.0 und 1.65.1 dieselben Tests), vermutlich weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt; nachgewiesen ist das nicht.
+- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün. Unter WebKit scheitert jeder Test mit Anmeldung (2026-11-17: 16 von 25): WebKit nimmt das `Secure`-Cookie auf `http://localhost` nicht an, gemessen in `research/2026-11-17-webkit-cookie/`. Das betrifft nur den Testverbund, der Host läuft über HTTPS; die Moderation ist damit aber in WebKit in keinem Test gelaufen. Die Systempakete für WebKit sind seit dem 17.11. installiert (`playwright install-deps`), daran lag es nicht.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
 - Text-Fragmente nur in Chromium und nur an vier Links geprüft.
 - Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.
 - Der Abnahmewert für Duplikate in den Top 5 (85 %) ist nicht erreicht: 74 bis 80 %.
 
 ## Nächster Schritt
+
+Der Umbau vom 2026-11-17 wartet auf Konrads Wort zum Ausspielen. Text und Technik gehen zusammen: `site/deploy.sh` bringt Rechtstexte
+und Stylesheet, `site/deploy-app.sh` den Code, und ab dem Neustart gilt Zustimmung Version 3. Danach bestätigt er die Kurztitel unter
+`/eidl/mod/titel/`.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes

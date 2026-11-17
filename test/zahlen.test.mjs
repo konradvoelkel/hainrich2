@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { hashPassphrase } from '../lib/auth.js';
 import { Ledger } from '../lib/budget.js';
-import { REQUESTS_PER_DAY } from '../lib/draft.js';
+import { REQUESTS_PER_DAY, TITLES_PER_DAY } from '../lib/draft.js';
 import { createFragen } from '../lib/fragen.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
@@ -137,4 +137,12 @@ test('die Admin-Seite nennt Buchungen ohne Antwort, und nur wenn es welche gibt'
   book.reserve(TODAY, 'claude-opus-5-5', 0.6);
   assert.equal(readCosts(c.kosten).entries.filter(e => e.offen).length, 1);
   assert.match(await (await c.get('/eidl/mod/zahlen/', cookie)).text(), /1 Anfragen ohne Antwort, gebucht mit dem schlimmsten Fall \(0,60 \$\)/);
+});
+
+test('D31: Kurztitel stehen in den Kosten, aber nicht im Tagesdeckel der Anfragen', () => {
+  const z = figures({ ...base, entries: [entry('2026-11-05', 0.3), { ...entry('2026-11-05', 0.001), art: 'titel' }, { ...entry('2026-11-05', 0.002), art: 'titel' }] });
+  assert.deepEqual(z.deckel.tag, { wert: 1, max: REQUESTS_PER_DAY });
+  assert.deepEqual(z.deckel.titel, { wert: 2, max: TITLES_PER_DAY });
+  assert.ok(Math.abs(z.deckel.monat.wert - 0.303) < 1e-9);
+  assert.equal(z.zeitraeume[0].anfragen, 3);
 });

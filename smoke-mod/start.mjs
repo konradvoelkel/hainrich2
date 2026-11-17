@@ -50,11 +50,14 @@ const spool = openSpool(path.join(dir, 'schlange'));
 const frageweg = createFragen({ store, pending, spool, publish });
 const passage = { id: 'p', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein wörtliches Zitat aus dem Skript.', page: 'tensoren', link: 'https://skript.test/tensoren#abschnitt' };
 const corpus = { embedder: { query: async () => fragen[0].vektor }, select: async () => [passage], chapters: async () => [passage] };
+/** Die Anfrage für den Kurztitel trägt keine Passagen (lib/answer.js), daran erkennt die Attrappe sie */
+const wantsTitle = request => !request.messages[0].content.some(block => block.type === 'document');
 const call = async request => ({
   model: 'attrappe',
   stop_reason: 'end_turn',
   usage: {},
-  content: [/Keras/.test(request.messages[0].content.at(-1).text) ? { type: 'text', text: 'KEIN_BELEG' } : { type: 'text', text: 'Ein Entwurf mit Formel $c^2$.', citations: [{ document_index: 0 }] }],
+  content: [wantsTitle(request) ? { type: 'text', text: 'Ein Kurztitel von der Attrappe' }
+    : /Keras/.test(request.messages[0].content.at(-1).text) ? { type: 'text', text: 'KEIN_BELEG' } : { type: 'text', text: 'Ein Entwurf mit Formel $c^2$.', citations: [{ document_index: 0 }] }],
 });
 /** das echte Kostenbuch, damit der Weg über Buchung und Antwort derselbe ist wie auf dem Server; die Attrappe kostet nichts */
 const ledger = new Ledger(path.join(dir, 'kostenbuch-attrappe.json'), 1000);

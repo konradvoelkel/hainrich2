@@ -238,10 +238,11 @@ test('Frage und Unterforum tragen den sichtbaren Pfad als strukturierte Daten', 
 });
 
 test('die Startseite nennt Site und Betreiber, Rechtstexte tragen keine Daten', () => {
-  const data = dataOf(indexPage([question()], site));
-  assert.equal(data['@type'], 'WebSite');
-  assert.equal(data.url, 'https://example.test/eidl/');
-  assert.deepEqual(data.publisher, { '@type': 'Person', name: 'Konrad Völkel', url: 'https://www.konradvoelkel.com' });
+  const [website, person] = dataOf(indexPage([question()], site))['@graph'];
+  assert.equal(website['@type'], 'WebSite');
+  assert.equal(website.url, 'https://example.test/eidl/');
+  assert.deepEqual(website.publisher, { '@id': 'https://example.test/eidl/#betreiber' });
+  assert.deepEqual(person, { '@type': 'Person', '@id': 'https://example.test/eidl/#betreiber', name: 'Konrad Völkel', url: 'https://www.konradvoelkel.com' });
   assert.doesNotMatch(textPage('impressum', '# Impressum', site), /ld\+json/);
 });
 
@@ -305,4 +306,124 @@ test('ein langes Zitat ist eingeklappt und zeigt Anfang und Quelle, ein kurzes b
   const kurz = page('Ein kurzes Zitat bleibt, wie es ist.');
   assert.match(kurz, /<figure id="z1"><blockquote><p>Ein kurzes Zitat bleibt, wie es ist\.<\/p>/);
   assert.doesNotMatch(kurz, /<details|zitate\.js/);
+});
+
+const allData = html => [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(m => JSON.parse(m[1]));
+const robotsOf = html => html.match(/name="robots" content="([^"]+)"/)[1];
+/** eine Frage, wie sie aus public.db kommt: geprüft, mit Datum */
+const geprueft = (overrides = {}, answer = {}) => {
+  const q = question();
+  return { ...q, antworten: [{ ...q.antworten[0], status: 'geprüft', geprueftAm: '2026-11-06', ...answer }], ...overrides };
+};
+const zweite = { art: 'bot', status: 'ungeprüft', modell: 'm', text: 'Noch eine Antwort.', zitate: [] };
+
+test('I9: Steht neben einer geprüften Antwort eine ungeprüfte, bleibt die Seite draußen', () => {
+  assert.equal(robotsOf(questionPage(geprueft(), site)), 'index,follow');
+  const gemischt = geprueft();
+  gemischt.antworten.push(zweite);
+  assert.equal(robotsOf(questionPage(gemischt, site)), 'noindex');
+  assert.doesNotMatch(sitemap([gemischt], site), /<url>/);
+  assert.equal(robotsOf(questionPage({ ...geprueft(), antworten: [] }, site)), 'noindex', 'ohne Antwort ist nichts geprüft');
+  gemischt.antworten[1] = { ...zweite, status: 'geprüft' };
+  assert.equal(robotsOf(questionPage(gemischt, site)), 'index,follow');
+  assert.match(sitemap([gemischt], site), /f\/s01\//);
+});
+
+test('D29: Eine geprüfte Antwort sagt, wer geprüft hat und wann; das Datum der Frage steht nicht mehr neben „geprüft“', () => {
+  const html = questionPage(geprueft(), site);
+  assert.match(html, /<p class="pruefung">Geprüft am <time datetime="2026-11-06">06\.11\.2026<\/time> von <a href="\.\.\/\.\.\/ueber\/#wer-prüft">Konrad Völkel<\/a>, Autor des Skripts\.<\/p>/);
+  const antwort = html.slice(html.indexOf('id="b2"'));
+  assert.doesNotMatch(antwort.slice(0, antwort.indexOf('</header>')), /2026-11-04/);
+  assert.doesNotMatch(questionPage(question(), site), /class="pruefung"/);
+  const eigene = questionPage(geprueft({}, { art: 'moderation', modell: null, zitate: [] }), site);
+  assert.doesNotMatch(eigene, /class="pruefung"/, 'an der eigenen Antwort steht der Name schon daneben');
+  assert.match(eigene.slice(eigene.indexOf('id="b2"')), /<time datetime="2026-11-06">/);
+});
+
+test('A4: An der Frage und an jeder Antwort steht ein Link „Melden“, am Entwurf nicht', () => {
+  const html = questionPage(geprueft(), site);
+  assert.equal((html.match(/<a class="melden" href="\.\.\/\.\.\/impressum\/#inhalte-melden">Melden<\/a>/g) ?? []).length, 2);
+});
+
+test('Befund 17: Der Fuß nennt den Betreiber, das Zitat Autor und Lizenz', () => {
+  const html = questionPage(question(), site);
+  assert.match(html, /Ein privates Angebot von <a href="\.\.\/\.\.\/impressum\/">Konrad Völkel<\/a>, nicht der Heinrich-Heine-Universität/);
+  assert.match(html, /<p class="lizenz">Aus dem Skript „Einführung in Deep Learning“ von Konrad Völkel, Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="license noopener">CC BY-SA 4\.0<\/a>\.<\/p>/);
+  assert.doesNotMatch(html, /gemeinfrei/, 'eine Beispielfrage hat niemand gemeinfrei gegeben');
+  assert.equal(foreignSource(html), null);
+});
+
+test('D2: Eine ungeprüfte Antwort des Bots verlinkt nur ins Skript, ein Bild wird Text; nach der Prüfung und bei der Moderation bleibt der Link', () => {
+  const text = 'Siehe [Musterlösung](https://boese.test/x), [Kapitel](https://skript.test/kapitel/) und ![Bild](https://boese.test/b.png).[1]';
+  const offen = questionPage(question({ text }), site);
+  assert.doesNotMatch(offen, /boese\.test/);
+  assert.match(offen, /Siehe Musterlösung, <a href="https:\/\/skript\.test\/kapitel\/">Kapitel<\/a> und Bild\./);
+  assert.match(questionPage(geprueft({}, { text }), site), /<a href="https:\/\/boese\.test\/x">Musterlösung<\/a>/);
+  assert.match(questionPage(geprueft({}, { text, art: 'moderation', zitate: [] }), site), /<a href="https:\/\/boese\.test\/x">/);
+  const textOf = html => html.match(/<div class="text">(.*?)<\/div>/s)[1];
+  assert.doesNotMatch(textOf(questionPage(question({ text }), { ...site, skript: undefined })), /<a href/, 'ohne Adresse des Skripts gar kein Link');
+  assert.match(questionPage(question({ text }), site), /name="description" content="Siehe Musterlösung, Kapitel und Bild\."/, 'die Beschreibung trägt weder Link noch Bildzeichen');
+});
+
+test('D31: Der Kurztitel der Moderation steht im Titel, die volle Frage bleibt in der H1', () => {
+  const html = questionPage(geprueft({ kurztitel: 'Perzeptron: Was rechnet es?' }), site);
+  assert.match(html, /<title>Perzeptron: Was rechnet es\? \| hAInrich2<\/title>/);
+  assert.match(html, /<h1>Was &lt;b&gt;rechnet&lt;\/b&gt; ein Perzeptron\?<\/h1>/);
+  assert.match(questionPage(geprueft({ kurztitel: 'A <b> & B' }), site), /<title>A &lt;b&gt; &amp; B \| hAInrich2<\/title>/);
+});
+
+test('D32: Eine geprüfte Frage trägt QAPage, mit dem Bot als Bot und dem Zitat als Quelle; eine ungeprüfte trägt keins', () => {
+  const html = questionPage(geprueft({}, { bearbeitet: true }), site);
+  const blocks = allData(html);
+  assert.deepEqual(blocks.map(b => b['@type'] ?? b['@graph'][0]['@type']), ['BreadcrumbList', 'QAPage']);
+  const [page, person] = blocks[1]['@graph'];
+  const frage = page.mainEntity;
+  assert.equal(frage.text, 'Was <b>rechnet</b> ein Perzeptron?');
+  assert.equal(frage.name, 'Was <b>rechnet</b> ein Perzeptron?');
+  assert.deepEqual([frage.answerCount, frage.dateCreated, frage.author], [1, '2026-11-04', { '@id': person['@id'] }]);
+  const antwort = frage.acceptedAnswer;
+  assert.equal(antwort.url, 'https://example.test/eidl/f/s01/#b2');
+  assert.ok(html.includes('id="b2"'));
+  assert.equal(antwort.text, 'Es rechnet eine Summe. Bei `x[1]` bleibt das, $a[1]$ auch, gibt es nicht.');
+  assert.deepEqual(antwort.author, { '@type': 'Organization', name: 'hAInrich2-Bot (Claude von Anthropic), von der Moderation geprüft' });
+  assert.deepEqual(antwort.citation, [{ '@type': 'CreativeWork', name: 'Tensoren › Abschnitt', url: 'https://skript.test/kapitel/#abschnitt' }]);
+  assert.equal(antwort.dateModified, '2026-11-06');
+  assert.ok(!JSON.stringify(blocks[1]).includes('upvoteCount'));
+  assert.equal(person.name, 'Konrad Völkel');
+  for (const url of JSON.stringify(blocks).match(/"https?:[^"]+"/g)) assert.match(url, /^"https:\/\//);
+
+  assert.deepEqual(allData(questionPage(question(), site)).map(b => b['@type']), ['BreadcrumbList']);
+  const gemischt = geprueft();
+  gemischt.antworten.push(zweite);
+  assert.equal(allData(questionPage(gemischt, site)).length, 1, 'nur was geprüft ist');
+});
+
+test('D32: Die Antwort der Moderation gilt, die des Bots daneben ist ein Vorschlag; an einer Frage von außen steht kein Autor', () => {
+  const q = geprueft({ herkunft: 'forum' });
+  q.antworten.push({ art: 'moderation', status: 'geprüft', geprueftAm: '2026-11-07', modell: null, text: 'So ist es.', zitate: [] });
+  const frage = allData(questionPage(q, site))[1]['@graph'][0].mainEntity;
+  assert.equal(frage.author, undefined);
+  assert.deepEqual([frage.acceptedAnswer.url, frage.acceptedAnswer.author], ['https://example.test/eidl/f/s01/#b3', { '@id': 'https://example.test/eidl/#betreiber' }]);
+  assert.equal(frage.acceptedAnswer.dateModified, undefined, 'unbearbeitet');
+  assert.deepEqual(frage.suggestedAnswer.map(a => a.url), ['https://example.test/eidl/f/s01/#b2']);
+});
+
+test('D31: Die Vorschläge für den Bestand gehören zu Beispielfragen, passen in die Grenzen und am Checker vorbei', async () => {
+  const { hardHits } = await import('../lib/checker.js');
+  const { kurztitelOf } = await import('../lib/fragen.js');
+  const seeds = JSON.parse(fs.readFileSync(new URL('../seeds/fragen.json', import.meta.url), 'utf8')).map(s => s.id);
+  const vorschlaege = JSON.parse(fs.readFileSync(new URL('../seeds/kurztitel.json', import.meta.url), 'utf8'));
+  assert.deepEqual(Object.keys(vorschlaege), seeds);
+  for (const [id, titel] of Object.entries(vorschlaege)) {
+    assert.equal(kurztitelOf(titel), titel, id);
+    assert.deepEqual(hardHits(titel), [], id);
+  }
+});
+
+test('D30: Das Frageformular sagt neben dem Haken, was gemeinfrei heißt', async () => {
+  const { askPage } = await import('../lib/site.js');
+  const html = askPage({ ...site, fragen: true, entwurf: true });
+  assert.match(html, /Ich gebe meine Frage gemeinfrei \(CC0 1\.0\)/);
+  assert.match(html, /Gemeinfrei heißt: Sie verzichten auf alle Rechte an Ihrer Frage, und das lässt sich nicht zurücknehmen/);
+  assert.match(html, /data-zustimmung="3"/);
 });

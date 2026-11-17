@@ -221,4 +221,15 @@ weiter aus dem alten Wortlaut gerechnet und steht in `daten/fragen.json`; wer da
 Rechte“ in `site/texte/datenschutz.md`. Der Wortlaut weicht vom Vorschlag oben ab: Er sagt „entfernt die Angabe aus dem Text oder löscht die ganze Frage“, weil
 beides vorkommt, und verweist für Anthropic auf die Fristen im nächsten Abschnitt, statt eine Zahl zu wiederholen.
 
-Offen bleiben A3 bis A5, B1, B4, C2, C5 und D1 bis D4.
+**A1** ist seit dem 2026-11-11 freigegeben und live, der Absatz darüber gibt den Stand vor der Freigabe wieder.
+
+**A3, A4 (Stufe 1), D2, D3 und D4, Plan D28, gebaut und getestet am 2026-11-17, noch nicht ausgespielt.** A3: Der Satz in
+`site/texte/datenschutz-fragen.md` nennt jetzt, was der Checker erkennt (Anrede mit Namen, Vorstellung, Grußformel, Wörter zu
+Gesundheit), und sagt, dass man sich auf ihn nicht verlassen kann. A4: An Frage und Antwort steht ein Link „Melden“ auf
+`impressum/#inhalte-melden`; den eigenen Schreibweg (Stufe 2) gibt es nicht. D2: Eine Antwort des Bots, die niemand geprüft hat, und
+jeder Entwurf verlinken nur noch ins Skript, ein Bild wird sein Ersatztext; nach der Prüfung bleiben Links stehen, dann hat sie ein
+Mensch gesehen. D3: `maxSize` begrenzt jede Länge in einer Formel auf 20 em, in Antworten, Fragen und Listen. D4: Der Worker verwirft
+einen Auftrag ohne gültige Kennung und beendet einen mit fehlendem oder zu langem Text als Fehler, beides ohne Anfrage; `lib/spool.js`
+legt unter keiner anderen Kennung eine Datei an.
+
+Offen bleiben A4 Stufe 2, A5 (Konrads Prüfung), B1, B4, C2, C5 und D1.

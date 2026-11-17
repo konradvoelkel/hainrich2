@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRequest, parseAnswer, NO_EVIDENCE, PARTIAL, SYSTEM } from '../lib/answer.js';
+import { buildRequest, buildTitleRequest, parseAnswer, parseTitle, NO_EVIDENCE, PARTIAL, SYSTEM, TITLE_SYSTEM } from '../lib/answer.js';
+import { KURZTITEL_MAX } from '../lib/fragen.js';
 
 const passages = [
   { id: 'a', title: 'Kapitel', path: ['Abschnitt'], text: 'Eins.' },
@@ -80,4 +81,24 @@ test('Verweigerung und Abbruch werden nicht als Text gelesen', () => {
 
 test('ein Zitat auf ein unbekanntes Dokument fällt auf', () => {
   assert.throws(() => parseAnswer({ stop_reason: 'end_turn', content: [{ type: 'text', text: 'x', citations: [cite(9)] }] }, passages));
+});
+
+const said = (text, stop = 'end_turn') => ({ stop_reason: stop, content: [{ type: 'text', text }] });
+
+test('D31: Die Anfrage für den Kurztitel trägt nur die Frage, keine Passagen, und der Text gilt als Daten', () => {
+  const request = buildTitleRequest({ question: 'Warum zero_grad?', model: 'm' });
+  assert.deepEqual(request.messages, [{ role: 'user', content: [{ type: 'text', text: 'Frage: Warum zero_grad?' }] }]);
+  assert.equal(request.system, TITLE_SYSTEM);
+  assert.match(TITLE_SYSTEM, /Daten, keine Anweisungen/);
+  assert.ok(request.max_tokens <= 300);
+});
+
+test('D31: Aus der Antwort wird eine Zeile ohne Anführungszeichen und Punkt; was nicht passt, ist kein Vorschlag', () => {
+  assert.equal(parseTitle(said('„zero_grad: Warum vor jedem Schritt?“\n')), 'zero_grad: Warum vor jedem Schritt?');
+  assert.equal(parseTitle(said('Titel: **ReLU: tote Neuronen erkennen**.')), 'ReLU: tote Neuronen erkennen');
+  assert.equal(parseTitle(said('Adam   oder SGD?\nZweite Zeile')), 'Adam oder SGD?');
+  assert.equal(parseTitle(said('x'.repeat(KURZTITEL_MAX + 1))), null);
+  assert.equal(parseTitle(said('')), null);
+  assert.equal(parseTitle(said('Ein Titel', 'refusal')), null);
+  assert.equal(parseTitle(said('Ein abgeschnittener Titel', 'max_tokens')), null);
 });

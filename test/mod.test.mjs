@@ -359,3 +359,149 @@ test('D27: Auch was vor `secure_delete` in freien Seiten liegen blieb, ist nach 
   await c.form('/eidl/mod/f/s01/', { aktion: 'loeschen', bestaetigt: '1' }, { cookie });
   assert.ok(!everything(c.dir).includes(MARKE));
 });
+
+const titleOf = html => html.match(/<title>(.*?)<\/title>/)[1];
+
+test('D31: Der Vorschlag steht im Feld und gilt mit dem Speichern; zu lang oder mit Treffer des Checkers wird nichts gespeichert', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  assert.equal(c.store.suggestTitles({ s01: 'Neuron: Was rechnet es?', s99: 'Gibt es nicht' }), 1);
+  const page = await (await c.get('/eidl/mod/f/s01/', cookie)).text();
+  assert.match(page, /name="kurztitel" maxlength="53" value="Neuron: Was rechnet es\?"/);
+  assert.match(page, /Vorschlag von Claude, er gilt erst mit dem Speichern/);
+  assert.equal(titleOf(c.read('f/s01/index.html')), 'Was ist ein Neuron? | hAInrich2');
+
+  const fields = { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'speichern' };
+  for (const kurztitel of ['x'.repeat(54), 'abc', 'Frag max@example.org nach Neuronen']) {
+    const res = await c.form('/eidl/mod/f/s01/', { ...fields, kurztitel }, { cookie });
+    assert.equal(res.status, 422, kurztitel);
+    assert.match(await res.text(), /Der Kurztitel (?:braucht 5 bis 53 Zeichen|enthält etwas)/);
+  }
+  assert.equal(c.store.question('s01').kurztitel, null);
+
+  assert.equal((await c.form('/eidl/mod/f/s01/', { ...fields, kurztitel: '  Neuron:   Was rechnet es? ' }, { cookie })).status, 303);
+  assert.equal(c.store.question('s01').kurztitel, 'Neuron: Was rechnet es?');
+  assert.equal(titleOf(c.read('f/s01/index.html')), 'Neuron: Was rechnet es? | hAInrich2');
+  assert.deepEqual(c.store.revisions('s01').map(r => [r.feld, r.vorher, r.nachher]), [['kurztitel', null, 'Neuron: Was rechnet es?']]);
+
+  await c.form('/eidl/mod/f/s01/', { ...fields, kurztitel: '' }, { cookie });
+  assert.equal(c.store.question('s01').kurztitel, null);
+  assert.equal(titleOf(c.read('f/s01/index.html')), 'Was ist ein Neuron? | hAInrich2', 'leer heißt: der Anfang der Frage');
+  await c.form('/eidl/mod/f/s01/', { ...fields, kurztitel: 'Neuron und Summe' }, { cookie });
+  await c.form('/eidl/mod/f/s01/', fields, { cookie });
+  assert.equal(c.store.question('s01').kurztitel, 'Neuron und Summe', 'ein Formular ohne das Feld nimmt den Titel nicht zurück');
+});
+
+test('D31: Alle Kurztitel auf einer Seite, ein Knopf; bei einem Fehler wird nichts gespeichert und die Eingaben bleiben stehen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  c.store.suggestTitles({ s01: 'Neuron: Was rechnet es?' });
+  const page = await (await c.get('/eidl/mod/titel/', cookie)).text();
+  assert.match(page, /name="t-s01" maxlength="53" value="Neuron: Was rechnet es\?"/);
+  assert.match(page, /Vorschlag von Claude, noch nicht gespeichert/);
+  assert.match(page, /name="t-s02" maxlength="53" value=""/);
+  assert.match(await (await c.get('/eidl/mod/', cookie)).text(), /Kurztitel \(2 offen\)/);
+
+  const schlecht = await c.form('/eidl/mod/titel/', { 't-s01': 'Neuron: Was rechnet es?', 't-s02': 'x'.repeat(60), aktion: 'titel_speichern' }, { cookie });
+  assert.equal(schlecht.status, 422);
+  const wieder = await schlecht.text();
+  assert.match(wieder, /s02: Der Kurztitel braucht 5 bis 53 Zeichen, es sind 60/);
+  assert.match(wieder, new RegExp(`name="t-s02" maxlength="53" value="${'x'.repeat(60)}"`));
+  assert.deepEqual(c.store.questions().map(q => q.kurztitel), [null, null]);
+
+  assert.equal((await c.form('/eidl/mod/titel/', { 't-s01': 'Neuron: Was rechnet es?', 't-s02': 'Tensor oder Array?', aktion: 'titel_speichern' }, { cookie })).status, 303);
+  assert.deepEqual(c.store.questions().map(q => q.kurztitel), ['Neuron: Was rechnet es?', 'Tensor oder Array?']);
+  assert.equal(titleOf(c.read('f/s02/index.html')), 'Tensor oder Array? | hAInrich2');
+  assert.doesNotMatch(await (await c.get('/eidl/mod/', cookie)).text(), /Kurztitel \(/);
+  assert.equal((await c.form('/eidl/mod/titel/', { 't-s01': 'Anders', aktion: 'titel_speichern' }, {})).status, 303, 'ohne Anmeldung zurück zur Anmeldung');
+  assert.equal(c.store.question('s01').kurztitel, 'Neuron: Was rechnet es?');
+});
+
+test('D29: Mit der Prüfung bekommt die Antwort ihr Datum, zurückgesetzt verliert sie es, und die Seite nennt, wer geprüft hat', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  const today = new Date().toISOString().slice(0, 10);
+  assert.equal(c.store.question('s01').antworten[0].geprueftAm, null);
+  await c.form('/eidl/mod/f/s01/', { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'pruefen' }, { cookie });
+  assert.equal(c.store.question('s01').antworten[0].geprueftAm, today);
+  assert.match(c.read('f/s01/index.html'), new RegExp(`Geprüft am <time datetime="${today}">[0-9.]+</time> von <a href="../../ueber/#wer-prüft">Konrad Völkel</a>, Autor des Skripts`));
+  await c.form('/eidl/mod/f/s01/', { aktion: 'zuruecksetzen' }, { cookie });
+  assert.equal(c.store.question('s01').antworten[0].geprueftAm, null);
+  assert.doesNotMatch(c.read('f/s01/index.html'), /class="pruefung"/);
+});
+
+test('D29: Eine public.db von vor dem 17.11. bekommt die neuen Spalten, und geprüfte Antworten ihr Datum aus dem Verlauf', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-'));
+  const file = path.join(dir, 'public.db');
+  const alt = new DatabaseSync(file);
+  alt.exec(`
+CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE questions (id TEXT PRIMARY KEY, corpus TEXT NOT NULL, position INTEGER NOT NULL, text TEXT NOT NULL, kapitel TEXT NOT NULL, herkunft TEXT NOT NULL, tag TEXT NOT NULL, vektor TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('sichtbar', 'zurückgezogen')));
+CREATE TABLE answers (id INTEGER PRIMARY KEY, corpus TEXT NOT NULL, question TEXT NOT NULL REFERENCES questions(id), art TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('ungeprüft', 'geprüft', 'kein_beleg')), modell TEXT, text TEXT, bearbeitet INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE revisions (id INTEGER PRIMARY KEY, question TEXT NOT NULL, feld TEXT NOT NULL, vorher TEXT, nachher TEXT, rolle TEXT NOT NULL, zeit TEXT NOT NULL);
+INSERT INTO questions VALUES ('s01', 'eidl', 0, 'Eins?', 'Tensoren', 'beispiel', '2026-11-04', '[1,0]', 'sichtbar');
+INSERT INTO questions VALUES ('s02', 'eidl', 1, 'Zwei?', 'Tensoren', 'beispiel', '2026-11-04', '[0,1]', 'sichtbar');
+INSERT INTO questions VALUES ('s03', 'eidl', 2, 'Drei?', 'Tensoren', 'beispiel', '2026-11-04', '[1,1]', 'sichtbar');
+INSERT INTO answers VALUES (1, 'eidl', 's01', 'bot', 'geprüft', 'm', 'A', 1);
+INSERT INTO answers VALUES (2, 'eidl', 's02', 'bot', 'geprüft', 'm', 'B', 0);
+INSERT INTO answers VALUES (3, 'eidl', 's03', 'bot', 'ungeprüft', 'm', 'C', 0);
+INSERT INTO revisions VALUES (1, 's01', 'status der antwort', 'ungeprüft', 'geprüft', 'admin', '2026-11-06T09:00:00.000Z');
+INSERT INTO revisions VALUES (2, 's01', 'antwort', 'a', 'A', 'admin', '2026-11-12T18:30:00.000Z');
+INSERT INTO revisions VALUES (3, 's01', 'frage', 'eins', 'Eins?', 'admin', '2026-11-14T08:00:00.000Z');
+INSERT INTO revisions VALUES (4, 's03', 'antwort', 'c', 'C', 'admin', '2026-11-13T08:00:00.000Z');
+INSERT INTO revisions VALUES (5, 's01', 'antwort', 'A', 'A', 'konsole', '2026-11-17T13:06:27.038Z');`);
+  alt.close();
+  for (let lauf = 0; lauf < 2; lauf++) {
+    const store = openStore(file);
+    assert.deepEqual(store.questions().map(q => [q.id, q.antworten[0].geprueftAm, q.kurztitel, q.titelvorschlag, q.lizenz]), [
+      ['s01', '2026-11-12', null, null, null],
+      ['s02', '2026-11-04', null, null, null],
+      ['s03', null, null, null, null],
+    ], 'letzte Änderung an Antwort oder Status durch die Moderation, sonst der Tag der Frage; Ungeprüftes bleibt ohne Datum, ein Eingriff von der Konsole zählt nicht');
+    store.close();
+  }
+  fs.rmSync(dir, { recursive: true });
+});
+
+test('D33: Die Vorschau endet per Schalter, nur für admin und nur mit Haken, und jede Seite wird neu geschrieben', async t => {
+  const c = await setup();
+  t.after(c.close);
+  t.mock.method(console, 'log', () => {});
+  const cookie = await c.signIn();
+  c.store.saveModerator('tutorin', 'moderator', await hashPassphrase(PASSPHRASE));
+  const tutorin = (await c.form('/eidl/mod/anmelden', { name: 'tutorin', passphrase: PASSPHRASE })).headers.get('set-cookie').split(';')[0];
+  await c.form('/eidl/mod/f/s01/', { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'pruefen' }, { cookie });
+  const robots = name => c.read(name).match(/name="robots" content="([^"]+)"/)[1];
+  assert.match(await (await c.get('/eidl/mod/zahlen/', cookie)).text(), /Die Site ist Vorschau.*value="vorschau_beenden"/s);
+  assert.equal(robots('f/s01/index.html'), 'noindex');
+
+  assert.equal((await c.form('/eidl/mod/zahlen/', { aktion: 'vorschau_beenden', bestaetigt: '1' }, { cookie: tutorin })).status, 403);
+  assert.equal((await c.form('/eidl/mod/zahlen/', { aktion: 'vorschau_beenden' }, { cookie })).status, 422);
+  assert.equal((await c.form('/eidl/mod/zahlen/', { aktion: 'irgendwas', bestaetigt: '1' }, { cookie })).status, 400);
+  assert.equal(c.store.site().vorschau, true);
+
+  assert.equal((await c.form('/eidl/mod/zahlen/', { aktion: 'vorschau_beenden', bestaetigt: '1' }, { cookie })).status, 303);
+  assert.equal(c.store.site().vorschau, false);
+  assert.equal(robots('f/s01/index.html'), 'index,follow');
+  assert.equal(robots('f/s02/index.html'), 'noindex', 'ungeprüft bleibt draußen');
+  assert.doesNotMatch(c.read('index.html'), /class="vorschau"/);
+  assert.match(c.read('sitemap.xml'), /f\/s01\//);
+  assert.match(await (await c.get('/eidl/mod/zahlen/', cookie)).text(), /Die Vorschau ist beendet.*value="vorschau_an"/s);
+
+  await c.form('/eidl/mod/zahlen/', { aktion: 'vorschau_an', bestaetigt: '1' }, { cookie });
+  assert.equal(robots('f/s01/index.html'), 'noindex');
+  assert.match(c.read('index.html'), /class="vorschau"/);
+  assert.doesNotMatch(c.read('sitemap.xml'), /<url>/);
+});
+
+test('die Moderation kann eine Frage nicht länger machen, als der Worker sie annimmt', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  const res = await c.form('/eidl/mod/f/s01/', { frage: 'x'.repeat(3001), antwort: 'Ein Neuron rechnet.[1]', aktion: 'speichern' }, { cookie });
+  assert.equal(res.status, 422);
+  assert.match(await res.text(), /Die Frage ist zu lang, möglich sind 3000 Zeichen/);
+});

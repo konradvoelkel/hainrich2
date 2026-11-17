@@ -51,3 +51,19 @@ test('Fragetext bleibt Text: Markup wird nie durchgereicht, auch nicht um eine F
 test('ein Dollar ist nicht immer eine Formel', () => {
   for (const text of ['Das kostet 5$ und 10$ im Monat.', 'Der Preis `$x$` steht im Code.', 'Ein einzelnes $ hier.']) assert.ok(!renderQuestion(text).includes('katex'), text);
 });
+
+test('D2: Mit einer Regel für Links bleibt nur stehen, was sie zulässt; vom Rest bleibt der Text', () => {
+  const nurSkript = href => href.startsWith('https://skript.test/');
+  const html = renderMarkdown('[a](https://boese.test/x) [b](https://skript.test/y) ![c](https://boese.test/c.png) <https://boese.test/auto> [d][1] [e](javascript:alert(1))\n\n[1]: https://boese.test/ref', { links: nurSkript });
+  assert.doesNotMatch(html, /boese\.test\/(?:x|c\.png|ref)|<img/);
+  assert.match(html, /<p>a <a href="https:\/\/skript\.test\/y">b<\/a> c https:\/\/boese\.test\/auto d /);
+  assert.match(renderMarkdown('[a](https://boese.test/x)'), /<a href="https:\/\/boese\.test\/x">a<\/a>/, 'ohne Regel wie bisher');
+});
+
+test('D3: Eine Formel kann keine Fläche über die Seite legen', () => {
+  const styles = html => (html.match(/style="[^"]*"/g) ?? []).join(' ');
+  for (const html of [renderMarkdown('$\\rule{4000em}{4000em}$'), renderQuestion('$\\rule{4000em}{4000em}$ und $\\hspace{900em}x$'), renderMarkdown('$$a\\\\[4000em] b$$')]) {
+    assert.doesNotMatch(styles(html), /(?<![\d.])\d{3,}(?:\.\d+)?em/);
+  }
+  assert.match(styles(renderMarkdown('$\\rule{4000em}{4000em}$')), /20em/);
+});

@@ -187,10 +187,17 @@ test('die Überschriften stehen in der eigenen Schrift, geladen vom eigenen Host
 test('strukturierte Daten stehen in der Seite, und die strenge CSP stört sich nicht daran', async ({ page }) => {
   const seen = watch(page);
   await page.goto('/eidl/f/s01/');
-  const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
-  expect(data.itemListElement.map(e => e.name)).toEqual(['Forum', 'Grundlagen', 'Was ist Deep Learning?']);
+  /** der Pfad steht immer da; ist die Frage geprüft, folgt ein zweiter Block mit QAPage (Plan D32), und der nennt dieselbe Frage wie die H1 */
+  const [pfad, qa] = (await page.locator('script[type="application/ld+json"]').allTextContents()).map(text => JSON.parse(text));
+  expect(pfad.itemListElement.map(e => e.name)).toEqual(['Forum', 'Grundlagen', 'Was ist Deep Learning?']);
+  if (qa) {
+    const frage = qa['@graph'][0].mainEntity;
+    expect(qa['@graph'][0]['@type']).toBe('QAPage');
+    await expect(page.locator('h1')).toHaveText(frage.text);
+    await expect(page.locator(`#${new URL(frage.acceptedAnswer.url).hash.slice(1)}`)).toBeVisible();
+  }
   await page.goto('/eidl/');
-  expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent())['@type']).toBe('WebSite');
+  expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent())['@graph'].map(node => node['@type'])).toEqual(['WebSite', 'Person']);
   expect(seen.problems).toEqual([]);
 });
 
@@ -202,11 +209,21 @@ test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2�
   }
 });
 
+test('an Frage und Antwort führt „Melden“ zum Impressum, und der Fuß nennt den Betreiber', async ({ page }) => {
+  await page.goto('/eidl/f/s01/');
+  await expect(page.locator('.fuss p')).toContainText('Ein privates Angebot von Konrad Völkel');
+  await expect(page.locator('.beitrag .melden')).toHaveCount(await page.locator('.beitrag').count());
+  await page.locator('.frage .melden').click();
+  await expect(page).toHaveURL(/\/eidl\/impressum\/#inhalte-melden$/);
+  await expect(page.locator('#inhalte-melden')).toBeVisible();
+});
+
 test('die Seite „Über hAInrich2“ ist von überall unten erreichbar', async ({ page }) => {
   await page.goto('/eidl/f/s01/');
   await page.click('.fuss a:has-text("Über hAInrich2")');
   await expect(page).toHaveURL(/\/eidl\/ueber\/$/);
   await expect(page.locator('h1')).toHaveText('Über hAInrich2');
-  await expect(page.locator('.dokument h2')).toHaveCount(5);
+  await expect(page.locator('.dokument h2')).toHaveCount(6);
+  await expect(page.locator('[id="wer-prüft"]')).toHaveText('Wer prüft');
   await expect(page.locator('.dokument a[href*="heicad.hhu.de"]')).toHaveText('hAInrich');
 });

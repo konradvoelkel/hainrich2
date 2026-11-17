@@ -34,6 +34,9 @@ const open = !!(pendingFile && code);
 store.setSite('fragen', open);
 store.setSite('entwurf', open && !!schlange);
 store.setSite('stimmen', !!stimmen);
+/** Vorschläge für die Kurztitel des Bestands (Plan D31), nur wo noch nichts steht. Öffentlich wird davon nichts, bis die Moderation speichert */
+const titelFile = new URL('../seeds/kurztitel.json', import.meta.url);
+if (fs.existsSync(titelFile)) store.suggestTitles(JSON.parse(fs.readFileSync(titelFile, 'utf8')));
 await publishAll(live, store);
 
 const publish = createPublisher(live, store);

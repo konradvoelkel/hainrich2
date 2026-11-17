@@ -89,7 +89,7 @@ ln -sfn korpus-<datum> /media/konrad/xtraspace/hainrich2/work/korpus-aktuell
    Hash im Vault des Server-Repos.
 2. **Text ohne Freigabe und ohne Einwilligung erreicht nie die Claude API.** Der einzige Weg vor der Freigabe ist die
    ausdrückliche Einwilligung beim Absenden, ohne Treffer des Checkers (Plan D20, §3 I1, §11.3). Jede andere Abkürzung bricht die
-   Grundlage der Datenschutz-Entscheidung. Der Richter läuft erst nach der Freigabe.
+   Grundlage der Datenschutz-Entscheidung. Der Richter läuft erst nach der Freigabe. Auch der Auftrag für einen Kurztitel entsteht erst dann (Plan D31).
 3. **Kosinus entscheidet nichts.** Embeddings liefern Kandidaten; entscheiden dürfen nur ein Klick,
    die Moderation oder der Richter (Plan §19).
 4. **Der VPS gehört `~/files/work/server`.** Hier liegen keine Playbooks. DNS, Caddy, Units und jeder

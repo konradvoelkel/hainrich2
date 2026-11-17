@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createApi, READS_PER_MINUTE } from '../lib/api.js';
 import { checkToken, hashPassphrase, issueToken, tokenKey } from '../lib/auth.js';
 import { hardHits, softHits } from '../lib/checker.js';
-import { createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
+import { CC0, createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
 import { createPublisher, publishAll } from '../lib/publish.js';
@@ -294,7 +294,7 @@ test('I1: Erst die Freigabe bringt eine Frage ohne Einwilligung in die Schlange,
   const cookie = await c.signIn();
   assert.deepEqual(c.inbox(), []);
   await c.form(`/eidl/mod/neu/${data.id}/`, { frage: 'Warum ist das Verfahren effizient?', kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
-  assert.deepEqual(c.inbox(), [{ id: data.id, text: 'Warum ist das Verfahren effizient?' }]);
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: 'Warum ist das Verfahren effizient?', titel: true }], 'mit der Antwort kommt der Vorschlag für den Kurztitel');
   assert.deepEqual(c.store.question(data.id).vektor, [0, 0, 0]);
   assert.match(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8'), /noch keine Antwort/);
 
@@ -448,7 +448,7 @@ test('der Knopf erscheint erst, wenn der Fragepfad offen ist', () => {
 const OWN = 'Das ist Geschmackssache.';
 const noEvidence = { status: 'kein_beleg', modell: 'attrappe', vektor: [0, 1, 0] };
 
-test('Findet Claude nichts, kann die Moderation bei der Freigabe selbst antworten, ohne Auftrag für den Worker', async t => {
+test('Findet Claude nichts, kann die Moderation bei der Freigabe selbst antworten; der Worker bekommt nur noch den Auftrag für den Kurztitel', async t => {
   const c = await setup();
   t.after(c.close);
   const { data } = await c.ask({ einwilligung: true });
@@ -458,7 +458,7 @@ test('Findet Claude nichts, kann die Moderation bei der Freigabe selbst antworte
   assert.equal((await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: OWN, aktion: 'freigeben' }, cookie)).status, 303);
   const [answer] = c.store.question(data.id).antworten;
   assert.deepEqual([answer.art, answer.status, answer.text, answer.modell, answer.zitate], ['moderation', 'geprüft', OWN, null, []]);
-  assert.deepEqual(c.inbox(), []);
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: FRAGE, titel: true, nurTitel: true }]);
   const html = fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8');
   assert.match(html, /<strong>Konrad Völkel<\/strong><\/a><span class="rolle">Moderation</);
   assert.match(html, /<strong>Anonymer Nutzer<\/strong>/);
@@ -483,7 +483,7 @@ test('Bleibt das Feld leer, gilt weiter „nichts gefunden“, und die Frage hä
   const cookie = await c.signIn();
   await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: '', aktion: 'freigeben' }, cookie);
   assert.equal(c.store.question(data.id).antworten[0].status, 'kein_beleg');
-  assert.deepEqual(c.inbox(), []);
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: FRAGE, titel: true, nurTitel: true }], 'keine zweite Frage nach der Antwort, nur der Kurztitel');
   const overview = await c.page('/eidl/mod/', cookie);
   assert.match(overview, /Kein Beleg \(1\)/);
 });
@@ -692,4 +692,89 @@ test('die Kapitelseiten liegen nach dem Start in live/, auch die noch leeren', a
   const page = fs.readFileSync(c.file('f/kapitel/backpropagation/index.html'), 'utf8');
   assert.match(page, /Zu diesem Kapitel gibt es noch keine Frage/);
   assert.ok(fs.existsSync(c.file('f/kapitel/optimierer/index.html')));
+});
+
+const titleOf = html => html.match(/<title>(.*?)<\/title>/)[1];
+
+test('D31: Vor der Freigabe geht kein Auftrag für einen Kurztitel hinaus, danach wartet der Vorschlag, und öffentlich wird er erst mit dem Speichern', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: FRAGE }], 'die Einwilligung gilt dem Entwurf, nicht dem Titel');
+  await c.deliver(data.id);
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: 'Antwort.[1]', aktion: 'pruefen' }, cookie);
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: FRAGE, titel: true, nurTitel: true }]);
+
+  await c.deliver(data.id, { art: 'titel', titel: 'Backpropagation: Warum effizient?' });
+  assert.deepEqual(c.inbox(), []);
+  const question = c.store.question(data.id);
+  assert.deepEqual([question.kurztitel, question.titelvorschlag], [null, 'Backpropagation: Warum effizient?']);
+  assert.equal(titleOf(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8')), 'Warum ist Backpropagation effizient? | hAInrich2', 'ein Vorschlag ist noch kein Titel');
+  const edit = await c.page(`/eidl/mod/f/${data.id}/`, cookie);
+  assert.match(edit, /name="kurztitel" maxlength="53" value="Backpropagation: Warum effizient\?"/);
+  assert.match(edit, /Vorschlag von Claude, er gilt erst mit dem Speichern/);
+  assert.doesNotMatch(edit, /value="titel_vorschlagen"/, 'ein zweiter Vorschlag wäre ein zweiter Aufruf');
+
+  await c.form(`/eidl/mod/f/${data.id}/`, { frage: FRAGE, antwort: 'Antwort.[1]', kurztitel: 'Backpropagation: Warum effizient?', aktion: 'speichern' }, cookie);
+  assert.equal(titleOf(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8')), 'Backpropagation: Warum effizient? | hAInrich2');
+  assert.equal(c.store.counters().some(z => z.art === 'entwurf_undefined'), false, 'ein Kurztitel ist kein Entwurf und zählt nicht als einer');
+});
+
+test('D31: Wer den Kurztitel bei der Freigabe selbst setzt, braucht keinen Vorschlag', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id);
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: 'Antwort.[1]', kurztitel: 'Backpropagation und Aufwand', aktion: 'freigeben' }, cookie);
+  assert.deepEqual(c.inbox(), []);
+  assert.equal(c.store.question(data.id).kurztitel, 'Backpropagation und Aufwand');
+  assert.equal(titleOf(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8')), 'Backpropagation und Aufwand | hAInrich2');
+});
+
+test('D31: Den Vorschlag gibt es auch auf Knopfdruck, aber nur für eine öffentliche Frage und nicht neben einem laufenden Auftrag', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  assert.match(await c.page('/eidl/mod/f/s01/', cookie), /value="titel_vorschlagen"/);
+  assert.equal((await c.form('/eidl/mod/f/s01/', { aktion: 'titel_vorschlagen' }, cookie)).status, 303);
+  assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Was ist ein Neuron?', titel: true, nurTitel: true }]);
+  assert.equal((await c.form('/eidl/mod/f/s01/', { aktion: 'titel_vorschlagen' }, cookie)).status, 409, 'es läuft schon einer');
+  await c.deliver('s01', { art: 'titel', titel: 'Neuron: Was ist das?' });
+  assert.equal(c.store.question('s01').titelvorschlag, 'Neuron: Was ist das?');
+  await c.form('/eidl/mod/f/s01/', { aktion: 'zurueckziehen' }, cookie);
+  assert.equal(c.fragen.suggest('s01'), false, 'zurückgezogen');
+});
+
+test('D31: Ein Vorschlag, den der Checker sperrt, der zu lang ist oder zu keiner Frage gehört, verfällt', async t => {
+  const c = await setup();
+  t.after(c.close);
+  for (const titel of ['Schreib an max@example.org wegen Neuronen', 'x'.repeat(54), '', null, 17]) {
+    c.fragen.suggest('s01');
+    await c.deliver('s01', { art: 'titel', titel });
+    assert.equal(c.store.question('s01').titelvorschlag, null, String(titel));
+  }
+  c.spool.finish(path.join(c.dir, 'nirgends.json'), { id: 'gibt-es-nicht', art: 'titel', titel: 'Ein Titel ohne Frage' });
+  await c.fragen.collect();
+  assert.deepEqual(c.spool.results(), []);
+});
+
+test('D30: Eine Frage mit Zustimmung ab Version 3 ist gemeinfrei, eine ältere trägt keinen Vermerk', async t => {
+  const c = await setup();
+  t.after(c.close);
+  assert.equal(ZUSTIMMUNG.version, 3);
+  assert.match(ZUSTIMMUNG.oeffentlich, /gemeinfrei \(CC0 1\.0\)/);
+  assert.match(ZUSTIMMUNG.oeffentlich, /eine Antwort und einen Kurztitel/);
+  const cookie = await c.signIn();
+  const { data } = await c.ask();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  assert.equal(c.store.question(data.id).lizenz, CC0.kennung);
+  assert.match(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8'), /Diese Frage ist gemeinfrei \(<a href="https:\/\/creativecommons\.org\/publicdomain\/zero\/1\.0\/deed\.de" rel="license noopener">CC0 1\.0<\/a>\)/);
+
+  const alt = c.pending.add({ text: 'Eine Frage aus der Zeit davor?', zustimmung: 2, einwilligung: false, treffer: [], zustand: 'wartet' });
+  await c.form(`/eidl/mod/neu/${alt.id}/`, { frage: 'Eine Frage aus der Zeit davor?', kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  assert.equal(c.store.question(alt.id).lizenz, null);
+  assert.doesNotMatch(fs.readFileSync(c.file(`f/${alt.id}/index.html`), 'utf8'), /gemeinfrei/);
+  assert.equal((await c.ask({ zustimmung: 2 })).status, 400, 'mit der alten Fassung lässt sich nichts mehr einreichen');
 });

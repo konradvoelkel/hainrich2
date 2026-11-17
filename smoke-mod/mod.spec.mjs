@@ -447,3 +447,49 @@ test('Endgültig löschen braucht den Haken, danach ist die Frage überall weg',
   expect((await page.request.get('/eidl/mod/f/s04/')).status()).toBe(404);
   expect(problems).toEqual([]);
 });
+
+test('Claude schlägt auf Knopfdruck einen Kurztitel vor, die Sammelseite speichert ihn, und er steht im Titel der öffentlichen Seite', async ({ page }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await page.goto('/eidl/mod/f/s02/');
+  await expect(page.locator('#kurztitel')).toHaveValue('');
+  await page.click('button[value="titel_vorschlagen"]');
+  await expect(page.locator('.gemeldet')).toContainText('Der Auftrag ist bei Claude');
+  await expect(async () => {
+    await page.goto('/eidl/mod/f/s02/');
+    await expect(page.locator('#kurztitel')).toHaveValue('Ein Kurztitel von der Attrappe', { timeout: 500 });
+  }).toPass({ timeout: 15_000 });
+  await expect(page.locator('button[value="titel_vorschlagen"]')).toHaveCount(0);
+
+  await page.goto('/eidl/mod/titel/');
+  await expect(page.locator('input[name="t-s02"]')).toHaveValue('Ein Kurztitel von der Attrappe');
+  await page.fill('input[name="t-s02"]', 'Vektoren normalisieren: warum?');
+  await page.click('button[value="titel_speichern"]');
+  await expect(page.locator('.gemeldet')).toContainText('Kurztitel gespeichert');
+  await expect(page.locator('input[name="t-s02"]')).toHaveValue('Vektoren normalisieren: warum?');
+  await page.goto('/eidl/f/s02/');
+  await expect(page).toHaveTitle('Vektoren normalisieren: warum? | hAInrich2');
+  expect(problems).toEqual([]);
+});
+
+test('Der Schalter beendet die Vorschau für alles, was der Server schreibt, und stellt sie wieder her', async ({ page }) => {
+  const problems = watch(page);
+  await signIn(page);
+  await page.goto('/eidl/');
+  await expect(page.locator('.vorschau')).toHaveCount(1);
+  await page.goto('/eidl/mod/zahlen/');
+  await expect(page.locator('main')).toContainText('Die Site ist Vorschau');
+  await page.check('input[name="bestaetigt"]');
+  await page.click('button[value="vorschau_beenden"]');
+  await expect(page.locator('.gemeldet')).toContainText('Die Vorschau ist beendet');
+  await page.goto('/eidl/');
+  await expect(page.locator('.vorschau')).toHaveCount(0);
+
+  await page.goto('/eidl/mod/zahlen/');
+  await page.check('input[name="bestaetigt"]');
+  await page.click('button[value="vorschau_an"]');
+  await expect(page.locator('.gemeldet')).toContainText('wieder Vorschau');
+  await page.goto('/eidl/');
+  await expect(page.locator('.vorschau')).toHaveCount(1);
+  expect(problems).toEqual([]);
+});

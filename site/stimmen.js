@@ -62,11 +62,16 @@ async function stimme(box, klick) {
   }
 }
 
+/**
+ * Klicks nacheinander. Ein zweiter Klick, der die Antwort auf den ersten nicht abwartet, liest dessen Stimme noch nicht: Er rechnet mit
+ * dem alten Stand, und kommt seine Antwort zuerst zurück, bleibt im Browser die falsche Stimme stehen. `stimme` wirft nie.
+ */
+let reihe = Promise.resolve();
 const stimmen = lies();
 for (const box of document.querySelectorAll('.stimme')) {
   zeige(box, stimmen[box.dataset.id]?.wert ?? 0);
   for (const pfeil of box.querySelectorAll('.pfeil')) {
     pfeil.hidden = false;
-    pfeil.addEventListener('click', () => stimme(box, +pfeil.dataset.wert));
+    pfeil.addEventListener('click', () => { reihe = reihe.then(() => stimme(box, +pfeil.dataset.wert)); });
   }
 }

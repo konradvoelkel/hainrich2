@@ -195,7 +195,7 @@ Jeder Schritt hängt an dem davor, und keiner wirkt in der Suche, solange die Vo
 ## 7. Umgesetzt am 2026-11-16
 
 Nach dem Audit umgebaut und **am 17.11. ausgespielt** (Commit `e454d4c`), erst `site/deploy.sh`, dann `site/deploy-app.sh`: erst
-das Stylesheet, dann die Vorlagen, sonst steht der Sprunglink kurz ungestaltet oben. Am Host danach Smoke 20 von 20 in Chromium.
+das Stylesheet, dann die Vorlagen, sonst steht der Sprunglink kurz ungestaltet oben. Am Host danach Smoke 20 von 20 in Chromium, Firefox und WebKit.
 
 | Befund | Stand | Wie geprüft |
 |---|---|---|
@@ -230,6 +230,17 @@ mit Unit-Test.
 **Nicht geprüft:** das Frageformular mit dem neuen Satz im Bild (die statische Site enthält `f/neu/` nicht, der Browser-Test der
 Moderation hat die Seite bedient), der Formelrand in Firefox und WebKit, ein Vorleseprogramm.
 
-**Bleibt bei Konrad:** 2 (wer prüft und wann), 5 (Trainings-Crawler), 6 (veraltete Zitate, kostet je Frage), 7 (Kurztitel),
-15 (Mischfall), 16 (`QAPage`), 17 (Betreiber und Lizenz an der Frageseite), der Schalter in der Moderation
-für das Ende der Vorschau, und im Server-Repo `cache-control` für Schrift, Logo und Icons.
+**Entschieden von Konrad am 17.11., gebaut am selben Tag, noch nicht ausgespielt** (Plan D29 bis D33):
+
+| Befund | Entscheidung | Was gebaut ist |
+|---|---|---|
+| 2 wer prüft und wann | Name, Rolle und Datum | „Geprüft am … von Konrad Völkel, Autor des Skripts“ mit `<time>`, Absatz „Wer prüft“ unter `ueber/`; das Datum der Frage steht nicht mehr neben „geprüft“ |
+| 5 Trainings-Crawler | nicht aussperren | nichts, `robots.txt` bleibt |
+| 7 Kurztitel | ja, mit Vorschlag von Claude | Feld in der Moderation, Sammelseite, 30 Vorschläge für die Beispielfragen, eigener Aufruf für neue Fragen |
+| 15 Mischfall | erst indexierbar, wenn alles geprüft ist | Regel in `lib/site.js`, Test |
+| 16 `QAPage` | ja, soweit möglich | ein Block je geprüfter Frageseite, wie im Beispiel aus `findings/strukturierte-daten.md`, mit der Person als eigenem Knoten auch auf der Startseite |
+| 17 Betreiber und Lizenz | ja; dazu: eingereichte Fragen sind gemeinfrei | Betreiber im Fuß, Autor und CC BY-SA 4.0 an den Zitaten, CC0 1.0 für Fragen ab Zustimmung Version 3 |
+| Schalter für die Vorschau | bauen | `/mod/zahlen/`, nur admin |
+
+**Bleibt offen:** 6 (veraltete Zitate, kostet je Frage Konrads Klick). `cache-control` für Schrift, Logo und Icons ist am 17.11. an
+die Sitzung im Server-Repo gemeldet.

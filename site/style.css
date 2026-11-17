@@ -131,6 +131,12 @@ pre { overflow-x: auto; }
 .inhalt > header { display: flex; flex-wrap: wrap; gap: .3rem .55rem; align-items: center; margin-bottom: .5rem; }
 .inhalt > header .meta { margin: 0; }
 .nummer { margin-left: auto; color: var(--leise); font-size: .85rem; text-decoration: none; }
+/* „Melden“ führt zum Impressum; es steht rechts vor der Nummer und nimmt ihr den Platz nicht */
+.melden { margin: -.3rem 0 -.3rem auto; padding: .3rem .1rem; color: var(--leise); font-size: .85rem; }
+.melden + .nummer { margin-left: 0; }
+.pruefung { margin: 0 0 .5rem; color: var(--gut); font-size: .9rem; }
+.pruefung a { color: inherit; }
+.lizenz { margin: .3rem 0 0; color: var(--leise); font-size: .85rem; }
 .frage h1 { margin: 0; }
 .antwort { margin: .8rem 0; padding: 0; }
 
@@ -173,6 +179,10 @@ pre { overflow-x: auto; }
 .vorschlag { max-height: 24rem; overflow-y: auto; }
 .mod pre { overflow-x: auto; padding: .5rem; border: 1px solid var(--linie); border-radius: .4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
 .verlauf, .zitatliste { padding-left: 1.2rem; }
+/* Alle Kurztitel auf einer Seite: die Frage als Beschriftung in normalem Schnitt, darunter ihr Feld */
+.titelliste { padding-left: 1.4rem; }
+.titelliste li { padding: .5rem 0; border-top: 1px solid var(--linie); }
+.titelliste label { display: block; margin: 0 0 .3rem; font-weight: 400; }
 
 .einstieg h1 { font-size: 1.25rem; }
 .einstieg p { margin: 0 0 .8rem; }
