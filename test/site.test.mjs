@@ -264,6 +264,8 @@ test('Ausschnitt ohne Markdown und Formeln', () => {
   assert.equal(excerpt('- Erstens das.\n- Zweitens dies.\n1. Dann jenes.'), 'Erstens das. Zweitens dies. Dann jenes.', 'Listenzeichen gehören nicht in eine Beschreibung');
   assert.ok(excerpt('wort '.repeat(100), 50).length <= 52);
   assert.equal(excerpt('Ein _kursives_ Wort, zero_grad und a > b'), 'Ein kursives Wort, zero_grad und a > b');
+  assert.equal(excerpt('Der Eintrag $w_j \\sigma\'((Ax)_j)$ und der Gradient $\\nabla_b E$, _betont_.'), 'Der Eintrag w_j σ\'((Ax)_j) und der Gradient ∇_b E, betont.',
+    'der Index einer Formel ist kein Markdown, auch nicht hinter einer Klammer oder einem Zeichen');
 });
 
 test('robots.txt sperrt das Modell und nennt die Sitemap', () => {

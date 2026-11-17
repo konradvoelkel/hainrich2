@@ -202,7 +202,7 @@ Nach dem Audit umgebaut, im Arbeitsbaum, **nicht ausgespielt**. Am Host ist davo
 | 1 Frageseite führt nirgends weiter | Kapitelname im Pfad und unter der H1 verlinkt, am Ende „Alle Fragen zu …“ und das Unterforum | Unit-Test, Browser-Test klickt von s04 zur Kapitelseite und findet die Frage dort |
 | 3 dünne Kapitelseiten | `index` und Sitemap erst ab drei geprüften Fragen (`KAPITEL_INDEX_AB`) | Unit-Tests für Seite und Sitemap |
 | 4 Ende der Vorschau | `test/vorschau.test.mjs` veröffentlicht mit `vorschau` an und aus und prüft Robots-Angabe und Sitemap | läuft in `npm test` |
-| 8 beschädigte Beschreibungen | Auszug ohne Listenzeichen; lesbare Formeln als Text („w · x + b“, „ℝ“, „[0, 1]“), Brüche und Summen bleiben Auslassung | Unit-Test; lokale s09: „Eine lineare Funktion w · x + b nimmt …“ |
+| 8 beschädigte Beschreibungen | Auszug ohne Listenzeichen; lesbare Formeln als Text („w · x + b“, „ℝ“, „[0, 1]“), Brüche und Summen bleiben Auslassung. Dieselbe Funktion macht die Suchausschnitte der Skriptstellen: 156 von 466 lesen sich anders, keiner ist leer | Unit-Test; lokale s09: „Eine lineare Funktion w · x + b nimmt …“; alte und neue Ausschnitte über alle 466 Passagen verglichen |
 | 9 Frageformular | fester Satz, wer fragen kann, mit Link auf den Datenschutz; Wortlaut aus `site/texte/ueber.md` | Unit-Test |
 | 11 Suche | Statuszeile sagt „N Fragen und M Stellen im Skript gefunden“, Suchbereich ist `role="search"` | Browser-Test in drei Browsern |
 | 12 Fokus im Frageformular | nach „Weiter“ im Fragefeld, nach dem Absenden auf „Meine Fragen“ mit Meldung | Browser-Test der Moderation in Chromium und Firefox |
@@ -221,6 +221,11 @@ falsch. Die Frageseite verweist deshalb auf Kapitel und Unterforum, und die list
 **Zum Einklappen:** Ein Zitat bis 220 Zeichen bleibt offen. Der volle Wortlaut steht immer im HTML, die Quelle immer sichtbar. Ohne
 JavaScript klappt ein Klick auf die Zeile das Zitat auf, nur die Marke [n] öffnet es dann nicht von selbst. Die Frageseite lädt dafür
 ein Skript mehr, aber nur, wenn sie ein langes Zitat hat. Gedruckt wird ein eingeklapptes Zitat nicht.
+
+**Nachgezogen am 17.11., beim Probelauf gefunden:** Der Index einer Formel verlor im Ausschnitt seinen Unterstrich, wenn kein
+Buchstabe davor stand: „(Ax)j“ statt „(Ax)_j“, „∇b E“ statt „∇_b E“. Das traf zwei der 466 Suchausschnitte, beide im Kapitel
+Backpropagation, und keine Beschreibung. Der Unterstrich einer Formel ist jetzt vor dem Entfernen der Markdown-Zeichen geschützt,
+mit Unit-Test.
 
 **Nicht geprüft:** das Frageformular mit dem neuen Satz im Bild (die statische Site enthält `f/neu/` nicht, der Browser-Test der
 Moderation hat die Seite bedient), der Formelrand in Firefox und WebKit, ein Vorleseprogramm.
