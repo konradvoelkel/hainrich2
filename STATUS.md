@@ -1,6 +1,6 @@
 # Status
 
-_Stand 2026-11-17._
+_Stand 2026-11-18._
 
 ## Was existiert
 
@@ -73,8 +73,8 @@ _Stand 2026-11-17._
   - Konrad hat den Schalter unter `/eidl/mod/zahlen/` zwischen 23:14 und 23:28 selbst umgelegt; seitdem schreibt der Server seine
     Seiten ohne Banner, und Geprüftes ist `index,follow`. Der statische Bau mit `--release` ging auf sein Wort um 23:42 hinaus
     (`site/deploy.sh`, wie im Probelauf: neuer Inhalt in allen 66 HTML-Seiten, `sitemap.xml`, `daten/fragen.json`; gelöscht die
-    statischen Seiten zu s19 und s27). Dieser Bau stammt aus dem Arbeitsbaum, nicht aus einem Commit: `06fe244` plus den Änderungen
-    dieses Abends an den Texten und Seeds.
+    statischen Seiten zu s19 und s27). Der Bau ging aus dem Arbeitsbaum hinaus und ist seither als `749e0b3` committet; ein Bau aus
+    dem Commit gleicht dem Baum am Host Datei für Datei (Inhaltsvergleich mit rsync am 18.11., kein Unterschied).
   - **s19 und s27 gibt es nicht mehr:** Er hat sie in der Moderation endgültig gelöscht. Sie sind aus `seeds/fragen.json` und
     `seeds/kurztitel.json` gestrichen, der Bestand hat 27 Beispielfragen und zwei Testfragen. Der Bau brach an ihnen zuerst ab; eine
     zurückgezogene Beispielfrage lässt er seither weg, eine gelöschte muss aus den Seeds.
@@ -86,9 +86,15 @@ _Stand 2026-11-17._
     s19 und s27 antworten mit 404. Die Sitemap nennt 35 Adressen. Smoke 22 von 22 in Chromium, Firefox und WebKit.
   - **Search Console:** Sitemap `https://hai.konradvoelkel.com/eidl/sitemap.xml` am 17.11. eingereicht, Status „Success“, 35 Seiten
     erkannt.
-  - **Gebaut, nicht ausgespielt:** Links aus der Moderation zurück zur öffentlichen Site (im Kopf „Zum Forum“, an jeder sichtbaren
-    Frage „öffentliche Seite“) und derselbe Wortlaut „Klick/Fokus“ im Hinweis an der Suche. Beides braucht `site/deploy-app.sh`.
-    `npm test` 301 von 301, `smoke:mod` 27 von 27 in Firefox und in drei von vier Läufen in Chromium: Einmal scheiterte dort der
+  - **Ausgespielt am 2026-11-18 um 00:07** (`site/deploy-app.sh`, Commit `749e0b3`, wie im Probelauf drei Dateien): Links aus der
+    Moderation zurück zur öffentlichen Site (im Kopf „Zum Forum“, an jeder sichtbaren Frage „öffentliche Seite“) und derselbe
+    Wortlaut „Klick/Fokus“ im Hinweis an der Suche. Am Host danach: beides zu sehen, die Vorschau bleibt beendet, Sitemap 35
+    Adressen, Smoke 22 von 22 in drei Browsern, CI grün. Hinter der Anmeldung habe ich die Links am Host nicht angesehen.
+  - `site/deploy-app.sh` wartet nach dem Neustart auf die erste 200 der Anmeldeseite, höchstens 60 Sekunden. Im Server-Repo hat
+    `hainrich2-web` seit dem 17.11. um 23:38 eine `CPUQuota` von einem Kern (Threat Model C5); dort gemessen kam die erste Antwort
+    elf Sekunden nach dem Neustart, „nach fünf Sekunden aktiv“ wurde vorher grün. Im ersten echten Lauf antwortete der Dienst rund
+    sieben Sekunden nach dem Neustart.
+  - Tests vor dem Ausspielen: `npm test` 301 von 301 (auch im Pre-Push-Hook), `smoke:mod` 27 von 27 in Firefox und in drei von vier Läufen in Chromium: Einmal scheiterte dort der
     ältere Test „ungespeicherte Änderungen …“, allein lief er dreimal durch; die Ursache ist nicht gesucht.
   - **Veraltete Zitate gibt es am Host keine mehr** (nur gelesen, um 23:55 gegen den ausgespielten Korpus gerechnet): Am Nachmittag
     waren es zehn. Konrad hat am Abend s19 und s27 gelöscht und die übrigen acht Antworten neu erzeugen lassen und geprüft (s17, s18,
@@ -335,7 +341,7 @@ _Stand 2026-11-17._
 
 ## Nächster Schritt
 
-Die Vorschau ist seit dem 2026-11-17 beendet. Die App am Host läuft auf `06fe244`, die statischen Seiten stammen aus dem Release-Bau vom selben Abend. Die Kurztitel sind bestätigt.
+Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `749e0b3`, App und statische Seiten. Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Geprüftes ist seit dem Ende der Vorschau indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.
