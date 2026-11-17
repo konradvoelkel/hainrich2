@@ -226,7 +226,8 @@ Keiner dieser Schritte wirkt in der Suche, solange die Vorschau läuft.
 
 ## 9. Umgesetzt am 2026-11-17
 
-Nach dem Audit umgebaut, auf Konrads Wort („umbauen, was sich ohne Entscheidung umbauen lässt“). **Nicht ausgespielt.**
+Nach dem Audit umgebaut, auf Konrads Wort („umbauen, was sich ohne Entscheidung umbauen lässt“), committet als `7ca0c6e` und am
+selben Abend gegen 19 Uhr ausgespielt. Was am Host gemessen ist, steht unter der Tabelle; die Tabelle nennt die Prüfung vor dem Ausspielen.
 
 | Befund | Stand | Wie geprüft |
 |---|---|---|
@@ -248,6 +249,24 @@ Chromium und Firefox, alles gegen den lokalen Bau.
 - **„Beim ersten Klick“ an der Suche:** Derselbe Satz steht im Datenschutz. Den ändere ich nicht ohne Konrad.
 - **Eigene Fokus-Regeln** für `.melden`, `.nummer`, `.marke-zitat`: Der Rahmen des Browsers gilt dort, entfernt hat ihn niemand.
 - **Befund 1, 3, 6, 7, 8** sind Konrads Text oder Klick, **9b und 9c** seine Entscheidung. Die Umleitungen gehören ins Server-Repo.
+
+**Am Host nachgemessen, nach dem Ausspielen** (neuer Crawl, 99 Seiten, alle mit Status 200, Rohdaten unter
+`work/seo-audit-2026-11-17/nach-umbau/`):
+
+| Was | vor dem Umbau | danach |
+|---|---|---|
+| Frage im Auszug von trafilatura (`auszug.py`) | 1 von 31 | 28 von 31, bei allen 28 beginnt der Auszug mit der Frage |
+| Prüfvermerk im Auszug | | 30 von 31 |
+| Anfang der Antwort im Auszug | | 29 von 31 |
+| Beschreibungen unter 70 Zeichen | 7 | 0 |
+| Beschreibungen mit „…“ vor dem Ende | 4 | 0 |
+| Beschreibungen über 155 Zeichen | 0 | 0 |
+| `npm run smoke` gegen den Host | 21 von 21 | 22 von 22 in Chromium, Firefox und WebKit |
+
+Bei s09, s11 und s15 fehlt die Frage weiter im Auszug; der beginnt dort mit dem Prüfvermerk. Mit `favor_recall` steht sie bei allen
+dreien vorn. Den Grund kenne ich nicht: s15 ist im lokalen Bau dabei und unterscheidet sich am Host nur durch die Knöpfe zum Abstimmen
+und den Kurztitel. Zwölf Beschreibungen enden auf „…“, das ist die Regel für den angefangenen nächsten Satz. Nicht gemessen sind
+Ladezeiten nach dem Umbau und alles hinter dem Kurscode.
 
 **Beim Nachsehen aufgefallen, älter als dieser Umbau:** Ein Suchausschnitt trägt „{math}“, eine Direktive aus dem Skript, die der Schnitt
 des Korpus stehen lässt.

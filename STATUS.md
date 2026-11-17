@@ -97,12 +97,14 @@ _Stand 2026-11-17._
   zehn geprüfte Antworten zitieren Wortlaut, den das Skript nicht mehr hat; ein Textextraktor findet die Frage auf 30 von 31
   Frageseiten nicht (der Umbau vom 16.11. dazu hat nichts bewirkt); s29 und s20 sagen im ersten Satz ab, was ihr Titel verspricht,
   bei s06 führt der erste Satz in die Irre; der Link „Alle Fragen zu …“ führt bei 25 von 31 Fragen auf eine Liste mit nur dieser
-  Frage. Gemessen: LCP 0,58 bis 0,68 s gedrosselt, ein Wiederbesuch kostet rund 1 KB. **Umgebaut am selben Abend, nicht ausgespielt**
-  (Abschnitt 9 des Berichts): Die Frage steht als Erstes in ihrer Karte und der Faden ist ein `<article>` (im lokalen Bau nimmt
-  trafilatura sie jetzt bei 27 von 29 Seiten mit, vorher bei einer), unter der Antwort stehen Unterforum und Skriptkapitel statt
-  des Kapitellinks, Beschreibungen in ganzen Sätzen mit lesbaren Formeln (an den 31 Antworten vom Host: keine unter 70 Zeichen,
-  keine mit Lücke), jede Quelle einmal im `QAPage`, `lastmod` in der Sitemap, „Melden“ mit Namen, dazu Kleinigkeiten. `npm test` 286
-  von 286, Smoke 22 von 22 in drei Browsern, `smoke:mod` 26 von 26 in Chromium und Firefox. Offen bleiben Konrads Texte und Klicks.
+  Frage. Gemessen: LCP 0,58 bis 0,68 s gedrosselt, ein Wiederbesuch kostet rund 1 KB. **Umgebaut und ausgespielt am selben Abend**
+  (Commit `7ca0c6e`, Abschnitt 9 des Berichts): Die Frage steht als Erstes in ihrer Karte und der Faden ist ein `<article>`, unter
+  der Antwort stehen Unterforum und Skriptkapitel statt des Kapitellinks, Beschreibungen in ganzen Sätzen mit lesbaren Formeln, jede
+  Quelle einmal im `QAPage`, `lastmod` in der Sitemap, „Melden“ mit Namen, dazu Kleinigkeiten. Vorher `npm test` 286 von 286, Smoke 22
+  von 22 in drei Browsern, `smoke:mod` 26 von 26 in Chromium und Firefox, CI grün. **Am Host nachgemessen** mit einem neuen Crawl:
+  trafilatura nimmt die Frage bei 28 von 31 Seiten mit (vorher bei einer; s09, s11 und s15 fehlen, Grund offen), keine Beschreibung
+  unter 70 Zeichen und keine mit Lücke (vorher 7 und 4), Smoke 22 von 22 in drei Browsern. Nicht gemessen: Ladezeiten nach dem Umbau.
+  Offen bleiben Konrads Texte und Klicks.
 - `research/2026-11-16-seo-audit/`: zweites SEO-Audit, am ausgespielten Stand mit 99 Seiten. Startbereitschaft 79 von 100 (eine
   Einschätzung), kein Rückschritt seit dem Audit vom 06.11. Offen vor dem Ende der Vorschau: Frageseiten verlinken weder ihr Kapitel
   noch andere Fragen, „geprüft“ nennt weder Prüfer noch Datum, Kapitelseiten würden ab einer geprüften Frage indexiert, und für das
@@ -267,7 +269,7 @@ _Stand 2026-11-17._
 
 ## Nächster Schritt
 
-Alles vom 2026-11-17 ist ausgespielt, der Host läuft auf `d977182`. Die Kurztitel sind bestätigt.
+Alles vom 2026-11-17 ist ausgespielt, der Host läuft auf `7ca0c6e`. Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes
