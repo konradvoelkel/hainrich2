@@ -100,7 +100,11 @@ test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link, noindex', async ({ pa
   await expect(page.locator('#z1 blockquote')).toBeVisible();
   await expect(page.locator('.frage time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
   await expect(page.locator('.weiter a')).toHaveCount(2);
-  await page.locator('.frage .meta a[href*="kapitel/"]').click();
+  /** die Frage steht im Quelltext vor Absender und Kopfzeile, zu sehen ist sie darunter */
+  expect(await page.evaluate(() => document.querySelector('.frage').firstElementChild.tagName)).toBe('H1');
+  expect(await page.evaluate(() => document.querySelector('.frage h1').getBoundingClientRect().top > document.querySelector('.frage > header').getBoundingClientRect().top)).toBe(true);
+  await expect(page.locator('.weiter a').first()).toContainText('Mehr Fragen im Unterforum');
+  await page.locator('.pfad a[href*="kapitel/"]').click();
   await expect(page).toHaveURL(/\/f\/kapitel\/[a-z0-9-]+\/$/);
   await expect(page.locator('h1')).toContainText('Fragen zu');
   await expect(page.locator('.themen a[href$="/s04/"]')).toBeVisible();
@@ -200,6 +204,34 @@ test('strukturierte Daten stehen in der Seite, und die strenge CSP stört sich n
   await page.goto('/eidl/');
   expect(JSON.parse(await page.locator('script[type="application/ld+json"]').textContent())['@graph'].map(node => node['@type'])).toEqual(['WebSite', 'Person']);
   expect(seen.problems).toEqual([]);
+});
+
+test('jede Frageseite: QAPage, wo es eins gibt, nennt die Frage der Seite, zeigt auf vorhandene Beiträge und nennt jede Quelle einmal', async ({ page }) => {
+  const fragen = await page.request.get('/eidl/daten/fragen.json').then(r => r.json());
+  expect(fragen.length).toBeGreaterThan(20);
+  let mitMarkup = 0;
+  for (const { id } of fragen) {
+    const html = await page.request.get(`/eidl/f/${id}/`).then(r => r.text());
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(m => JSON.parse(m[1]));
+    expect(blocks[0]['@type'], id).toBe('BreadcrumbList');
+    /** die Frage als Erstes in ihrer Karte, sonst nimmt ein Textextraktor sie nicht mit (am Host erst nach dem Ausspielen dieses Stands) */
+    if (!process.env.SMOKE_URL) expect(html, id).toMatch(/<article class="beitrag frage" id="b1" aria-label="Frage"><h1>/);
+    const qa = blocks.find(b => b['@graph']?.[0]['@type'] === 'QAPage')?.['@graph'][0].mainEntity;
+    if (!qa) continue;
+    mitMarkup += 1;
+    const antworten = [qa.acceptedAnswer, ...(qa.suggestedAnswer ?? [])];
+    expect(qa.answerCount, id).toBe((html.match(/<article class="beitrag antwort"/g) ?? []).length);
+    expect(antworten.length, id).toBe(qa.answerCount);
+    for (const antwort of antworten) {
+      expect(html, id).toContain(`id="${new URL(antwort.url).hash.slice(1)}"`);
+      const quellen = (antwort.citation ?? []).map(c => c.url);
+      if (!process.env.SMOKE_URL) expect(new Set(quellen).size, id).toBe(quellen.length);
+      for (const url of quellen) expect(url, id).toMatch(/^https:\/\/[^:]*$/);
+    }
+    expect(html.includes('rel="license'), id).toBe(false);
+  }
+  /** im lokalen Bau ist nichts geprüft, also gibt es dort kein QAPage; am Host tragen es alle geprüften Seiten */
+  if (process.env.SMOKE_URL) expect(mitMarkup).toBeGreaterThan(0);
 });
 
 test('ein Klick auf Bild oder Name des Bots führt zur Seite „Über hAInrich2“', async ({ page }) => {

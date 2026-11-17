@@ -128,8 +128,13 @@ pre { overflow-x: auto; }
 .rolle { padding: .02rem .3rem; font-size: .72rem; overflow-wrap: normal; }
 .avatar { display: grid; place-items: center; border-radius: 50%; background: var(--karte); color: var(--marke); font-size: 1.6rem; font-weight: 700; }
 .inhalt { padding: .7rem 1rem 1rem; }
-.inhalt > header { display: flex; flex-wrap: wrap; gap: .3rem .55rem; align-items: center; margin-bottom: .5rem; }
-.inhalt > header .meta { margin: 0; }
+.inhalt > header, .frage > header { display: flex; flex-wrap: wrap; gap: .3rem .55rem; align-items: center; margin-bottom: .5rem; }
+.inhalt > header .meta, .frage > header .meta { margin: 0; }
+/* Die Fragekarte: Im Quelltext steht die H1 zuerst, damit ein Textextraktor die Frage mitnimmt. Zu sehen ist die alte Ordnung, Absender links, Kopfzeile über der Frage */
+.frage { grid-template-areas: "autor kopf" "autor frage"; grid-template-rows: auto 1fr; }
+.frage > .autor { grid-area: autor; }
+.frage > header { grid-area: kopf; padding: .7rem 1rem 0; }
+.frage > h1 { grid-area: frage; padding: 0 1rem 1rem; }
 .nummer { margin-left: auto; color: var(--leise); font-size: .85rem; text-decoration: none; }
 /* „Melden“ führt zum Impressum; es steht rechts vor der Nummer und nimmt ihr den Platz nicht */
 .melden { margin: -.3rem 0 -.3rem auto; padding: .3rem .1rem; color: var(--leise); font-size: .85rem; }
@@ -143,6 +148,7 @@ pre { overflow-x: auto; }
 @media (max-width: 34rem) {
   h1 { font-size: 1.25rem; }
   .beitrag { grid-template-columns: minmax(0, 1fr); }
+  .frage { grid-template-areas: "autor" "kopf" "frage"; grid-template-rows: auto; }
   .autor { flex-direction: row; justify-content: flex-start; gap: .5rem; padding: .4rem .7rem; }
   .autor img, .avatar { width: 2rem; height: 2rem; }
   .avatar { font-size: 1rem; }
@@ -227,6 +233,8 @@ pre { overflow-x: auto; }
 .deckel progress { display: block; width: 100%; margin-top: .2rem; accent-color: var(--marke); }
 
 /* Sprunglink für die Tastatur: sichtbar erst, wenn sie ihn erreicht */
+/* Nur für Vorleseprogramme: Der Zähler der Stimmen bekommt so sein Wort, ohne dass das Skript es beim Zählen überschreibt */
+.nur-vorlesen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .sprung { position: absolute; left: -999rem; top: .5rem; z-index: 2; padding: .4rem .7rem; border: 2px solid var(--marke); border-radius: .4rem; background: var(--karte); color: var(--tinte); }
 .sprung:focus { left: .5rem; }
 /* Fokus, den ein Skript setzt, damit die Tastatur an der richtigen Stelle weitermacht, braucht keinen Rahmen */

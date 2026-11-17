@@ -35,7 +35,7 @@ test('die Kapitelseite trägt Adresse, Titel, Brotkrumen und einen Link ins Form
   const html = kapitelPage(backprop, [], site);
   assert.match(html, /<link rel="canonical" href="https:\/\/example\.test\/eidl\/f\/kapitel\/backpropagation\/">/);
   assert.match(html, /<h1>Fragen zu „Backpropagation“<\/h1>/);
-  assert.match(html, /<a class="knopf fragen" href="\.\.\/\.\.\/neu\/\?kapitel=backpropagation">Frage stellen<\/a>/);
+  assert.match(html, /<a class="knopf fragen" href="\.\.\/\.\.\/neu\/\?kapitel=backpropagation" rel="nofollow">Frage stellen<\/a>/);
   assert.match(html, /<a href="\.\.\/\.\.\/\.\.\/">Forum<\/a> <span aria-hidden="true">›<\/span> <a href="\.\.\/\.\.\/lernen\/">Lernen und Training<\/a>/);
   assert.match(html, /href="https:\/\/skript\.test\/backpropagation\/">Kapitel im Skript/);
   assert.match(html, /"name":"Backpropagation"/);
@@ -47,7 +47,7 @@ test('die Kapitelseite trägt Adresse, Titel, Brotkrumen und einen Link ins Form
 test('die Suche auf der Kapitelseite kennt ihren Kapiteltitel und findet ihre Dateien unter der Wurzel', () => {
   const html = kapitelPage(backprop, [], site);
   assert.match(html, /<section class="suche" id="suche" role="search" aria-label="Suche im Forum" hidden data-root="\.\.\/\.\.\/\.\.\/" data-kapitel="Backpropagation">/);
-  assert.match(html, /<a class="knopf fragen" href="\.\.\/\.\.\/neu\/\?kapitel=backpropagation">Diese Frage stellen<\/a>/);
+  assert.match(html, /<a class="knopf fragen" href="\.\.\/\.\.\/neu\/\?kapitel=backpropagation" rel="nofollow">Diese Frage stellen<\/a>/);
   assert.doesNotMatch(indexPage([], site), /data-kapitel/);
   assert.match(indexPage([], site), /<section class="suche" id="suche" role="search" aria-label="Suche im Forum" hidden data-root="">/);
 });

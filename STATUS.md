@@ -60,11 +60,15 @@ _Stand 2026-11-17._
     auf den Text statt auf den Folienlink zeigt (Vergleich der öffentlichen Seiten vor und nach dem Ausspielen). Prüfdaten und
     Fragetexte sind unverändert. **Kein Vektor hat sich geändert** (bis 16:39). Das passt: Die Texte der 29 Beispielfragen am Host
     gleichen dem Repo, bearbeitet wurde dort keiner. Dass ein Auftrag `nurVektor` am Host durchläuft, hat damit noch niemand gesehen.
-- **Gebaut am Abend des 2026-11-17, nicht committet und nicht ausgespielt** (Nachtrag zu D35): Ändert die Moderation eine Frage bei
+- **Gebaut und ausgespielt am Abend des 2026-11-17** (Nachtrag zu D35, Commit `d977182`): Ändert die Moderation eine Frage bei
   der Freigabe, wurde bisher der Vektor aus dem Entwurf übernommen, also der des eingereichten Wortlauts; nach einer Redaktion stünde
   er öffentlich in `daten/fragen.json`. Jetzt trägt jedes Ergebnis des Worker ein Kennzeichen seines Wortlauts, ein Vektor wird nur
-  gesetzt, wenn es zum Text passt, und sonst rechnet der Worker ihn aus dem freigegebenen Text neu. `npm test` 283 von 283. Am Host
-  gilt bis zum Ausspielen das alte Verhalten; freigegeben wurde dort seit dem 05.11. keine Frage.
+  gesetzt, wenn es zum Text passt, und sonst rechnet der Worker ihn aus dem freigegebenen Text neu. `npm test` 283 von 283,
+  `smoke:mod` 26 von 26 in Chromium und Firefox. Ausgespielt auf Konrads Wort um 17:10:22 mit `site/deploy-app.sh` (drei Dateien unter
+  `lib/`, wie im Probelauf; die Site blieb unberührt), Dienst nach fünf Sekunden aktiv. Am Host danach, nur lesend: Vektoren,
+  Fragetexte, Prüfdaten und alle 134 Zitate wie vor dem Ausspielen, Smoke 21 von 21 in drei Browsern. Freigegeben wurde am Host seit
+  dem 05.11. keine Frage; dass eine Redaktion bei der Freigabe dort Nullen und danach einen neuen Vektor ergibt, hat also noch
+  niemand gesehen. Der CI-Lauf zu `d977182` lief beim Ausspielen noch und endete sieben Minuten später grün.
 - Am Host hinter der Anmeldung angesehen, 2026-11-17 gegen 17 Uhr, in Konrads Browser und nur lesend: Alle 31 Kurztitel sind
   gespeichert (Konrad hat die 29 Vorschläge bestätigt, einen gekürzt und zwei selbst geschrieben), sie stehen in den Titeln der
   öffentlichen Seiten. `/eidl/mod/zahlen/`: 0 Anfragen in den letzten sieben Tagen, 13 im Monat für 1,33 $ von 15 $, keine Fehlerzeile,
@@ -88,6 +92,17 @@ _Stand 2026-11-17._
   `site/deploy-app.sh` endete mit Status 255; nachgeholt mit einer einzelnen Verbindung. Danach `hainrich2-web` aktiv, Smoke 19/19 gegen
   den Host, die API weist `GET` mit 405 ab, die Anmeldeseite der Moderation kommt. **Einen echten Aufruf mit SDK 1.8.0 gab es noch
   nicht:** Der erste Entwurf nach dem Ausspielen ist der erste, und das Journal des Workers habe ich nicht gelesen.
+- `research/2026-11-17-seo-audit/`: drittes SEO-Audit, am ausgespielten Stand `d977182` mit 99 Seiten. Startbereitschaft 84 von 100
+  (eine Einschätzung; 16.11.: 79). Von den 17 Befunden des 16.11. sind 13 erledigt oder entschieden. Offen vor dem Ende der Vorschau:
+  zehn geprüfte Antworten zitieren Wortlaut, den das Skript nicht mehr hat; ein Textextraktor findet die Frage auf 30 von 31
+  Frageseiten nicht (der Umbau vom 16.11. dazu hat nichts bewirkt); s29 und s20 sagen im ersten Satz ab, was ihr Titel verspricht,
+  bei s06 führt der erste Satz in die Irre; der Link „Alle Fragen zu …“ führt bei 25 von 31 Fragen auf eine Liste mit nur dieser
+  Frage. Gemessen: LCP 0,58 bis 0,68 s gedrosselt, ein Wiederbesuch kostet rund 1 KB. **Umgebaut am selben Abend, nicht ausgespielt**
+  (Abschnitt 9 des Berichts): Die Frage steht als Erstes in ihrer Karte und der Faden ist ein `<article>` (im lokalen Bau nimmt
+  trafilatura sie jetzt bei 27 von 29 Seiten mit, vorher bei einer), unter der Antwort stehen Unterforum und Skriptkapitel statt
+  des Kapitellinks, Beschreibungen in ganzen Sätzen mit lesbaren Formeln (an den 31 Antworten vom Host: keine unter 70 Zeichen,
+  keine mit Lücke), jede Quelle einmal im `QAPage`, `lastmod` in der Sitemap, „Melden“ mit Namen, dazu Kleinigkeiten. `npm test` 286
+  von 286, Smoke 22 von 22 in drei Browsern, `smoke:mod` 26 von 26 in Chromium und Firefox. Offen bleiben Konrads Texte und Klicks.
 - `research/2026-11-16-seo-audit/`: zweites SEO-Audit, am ausgespielten Stand mit 99 Seiten. Startbereitschaft 79 von 100 (eine
   Einschätzung), kein Rückschritt seit dem Audit vom 06.11. Offen vor dem Ende der Vorschau: Frageseiten verlinken weder ihr Kapitel
   noch andere Fragen, „geprüft“ nennt weder Prüfer noch Datum, Kapitelseiten würden ab einer geprüften Frage indexiert, und für das
@@ -252,8 +267,7 @@ _Stand 2026-11-17._
 
 ## Nächster Schritt
 
-Bis auf den Nachtrag zum Vektor vom Abend ist alles vom 2026-11-17 ausgespielt, der Host läuft auf `a918710`. Die Kurztitel sind
-bestätigt.
+Alles vom 2026-11-17 ist ausgespielt, der Host läuft auf `d977182`. Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes

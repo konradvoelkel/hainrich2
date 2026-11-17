@@ -169,17 +169,29 @@ test('der Titel bleibt kurz und ohne Formel, die volle Frage steht in der H1', (
   assert.match(titleOf(html), /^Ich bringe .* … \| hAInrich2$/);
   assert.match(html, /<h1>Ich bringe[\s\S]*allgemein\?<\/h1>/);
   assert.equal(titleOf(questionPage({ ...question(), text: 'Was ist $x$?' }, site)), 'Was ist x? | hAInrich2');
-  assert.equal(titleOf(questionPage({ ...question(), text: 'Was ist $\\frac{a}{b}$?' }, site)), 'Was ist …? | hAInrich2');
+  assert.equal(titleOf(questionPage({ ...question(), text: 'Was ist $\\frac{a}{b}$?' }, site)), 'Was ist a/b? | hAInrich2', 'ein einfacher Bruch lässt sich lesen');
+  assert.equal(titleOf(questionPage({ ...question(), text: 'Was ist $\\sum_{i=1}^n x_i$?' }, site)), 'Was ist …? | hAInrich2', 'eine Summe nicht');
 });
 
 test('die Beschreibung ist der Anfang der Antwort, sonst das Kapitel', () => {
-  const text = `Mit \`zero_grad()\` und **Gradienten**: $x$ bleibt, $\\frac{a}{b}$ nicht.[1] ${'Noch mehr Text. '.repeat(30)}`;
+  const text = `Mit \`zero_grad()\` und **Gradienten**: $x$ bleibt, $\\frac{a}{b}$ auch.[1] ${'Noch mehr Text. '.repeat(30)}`;
   const answer = { ...question().antworten[0], text };
-  const description = descriptionOf(questionPage({ ...question(), antworten: [answer] }, site));
-  assert.match(description, /^Mit zero_grad\(\) und Gradienten: x bleibt, … nicht\. Noch mehr/);
-  assert.ok(description.length <= 155, description);
-  const whole = { ...answer, text: `Der erste Satz ist lang genug, um für sich zu stehen. Dann folgt $\\frac{a}{b}$ und mehr.` };
-  assert.equal(descriptionOf(questionPage({ ...question(), antworten: [whole] }, site)), 'Der erste Satz ist lang genug, um für sich zu stehen.');
+  const of = antwort => descriptionOf(questionPage({ ...question(), antworten: [{ ...answer, text: antwort }] }, site));
+  const description = of(text);
+  assert.match(description, /^Mit zero_grad\(\) und Gradienten: x bleibt, a\/b auch\. Noch mehr Text\./);
+  assert.ok(description.length <= 155 && description.endsWith('Text.'), description);
+  const SUMME = '$\\sum_{i=1}^n x_i$';
+  assert.equal(of(`Der erste Satz ist lang genug, um für sich allein als Beschreibung im Treffer zu stehen. Dann folgt ${SUMME} und mehr.`),
+    'Der erste Satz ist lang genug, um für sich allein als Beschreibung im Treffer zu stehen.', 'lang genug: vor dem Satz mit der Formel ist Schluss');
+  assert.equal(of(`Ein kurzer Satz davor. Dann folgt eine längere Erklärung mit vielen Worten bis zur Formel ${SUMME} und noch mehr danach.`),
+    'Ein kurzer Satz davor. Dann folgt eine längere Erklärung mit vielen Worten bis zur Formel …', 'zu kurz: der nächste Satz bis vor die Formel, die Auslassung nur am Ende');
+  assert.equal(of('Nein, das ist keine Voraussetzung. Das Skript beschreibt das Vortraining ausdrücklich als freiwilligen Schritt, den man auslassen kann, ohne dass dem Verfahren danach etwas Wesentliches fehlt, und nennt dafür zwei Gründe.'),
+    'Nein, das ist keine Voraussetzung. Das Skript beschreibt das Vortraining ausdrücklich als freiwilligen Schritt, den man auslassen kann, ohne dass dem …', 'ein kurzer erster Satz bekommt den Anfang des nächsten dazu');
+  assert.equal(of('Das gilt z. B. für kleine Netze, wie man in Kap. 3 sieht, und auch für große. Der zweite Satz steht hier nur, damit es einen gibt.'),
+    'Das gilt z. B. für kleine Netze, wie man in Kap. 3 sieht, und auch für große. Der zweite Satz steht hier nur, damit es einen gibt.', 'ein Punkt hinter einem Kürzel beendet keinen Satz');
+  assert.equal(of(`Es gilt ${SUMME}, und zwar immer.`), 'Es gilt …, und zwar immer.', 'trägt schon der erste Satz die Formel, bleibt die Auslassung');
+  assert.equal(of('Die Liste [...] geht so weiter, wie man es aus dem vorigen Abschnitt kennt, und endet erst nach vielen weiteren Einträgen dieser Art.'),
+    'Die Liste geht so weiter, wie man es aus dem vorigen Abschnitt kennt, und endet erst nach vielen weiteren Einträgen dieser Art.', 'ein Auslassungszeichen aus dem Zitat gehört nicht in den Treffer');
   const none = descriptionOf(questionPage({ ...question({ status: 'kein_beleg' }), kapitel: 'Was ist Deep Learning?' }, site));
   assert.equal(none, 'Frage zum Kapitel „Was ist Deep Learning?“ im Skript „Einführung in Deep Learning“.');
 });
@@ -261,7 +273,9 @@ test('Vorschau-Banner nur in der Vorschau', () => {
 test('Ausschnitt ohne Markdown und Formeln', () => {
   assert.equal(excerpt('Ein **Wort** mit $x^2$ und [Link](http://a.test).'), 'Ein Wort mit x^2 und Link.');
   assert.equal(excerpt('Die Funktion $w \\cdot x + b$ liegt in $\\mathbb{R}$, nicht in $[0, 1]$.'), 'Die Funktion w · x + b liegt in ℝ, nicht in [0, 1].');
-  assert.equal(excerpt('Ein Bruch $\\frac{a}{b}$ und eine Summe $\\sum_{i=1}^n x_i$ bleiben draußen.'), 'Ein Bruch … und eine Summe … bleiben draußen.');
+  assert.equal(excerpt('Ein Bruch $\\frac{a}{b}$ bleibt, eine Summe $\\sum_{i=1}^n x_i$ und ein Bruch im Bruch $\\frac{\\frac{a}{b}}{c}$ bleiben draußen.'), 'Ein Bruch a/b bleibt, eine Summe … und ein Bruch im Bruch … bleiben draußen.');
+  assert.equal(excerpt('Es gilt $D(f \\circ g) = \\bigl((Df) \\circ g\\bigr) \\cdot Dg$ und $n_{\\text{out}} = \\left\\lfloor \\frac{n + 2p - k}{s} \\right\\rfloor + 1$, mit $A \\in \\mathbb{R}^{d \\times d}$, $A^\\top A = I$, $f \\colon \\mathbb{R}^n \\to \\mathbb{R}$.'),
+    'Es gilt D(f ∘ g) = ((Df) ∘ g) · Dg und n_out = ⌊(n + 2p - k)/s⌋ + 1, mit A ∈ ℝ^(d×d), Aᵀ A = I, f : ℝ^n → ℝ.', 'die vier Formeln, die am 17.11. als Lücke in Beschreibungen standen');
   assert.equal(excerpt('- Erstens das.\n- Zweitens dies.\n1. Dann jenes.'), 'Erstens das. Zweitens dies. Dann jenes.', 'Listenzeichen gehören nicht in eine Beschreibung');
   assert.ok(excerpt('wort '.repeat(100), 50).length <= 52);
   assert.equal(excerpt('Ein _kursives_ Wort, zero_grad und a > b'), 'Ein kursives Wort, zero_grad und a > b');
@@ -285,11 +299,13 @@ test('der Stolperdraht für fremde Quellen schlägt an, Links lässt er durch', 
 
 test('die Frageseite führt weiter: zum Kapitel und zum Unterforum, mit Datum und einem Namen für jeden Beitrag', () => {
   const html = questionPage(question(), site);
-  assert.match(html, /<p class="meta"><a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><span>Diese Frage ist gemeinfrei /);
-  assert.match(html, /<nav class="pfad" aria-label="Pfad">.*<a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/nav>/);
-  assert.match(html, /<nav class="weiter" aria-label="Weitere Fragen"><a href="\.\.\/kapitel\/tensoren\/">Alle Fragen zu „Tensoren“<\/a><a href="\.\.\/grundlagen\/">Unterforum Grundlagen<\/a><\/nav>/);
+  assert.match(html, /<nav class="pfad" aria-label="Pfad">.*<a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/nav>/, 'das Kapitel steht im Pfad');
+  assert.equal(html.match(/href="\.\.\/kapitel\/tensoren\/"/g).length, 1, 'und nur dort: Der zweite Link unter der Frage schob die Antwort nach unten');
+  assert.match(html, /<nav class="weiter" aria-label="Weiter"><a href="\.\.\/grundlagen\/">Mehr Fragen im Unterforum Grundlagen<\/a><a href="https:\/\/skript\.test\/tensoren\/" rel="noopener">Kapitel „Tensoren“ im Skript lesen<\/a><\/nav>/);
+  assert.doesNotMatch(html, /Alle Fragen zu/, 'bei 25 von 31 Fragen führte der Link auf eine Liste mit nur dieser Frage');
   assert.equal(html.match(/<time datetime="2026-11-04">04\.11\.2026<\/time>/g).length, 2);
-  assert.match(html, /<div class="faden">\s*<article class="beitrag frage" id="b1" aria-label="Frage">[\s\S]*<article class="beitrag antwort" id="b2" aria-label="Antwort des Bots">[\s\S]*<\/div>\s*<p class="lizenz">Die Antworten auf dieser Seite[^\n]*<\/p>\s*<nav class="weiter"/);
+  assert.match(html, /<article class="faden">\s*<article class="beitrag frage" id="b1" aria-label="Frage"><h1>[\s\S]*?<\/h1><aside class="autor">[\s\S]*?<\/aside><header>[\s\S]*?<\/header><\/article>\s*<article class="beitrag antwort" id="b2" aria-label="Antwort des Bots">[\s\S]*<\/article>\s*<\/article>\s*<p class="lizenz">Diese Frage ist gemeinfrei[^\n]*Die Antworten auf dieser Seite[^\n]*<\/p>\s*<nav class="weiter"/,
+    'der Faden ist ein Artikel, und die Frage steht als Erstes in ihrer Karte: So nimmt ein Textextraktor sie mit');
   assert.match(html, /<a class="marke-zitat" href="#z1" aria-label="Zitat 1">\[1\]<\/a>/);
   assert.match(html, /<section class="zitate" data-nosnippet>/, 'die Trefferbeschreibung soll aus der Antwort kommen, nicht aus dem Skript');
   assert.match(html, /<a class="sprung" href="#inhalt">Zum Inhalt<\/a>[\s\S]*<main id="inhalt">/);
@@ -299,7 +315,7 @@ test('ein langes Zitat ist eingeklappt und zeigt Anfang und Quelle, ein kurzes b
   const page = text => questionPage({ ...question(), antworten: [{ ...question().antworten[0], zitate: [{ titel: 'T', pfad: ['A'], url: 'https://skript.test/x', text }] }] }, site);
   const lang = `Der erste Satz des Zitats steht für sich. ${'Dann folgt eine längere Herleitung mit $w \\cdot x + b$ und vielen Worten. '.repeat(6)}`;
   const html = page(lang);
-  assert.match(html, /<figure id="z1"><details><summary><span class="anriss">Der erste Satz des Zitats steht für sich\. Dann folgt[^<]* …<\/span> <span class="mehr zu">ganzes Zitat<\/span><span class="mehr auf">einklappen<\/span><\/summary><blockquote><p>Der erste Satz/);
+  assert.match(html, /<figure id="z1"><details><summary><span class="anriss">Der erste Satz des Zitats steht für sich\. Dann folgt[^<]* …<\/span> <span class="mehr zu">ganzes Zitat<\/span> <span class="mehr auf">einklappen<\/span><\/summary><blockquote><p>Der erste Satz/);
   assert.match(html, /<\/blockquote><\/details><figcaption>\[1\] <a href="https:\/\/skript\.test\/x" rel="noopener">T › A<\/a><\/figcaption><\/figure>/, 'die Quelle steht außerhalb, also immer sichtbar');
   assert.equal(html.match(/vielen Worten/g).length, 7, 'der volle Wortlaut steht im HTML, auch eingeklappt: sechsmal im Zitat, einmal im Anfang');
   assert.match(html, /<script type="module" src="\.\.\/\.\.\/zitate\.js"><\/script>/, 'eine Marke [1] klappt ihr Zitat auf');
@@ -342,7 +358,8 @@ test('D29: Eine geprüfte Antwort sagt, wer geprüft hat und wann; das Datum der
 
 test('A4: An der Frage und an jeder Antwort steht ein Link „Melden“, am Entwurf nicht', () => {
   const html = questionPage(geprueft(), site);
-  assert.equal((html.match(/<a class="melden" href="\.\.\/\.\.\/impressum\/#inhalte-melden">Melden<\/a>/g) ?? []).length, 2);
+  assert.deepEqual(html.match(/<a class="melden" href="\.\.\/\.\.\/impressum\/#inhalte-melden" aria-label="Beitrag \d melden">Melden<\/a>/g).map(link => link.match(/Beitrag \d melden/)[0]),
+    ['Beitrag 1 melden', 'Beitrag 2 melden'], 'der Name sagt, welcher Beitrag gemeint ist, und enthält die sichtbare Beschriftung');
 });
 
 test('Befund 17: Der Fuß nennt den Betreiber, das Zitat Autor und Lizenz', () => {
@@ -442,9 +459,41 @@ test('der Fuß führt zur Anmeldung der Moderation, von jeder Tiefe aus und ohne
 });
 
 test('D30: Die Antworten stehen unter CC BY-SA 4.0, das sagt die Seite einmal unter den Antworten; ohne Antworttext sagt sie nichts', () => {
-  const zeile = /<p class="lizenz">Die Antworten auf dieser Seite stehen unter der Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="noopener">CC BY-SA 4\.0<\/a>, wie das Skript\.<\/p>/g;
+  const zeile = /Die Antworten auf dieser Seite stehen unter der Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="noopener">CC BY-SA 4\.0<\/a>, wie das Skript\.<\/p>/g;
   assert.equal((questionPage(geprueft(), site).match(zeile) ?? []).length, 1);
   assert.equal((questionPage(question(), site).match(zeile) ?? []).length, 1, 'auch ungeprüft');
   assert.doesNotMatch(questionPage(question({ status: 'kein_beleg' }), site), /Die Antworten auf dieser Seite/);
   assert.doesNotMatch(questionPage({ ...question(), antworten: [] }, site), /Die Antworten auf dieser Seite/);
+  /** beide Lizenzen in einer Zeile am Ende; fehlt eine, steht nur die andere da, fehlen beide, gibt es keine Zeile */
+  assert.match(questionPage(question(), site), /<p class="lizenz">Diese Frage ist gemeinfrei \(<a [^>]*>CC0 1\.0<\/a>\)\. Die Antworten auf dieser Seite/);
+  assert.match(questionPage({ ...question(), antworten: [] }, site), /<p class="lizenz">Diese Frage ist gemeinfrei \(<a [^>]*>CC0 1\.0<\/a>\)\.<\/p>/);
+  assert.match(questionPage({ ...question(), lizenz: null }, site), /<p class="lizenz">Die Antworten auf dieser Seite/);
+  assert.doesNotMatch(questionPage({ ...question(), lizenz: null, antworten: [] }, site), /class="lizenz"/);
+});
+
+test('Befund 9a: Mehrere Zitate aus einem Abschnitt stehen im Markup als eine Quelle', () => {
+  const stelle = (pfad, text) => ({ titel: 'Tensoren', pfad: [pfad], text, url: `https://skript.test/kapitel/#${pfad.toLowerCase()}:~:text=${encodeURIComponent(text.slice(0, 12))}` });
+  const zitate = [stelle('Abschnitt', 'Erster Satz aus dem Abschnitt.'), stelle('Abschnitt', 'Zweiter Satz aus demselben Abschnitt.'), stelle('Anderswo', 'Ein Satz von anderswo.')];
+  const html = questionPage(geprueft({}, { zitate, text: 'Antwort.[1][2][3]' }), site);
+  assert.deepEqual(allData(html)[1]['@graph'][0].mainEntity.acceptedAnswer.citation.map(c => [c.name, c.url]),
+    [['Tensoren › Abschnitt', 'https://skript.test/kapitel/#abschnitt'], ['Tensoren › Anderswo', 'https://skript.test/kapitel/#anderswo']]);
+  assert.equal((html.match(/<figure id="z\d"/g) ?? []).length, 3, 'sichtbar bleiben alle drei Zitate');
+});
+
+test('Befund 10: Die Sitemap nennt den Tag der letzten Prüfung, bei Listen den jüngsten ihrer Fragen', () => {
+  const frage = (id, kapitel, tag) => ({ ...geprueft({ id, kapitel }), antworten: [{ ...geprueft().antworten[0], geprueftAm: tag }] });
+  const fragen = [frage('s01', 'Tensoren', '2026-11-05'), frage('s02', 'Tensoren', '2026-11-10'), frage('s03', 'Tensoren', '2026-11-07'), frage('s04', 'Backpropagation', null)];
+  const eintraege = Object.fromEntries([...sitemap(fragen, site).matchAll(/<url><loc>https:\/\/example\.test\/eidl\/([^<]*)<\/loc>(?:<lastmod>([^<]*)<\/lastmod>)?<\/url>/g)].map(m => [m[1], m[2] ?? null]));
+  assert.deepEqual(eintraege, {
+    '': '2026-11-10', 'ueber/': null, 'f/kapitel/tensoren/': '2026-11-10', 'f/grundlagen/': '2026-11-10', 'f/lernen/': null,
+    'f/s01/': '2026-11-05', 'f/s02/': '2026-11-10', 'f/s03/': '2026-11-07', 'f/s04/': null,
+  }, 'ohne Prüfdatum kein lastmod, statt eines erfundenen');
+});
+
+test('Kleines aus dem Audit vom 17.11.: Unterforum mit Thema im Titel, Fehlerseite mit Wegen, Zähler mit Namen, Formular-Varianten ohne Empfehlung', () => {
+  assert.match(forumPage(UNTERFOREN[2], [], site), /<title>Deep Learning: Architekturen und Repräsentationen \| hAInrich2<\/title>/);
+  for (const forum of UNTERFOREN) assert.ok(`Deep Learning: ${forum.titel} | hAInrich2`.length <= 65, forum.titel);
+  const fehler = notFoundPage(site);
+  for (const forum of UNTERFOREN) assert.ok(fehler.includes(`<a href="/eidl/f/${forum.slug}/">`), forum.slug);
+  assert.match(questionPage(question(), { ...site, stimmen: true }), /<span class="punkte" title="Punkte">0<\/span><span class="nur-vorlesen"> Punkte<\/span>/);
 });
