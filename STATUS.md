@@ -36,6 +36,20 @@ _Stand 2026-11-17._
     vier Rechtstext-Seiten die neuen Absätze, der alte Satz über den Checker ist weg. `style.css` und `stimmen.js` gleichen dem Bau.
     `GET` auf die API gibt 405, `mod/` 200, alles bleibt `noindex`, die Sitemap leer. Keine Frage trägt „gemeinfrei“: Unter Version 3
     ist noch keine freigegeben.
+- **Gebaut am Nachmittag des 2026-11-17, nicht ausgespielt** (Konrads Entscheidungen, Plan D30, D34 bis D36):
+  - Der Fuß jeder Seite verlinkt die Anmeldung der Moderation (`881f9db`, beide Probeläufe mit vorhergesagter Liste).
+  - _Lizenzen:_ Die Beispielfragen tragen „gemeinfrei“ (CC0 1.0), die Antworten stehen unter CC BY-SA 4.0: eine Zeile unter den Antworten,
+    zwei Sätze im Impressum, der Abschnitt „Zitate und Antworten“ in den Nutzungsbedingungen, `license` in `QAPage`. Die Seite trägt kein
+    `rel="license"` mehr, weil drei Lizenzen auf ihr stehen.
+  - _s30 entfällt_ (D34): 29 Beispielfragen, 29 Titelvorschläge; Bau und Import überlesen die eingefrorenen Antworten dazu.
+  - _Vektor (D35):_ Eine bearbeitete Frage bekommt ihren Vektor neu, über einen Auftrag `nurVektor` an den Worker, lokal und ohne Kosten.
+  - _Zitate (D36):_ Beim Start ziehen Zitate, deren Wortlaut noch im Skript steht, auf den ausgespielten Korpus um. Geschätzt an den 129
+    Opus-Zitaten aus `phase1` gegen den Korpus vom 15.11.: 107 unverändert, eins bekommt eine neue Adresse (s29, der Anker heißt anders),
+    21 stehen so nicht mehr im Skript und bleiben. Am Host ist der Bestand ein anderer, die Zahl dort kenne ich nicht.
+  - Tests gegen den lokalen Bau (68 Seiten, 29 Fragen): `npm test` 278 von 278, `npm run smoke` 21 von 21 in Chromium, Firefox und
+    WebKit, `npm run smoke:mod` 26 von 26 in Chromium und Firefox.
+- Die GitHub-App `konrads-ci-runner` ist seit dem 2026-11-17 für dieses Repo abgewählt (in den Einstellungen der App, auf Konrads Wort;
+  nach dem Neuladen zeigt GitHub noch `laberampel`, `pycear` und `ci-probe`).
 - Am Host von Hand geändert, 2026-11-17 auf Konrads Wort: der Tippfehler „ortohogonale“ in der Antwort zu s21, über `store.editAnswer`
   mit der Rolle `konsole` im Verlauf, die Seite neu geschrieben. Nachgesehen: `f/s21/` trägt das Wort in keiner der drei Kodierungen mehr.
 - Abhängigkeiten, Stand 2026-11-16: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0), Playwright 1.65.1 (vorher 1.63.0) und das
@@ -147,8 +161,8 @@ _Stand 2026-11-17._
 
 - Das Repo ist nicht bereit für die Veröffentlichung (geprüft am 2026-11-17 gegen Playbook §5 Punkt 10 und §3.6, am Stand `6ba0447`).
   Vier Punkte stehen davor: Der Bericht `research/2026-11-11-threat-model/` beschreibt Schwächen, die offen sind (B1, B4, C2, C5, D1;
-  A5 prüft Konrad), und er steht in der Historie; A3, A4, D2 bis D4 sind seit dem Ausspielen am selben Tag zu. Ob die GitHub-App
-  `konrads-ci-runner` noch auf dem Repo installiert ist, ließ sich von hier nicht sehen. Den Kurscode kann nur Konrad in der Historie
+  A5 prüft Konrad), und er steht in der Historie; A3, A4, D2 bis D4 sind seit dem Ausspielen am selben Tag zu. Die GitHub-App
+  `konrads-ci-runner` ist seit dem 17.11. abgewählt, dieser Punkt ist zu. Den Kurscode kann nur Konrad in der Historie
   suchen; den Scan aus I7 gibt es nicht. Fünf Messskripte unter `research/2026-11-04-*` nennen `/home/konrad/Sciebo/…`. Dazu kleiner:
   kein `gitleaks` auf dem Laptop (der letzte Lauf ist vom 10.11.), keine Kopfzeile zur Lizenz in den Quelldateien, kein Link auf den
   Quelltext auf der Site, `THIRD_PARTY_PROVENANCE.md` ohne `onnxruntime-node` und `sharp`, und auf GitHub sind Secret Scanning, Push
@@ -163,8 +177,7 @@ _Stand 2026-11-17._
 - Bleibt eine freigegebene Frage wegen Deckel oder Ausfall ohne Antwort, gibt es keinen zweiten Versuch. Die Seite sagt dann „noch keine
   Antwort“.
 - Was D18 offenließ, gilt so: Eine englische Frage bekommt einen Entwurf in ihrer Sprache, die Moderation entscheidet.
-- Bearbeitete Fragen behalten ihren alten Vektor, bis die Moderation ihn neu rechnen kann. Die Stichwortsuche sieht den
-  neuen Text, die semantische Suche den alten.
+- Bearbeitete Fragen behalten am Host ihren alten Vektor, bis der Stand vom Nachmittag des 17.11. ausgespielt ist (D35).
 - Kein Smoke-Test in der CI. Er braucht den gebauten Baum und die Modelle, beides liegt außerhalb des Repos, und es fehlt ein
   Schritt, der sie holt und prüft. Auch kein Pre-Push-Hook (Playbook §5 Punkt 7).
 - Kein Web-Manifest, es bräuchte `manifest-src` in der CSP. Der Laptop-Key liegt außerhalb des Repos und ist getestet.

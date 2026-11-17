@@ -14,10 +14,12 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import { closedApi, createApi } from '../lib/api.js';
+import { relinker } from '../lib/citations.js';
 import { createFragen } from '../lib/fragen.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
 import { createPublisher, publishAll } from '../lib/publish.js';
+import { quoteUrl } from '../lib/segment.js';
 import { openSpool } from '../lib/spool.js';
 import { createVoting, FLUSH_MS } from '../lib/stimmen.js';
 import { openStore } from '../lib/store.js';
@@ -37,6 +39,15 @@ store.setSite('stimmen', !!stimmen);
 /** Vorschläge für die Kurztitel des Bestands (Plan D31), nur wo noch nichts steht. Öffentlich wird davon nichts, bis die Moderation speichert */
 const titelFile = new URL('../seeds/kurztitel.json', import.meta.url);
 if (fs.existsSync(titelFile)) store.suggestTitles(JSON.parse(fs.readFileSync(titelFile, 'utf8')));
+const korpusFile = `${korpus}/corpus.json`;
+const passages = fs.existsSync(korpusFile) ? JSON.parse(fs.readFileSync(korpusFile, 'utf8')).passages : null;
+if (!passages) console.error(`${korpusFile} fehlt, die Moderation zeigt keine veralteten Zitate`);
+/**
+ * Ein neuer Korpus kommt mit site/deploy-app.sh und diesem Neustart. Zitate, deren Wortlaut noch im Skript steht, ziehen dann mit um
+ * (Plan D36); die übrigen listet die Moderation als veraltet. Die Kennungen stehen im Journal, kein Text.
+ */
+const umgezogen = passages ? store.relinkCitations(relinker(passages, quoteUrl)) : [];
+if (umgezogen.length) console.log(`Zitate umgezogen: ${umgezogen.join(', ')}`);
 await publishAll(live, store);
 
 const publish = createPublisher(live, store);
@@ -54,9 +65,6 @@ if (open) {
 }
 const voting = stimmen ? createVoting({ store, publish }) : null;
 if (voting) setInterval(safely(voting.flush), FLUSH_MS);
-const korpusFile = `${korpus}/corpus.json`;
-const passages = fs.existsSync(korpusFile) ? JSON.parse(fs.readFileSync(korpusFile, 'utf8')).passages : null;
-if (!passages) console.error(`${korpusFile} fehlt, die Moderation zeigt keine veralteten Zitate`);
 const mod = createHandler({ store, live, base, publish, fragen, kosten, passages });
 const routeOf = ({ url }) => {
   if (voting && url === `${base}api/stimme`) return voting.handle;

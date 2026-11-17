@@ -417,7 +417,7 @@ test('ein neuer Kurscode macht alte Tokens ungültig', async () => {
 
 test('keine Beispielfrage schlägt im Checker an, sie gingen sonst nie sofort an Claude', () => {
   const seeds = JSON.parse(fs.readFileSync(new URL('../seeds/fragen.json', import.meta.url), 'utf8'));
-  assert.ok(seeds.length >= 30);
+  assert.ok(seeds.length >= 29);
   for (const { frage } of seeds) assert.deepEqual([...hardHits(frage), ...softHits(frage)], [], frage);
 });
 
@@ -770,11 +770,65 @@ test('D30: Eine Frage mit Zustimmung ab Version 3 ist gemeinfrei, eine ältere t
   const { data } = await c.ask();
   await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
   assert.equal(c.store.question(data.id).lizenz, CC0.kennung);
-  assert.match(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8'), /Diese Frage ist gemeinfrei \(<a href="https:\/\/creativecommons\.org\/publicdomain\/zero\/1\.0\/deed\.de" rel="license noopener">CC0 1\.0<\/a>\)/);
+  assert.match(fs.readFileSync(c.file(`f/${data.id}/index.html`), 'utf8'), /Diese Frage ist gemeinfrei \(<a href="https:\/\/creativecommons\.org\/publicdomain\/zero\/1\.0\/deed\.de" rel="noopener">CC0 1\.0<\/a>\)/);
 
   const alt = c.pending.add({ text: 'Eine Frage aus der Zeit davor?', zustimmung: 2, einwilligung: false, treffer: [], zustand: 'wartet' });
   await c.form(`/eidl/mod/neu/${alt.id}/`, { frage: 'Eine Frage aus der Zeit davor?', kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
   assert.equal(c.store.question(alt.id).lizenz, null);
   assert.doesNotMatch(fs.readFileSync(c.file(`f/${alt.id}/index.html`), 'utf8'), /gemeinfrei/);
   assert.equal((await c.ask({ zustimmung: 2 })).status, 400, 'mit der alten Fassung lässt sich nichts mehr einreichen');
+});
+
+test('D35: Eine bearbeitete Frage bekommt ihren Vektor neu, lokal im Worker; die Suche im Browser sieht ihn danach', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), [], 'ohne Bearbeitung kein Auftrag');
+  await c.form('/eidl/mod/f/s01/', { frage: 'Was ist ein künstliches Neuron?', aktion: 'speichern' }, cookie);
+  assert.deepEqual(c.store.staleVectors(), [{ id: 's01', text: 'Was ist ein künstliches Neuron?' }]);
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Was ist ein künstliches Neuron?', nurVektor: true }]);
+  await c.fragen.collect();
+  assert.equal(c.inbox().length, 1, 'kein zweiter Auftrag, solange einer liegt');
+
+  const { textDigest } = await import('../lib/spool.js');
+  await c.deliver('s01', { art: 'vektor', vektor: [0, 0, 1], von: textDigest('Was ist ein künstliches Neuron?') });
+  assert.deepEqual(c.store.question('s01').vektor, [0, 0, 1]);
+  assert.deepEqual(c.store.staleVectors(), []);
+  assert.deepEqual(JSON.parse(fs.readFileSync(c.file('daten/fragen.json'), 'utf8')).find(f => f.id === 's01').vektor, [0, 0, 1]);
+  assert.deepEqual(c.inbox(), []);
+  assert.equal(c.store.counters().some(z => z.art.startsWith('entwurf_')), false, 'ein Vektor ist kein Entwurf');
+});
+
+test('D35: Ein Vektor für einen Wortlaut, den es nicht mehr gibt, verfällt, und der nächste Auftrag trägt den neuen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  const { textDigest } = await import('../lib/spool.js');
+  await c.form('/eidl/mod/f/s01/', { frage: 'Erste Fassung der Frage?', aktion: 'speichern' }, cookie);
+  await c.fragen.collect();
+  await c.form('/eidl/mod/f/s01/', { frage: 'Zweite Fassung der Frage?', aktion: 'speichern' }, cookie);
+  await c.deliver('s01', { art: 'vektor', vektor: [9, 9, 9], von: textDigest('Erste Fassung der Frage?') });
+  assert.deepEqual(c.store.question('s01').vektor, [1, 0, 0], 'der Vektor der ersten Fassung gehört nicht zur zweiten');
+  assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Zweite Fassung der Frage?', nurVektor: true }]);
+  await c.deliver('s01', { art: 'vektor', vektor: 'kein Vektor', von: textDigest('Zweite Fassung der Frage?') });
+  assert.deepEqual(c.store.question('s01').vektor, [1, 0, 0]);
+
+  await c.form('/eidl/mod/f/s01/', { aktion: 'zurueckziehen' }, cookie);
+  for (const job of c.spool.jobs()) c.spool.drop(job.file);
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), [], 'eine zurückgezogene Frage sucht niemand');
+});
+
+test('D35: Läuft für die Frage schon ein anderer Auftrag, wartet der Vektor, statt ihn zu überschreiben', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  await c.form('/eidl/mod/f/s01/', { aktion: 'titel_vorschlagen' }, cookie);
+  await c.form('/eidl/mod/f/s01/', { frage: 'Was ist ein künstliches Neuron?', aktion: 'speichern' }, cookie);
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Was ist ein Neuron?', titel: true, nurTitel: true }]);
+  await c.deliver('s01', { art: 'titel', titel: 'Neuron: Was ist das?' });
+  assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Was ist ein künstliches Neuron?', nurVektor: true }]);
 });

@@ -238,3 +238,12 @@ test('D4: Der Worker glaubt der Schlange nicht: Ohne gültige Kennung verschwind
   assert.deepEqual(book.entries, []);
   assert.ok(!logged.join('\n').includes('geheime'));
 });
+
+test('D35: `nurVektor` rechnet lokal, fragt niemanden und bucht nichts; das Ergebnis nennt seinen Wortlaut nur als Kennzeichen', async () => {
+  const { textDigest } = await import('../lib/spool.js');
+  const book = ledger();
+  const result = await draftFor({ ...job, nurVektor: true }, { corpus, call: () => assert.fail('keine Anfrage für einen Vektor'), ledger: book, day: DAY });
+  assert.deepEqual(result, { id: 'abc', art: 'vektor', vektor: [0.1235, 0.5], von: textDigest(job.text) });
+  assert.deepEqual(book.entries, []);
+  assert.ok(!JSON.stringify(result).includes('rückwärts'));
+});

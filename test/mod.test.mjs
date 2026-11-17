@@ -457,12 +457,26 @@ INSERT INTO revisions VALUES (5, 's01', 'antwort', 'A', 'A', 'konsole', '2026-11
   for (let lauf = 0; lauf < 2; lauf++) {
     const store = openStore(file);
     assert.deepEqual(store.questions().map(q => [q.id, q.antworten[0].geprueftAm, q.kurztitel, q.titelvorschlag, q.lizenz]), [
-      ['s01', '2026-11-12', null, null, null],
-      ['s02', '2026-11-04', null, null, null],
-      ['s03', null, null, null, null],
+      ['s01', '2026-11-12', null, null, 'CC0-1.0'],
+      ['s02', '2026-11-04', null, null, 'CC0-1.0'],
+      ['s03', null, null, null, 'CC0-1.0'],
     ], 'letzte Änderung an Antwort oder Status durch die Moderation, sonst der Tag der Frage; Ungeprüftes bleibt ohne Datum, ein Eingriff von der Konsole zählt nicht');
+    assert.deepEqual(store.staleVectors(), [{ id: 's01', text: 'Eins?' }], 'nur wessen Frage je bearbeitet wurde, rechnet neu');
     store.close();
   }
+  fs.rmSync(dir, { recursive: true });
+});
+
+test('D30: Eine Frage von außen ohne Erklärung bekommt bei der Migration keine Lizenz, auch wenn sie dem Betreiber gehört', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hainrich2-'));
+  const file = path.join(dir, 'public.db');
+  const store = openStore(file);
+  store.importQuestions([{ id: 's01', text: 'Eins?', kapitel: 'Tensoren', herkunft: 'beispiel', tag: '2026-11-04', antworten: [] }], [[1, 0]], { base: '/eidl/' });
+  store.addQuestion({ id: 'abc', text: 'Von außen?', kapitel: 'Tensoren', tag: '2026-11-06' });
+  store.close();
+  const wieder = openStore(file);
+  assert.deepEqual(wieder.questions().map(q => [q.id, q.lizenz]), [['s01', 'CC0-1.0'], ['abc', null]]);
+  wieder.close();
   fs.rmSync(dir, { recursive: true });
 });
 

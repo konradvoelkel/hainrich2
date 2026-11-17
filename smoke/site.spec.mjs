@@ -100,7 +100,7 @@ test('Frageseite: Bot erkennbar, Zitat wörtlich mit Link, noindex', async ({ pa
   await expect(page.locator('#z1 blockquote')).toBeVisible();
   await expect(page.locator('.frage time')).toHaveAttribute('datetime', /^\d{4}-\d{2}-\d{2}$/);
   await expect(page.locator('.weiter a')).toHaveCount(2);
-  await page.locator('.frage .meta a').click();
+  await page.locator('.frage .meta a[href*="kapitel/"]').click();
   await expect(page).toHaveURL(/\/f\/kapitel\/[a-z0-9-]+\/$/);
   await expect(page.locator('h1')).toContainText('Fragen zu');
   await expect(page.locator('.themen a[href$="/s04/"]')).toBeVisible();
@@ -130,7 +130,8 @@ test('ohne JavaScript bleibt alles lesbar, das tote Suchfeld fehlt', async ({ br
     await page.goto(forum);
     threads += await page.locator('.themen tbody tr').count();
   }
-  expect(threads).toBe(process.env.SMOKE_URL ? await page.request.get('/eidl/daten/fragen.json').then(r => r.json()).then(f => f.length) : 30);
+  /** so viele, wie die Suche kennt: lokal die Beispielfragen, am Host auch die Fragen von außen */
+  expect(threads).toBe(await page.request.get('/eidl/daten/fragen.json').then(r => r.json()).then(f => f.length));
   await expect(page.locator('#suche')).toBeHidden();
   await page.goto('/eidl/f/s04/');
   await expect(page.locator('.katex').first()).toBeVisible();

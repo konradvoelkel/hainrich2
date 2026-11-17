@@ -22,7 +22,9 @@ const env = Object.fromEntries(fs.readFileSync(path.join(here, '../site/site.env
 const { ladegroesse } = readJson(path.join(built, env.SITE_BASE, 'daten/meta.json'));
 
 const seeds = readJson(seedsFile);
-const rows = readJson(path.join(dir, 'antworten.json')).filter(r => r.model === model);
+/** wie in site/build.mjs: Das eingefrorene `antworten.json` kennt auch Fragen, die es nicht mehr gibt */
+const known = new Set(seeds.map(seed => seed.id));
+const rows = readJson(path.join(dir, 'antworten.json')).filter(r => r.model === model && known.has(r.seed));
 const { passages, fetched } = readJson(path.join(dir, 'corpus.json'));
 if (rows.length !== seeds.length) throw new Error(`${model}: ${rows.length} Antworten für ${seeds.length} Fragen`);
 

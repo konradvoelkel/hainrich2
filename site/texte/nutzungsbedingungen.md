@@ -26,9 +26,9 @@ Ihre Rechte aus dem Datenschutz bleiben davon unberührt: Löschen lassen könne
 
 Antworten erzeugt ein Sprachmodell. Sie können falsch sein, auch wenn sie ein Zitat tragen; das Zitat selbst stammt wörtlich aus dem Skript. Ein Entwurf ist ungeprüft, geprüfte Antworten sind als solche gekennzeichnet.
 
-## Zitate
+## Zitate und Antworten
 
-Die Zitate aus dem Skript stehen unter der Lizenz CC BY-SA 4.0.
+Die Zitate aus dem Skript und die Antworten im Forum stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de).
 
 ## Rechtswidrige Inhalte
 

@@ -201,12 +201,5 @@
   "kapitel": "optimierer",
   "blick": "skeptisch",
   "hoersaal": true
- },
- {
-  "id": "s30",
-  "frage": "Wo liegen diese Singularitäten eigentlich, in der Loss-Landschaft oder in der latenten Mannigfaltigkeit der Token-Embeddings? Ich bringe das durcheinander.",
-  "kapitel": "adversarial-attacks-polysemie",
-  "blick": "pruefung",
-  "hoersaal": true
  }
 ]

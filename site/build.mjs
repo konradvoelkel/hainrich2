@@ -43,7 +43,9 @@ if (!env.SITE_KONTAKT || !env.SITE_ANSCHRIFT) throw new Error('site.env: SITE_KO
 
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const seeds = readJson(path.join(repo, 'seeds/fragen.json'));
-const rows = readJson(path.join(args.daten, 'antworten.json')).filter(r => r.model === args.modell);
+/** `phase1` ist eingefroren und kennt auch Fragen, die es nicht mehr gibt (s30, Konrad am 2026-11-17): Es zählen nur die Antworten zu den Seeds */
+const known = new Set(seeds.map(seed => seed.id));
+const rows = readJson(path.join(args.daten, 'antworten.json')).filter(r => r.model === args.modell && known.has(r.seed));
 const { passages: cited, fetched } = readJson(path.join(args.daten, 'corpus.json'));
 const { passages, fetched: korpusFetched } = readJson(path.join(args.korpus, 'corpus.json'));
 const passageVectors = readJson(path.join(args.korpus, 'vectors.json'));

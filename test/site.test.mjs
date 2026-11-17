@@ -285,11 +285,11 @@ test('der Stolperdraht für fremde Quellen schlägt an, Links lässt er durch', 
 
 test('die Frageseite führt weiter: zum Kapitel und zum Unterforum, mit Datum und einem Namen für jeden Beitrag', () => {
   const html = questionPage(question(), site);
-  assert.match(html, /<p class="meta"><a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/p>/);
+  assert.match(html, /<p class="meta"><a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><span>Diese Frage ist gemeinfrei /);
   assert.match(html, /<nav class="pfad" aria-label="Pfad">.*<a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/nav>/);
   assert.match(html, /<nav class="weiter" aria-label="Weitere Fragen"><a href="\.\.\/kapitel\/tensoren\/">Alle Fragen zu „Tensoren“<\/a><a href="\.\.\/grundlagen\/">Unterforum Grundlagen<\/a><\/nav>/);
   assert.equal(html.match(/<time datetime="2026-11-04">04\.11\.2026<\/time>/g).length, 2);
-  assert.match(html, /<div class="faden">\s*<article class="beitrag frage" id="b1" aria-label="Frage">[\s\S]*<article class="beitrag antwort" id="b2" aria-label="Antwort des Bots">[\s\S]*<\/div>\s*<nav class="weiter"/);
+  assert.match(html, /<div class="faden">\s*<article class="beitrag frage" id="b1" aria-label="Frage">[\s\S]*<article class="beitrag antwort" id="b2" aria-label="Antwort des Bots">[\s\S]*<\/div>\s*<p class="lizenz">Die Antworten auf dieser Seite[^\n]*<\/p>\s*<nav class="weiter"/);
   assert.match(html, /<a class="marke-zitat" href="#z1" aria-label="Zitat 1">\[1\]<\/a>/);
   assert.match(html, /<section class="zitate" data-nosnippet>/, 'die Trefferbeschreibung soll aus der Antwort kommen, nicht aus dem Skript');
   assert.match(html, /<a class="sprung" href="#inhalt">Zum Inhalt<\/a>[\s\S]*<main id="inhalt">/);
@@ -348,8 +348,10 @@ test('A4: An der Frage und an jeder Antwort steht ein Link „Melden“, am Entw
 test('Befund 17: Der Fuß nennt den Betreiber, das Zitat Autor und Lizenz', () => {
   const html = questionPage(question(), site);
   assert.match(html, /Ein privates Angebot von <a href="\.\.\/\.\.\/impressum\/">Konrad Völkel<\/a>, nicht der Heinrich-Heine-Universität/);
-  assert.match(html, /<p class="lizenz">Aus dem Skript „Einführung in Deep Learning“ von Konrad Völkel, Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="license noopener">CC BY-SA 4\.0<\/a>\.<\/p>/);
-  assert.doesNotMatch(html, /gemeinfrei/, 'eine Beispielfrage hat niemand gemeinfrei gegeben');
+  assert.match(html, /<p class="lizenz">Aus dem Skript „Einführung in Deep Learning“ von Konrad Völkel, Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="noopener">CC BY-SA 4\.0<\/a>\.<\/p>/);
+  assert.match(html, /Diese Frage ist gemeinfrei \(<a href="https:\/\/creativecommons\.org\/publicdomain\/zero\/1\.0\/deed\.de" rel="noopener">CC0 1\.0<\/a>\)/, 'die Beispielfragen stammen vom Betreiber und sind gemeinfrei');
+  assert.doesNotMatch(questionPage({ ...question(), lizenz: null }, site), /gemeinfrei/, 'ohne Erklärung kein Vermerk');
+  assert.doesNotMatch(html, /rel="license/, 'drei Lizenzen auf einer Seite: Welche für was gilt, sagen Text und strukturierte Daten');
   assert.equal(foreignSource(html), null);
 });
 
@@ -381,6 +383,7 @@ test('D32: Eine geprüfte Frage trägt QAPage, mit dem Bot als Bot und dem Zitat
   assert.equal(frage.text, 'Was <b>rechnet</b> ein Perzeptron?');
   assert.equal(frage.name, 'Was <b>rechnet</b> ein Perzeptron?');
   assert.deepEqual([frage.answerCount, frage.dateCreated, frage.author], [1, '2026-11-04', { '@id': person['@id'] }]);
+  assert.deepEqual([frage.license, frage.acceptedAnswer.license], ['https://creativecommons.org/publicdomain/zero/1.0/', 'https://creativecommons.org/licenses/by-sa/4.0/']);
   const antwort = frage.acceptedAnswer;
   assert.equal(antwort.url, 'https://example.test/eidl/f/s01/#b2');
   assert.ok(html.includes('id="b2"'));
@@ -401,8 +404,11 @@ test('D32: Eine geprüfte Frage trägt QAPage, mit dem Bot als Bot und dem Zitat
 test('D32: Die Antwort der Moderation gilt, die des Bots daneben ist ein Vorschlag; an einer Frage von außen steht kein Autor', () => {
   const q = geprueft({ herkunft: 'forum' });
   q.antworten.push({ art: 'moderation', status: 'geprüft', geprueftAm: '2026-11-07', modell: null, text: 'So ist es.', zitate: [] });
+  q.lizenz = null;
   const frage = allData(questionPage(q, site))[1]['@graph'][0].mainEntity;
   assert.equal(frage.author, undefined);
+  assert.equal(frage.license, undefined, 'eine Frage ohne Erklärung trägt keine Lizenz');
+  assert.deepEqual(frage.suggestedAnswer.map(a => a.license), ['https://creativecommons.org/licenses/by-sa/4.0/']);
   assert.deepEqual([frage.acceptedAnswer.url, frage.acceptedAnswer.author], ['https://example.test/eidl/f/s01/#b3', { '@id': 'https://example.test/eidl/#betreiber' }]);
   assert.equal(frage.acceptedAnswer.dateModified, undefined, 'unbearbeitet');
   assert.deepEqual(frage.suggestedAnswer.map(a => a.url), ['https://example.test/eidl/f/s01/#b2']);
@@ -433,4 +439,12 @@ test('der Fuß führt zur Anmeldung der Moderation, von jeder Tiefe aus und ohne
   assert.match(indexPage([question()], site), /<a href="mod\/" rel="nofollow">Moderation<\/a>/);
   assert.match(notFoundPage(site), /<a href="\/eidl\/mod\/" rel="nofollow">Moderation<\/a>/);
   assert.match(robotsTxt(site), /Disallow: \/eidl\/mod\//);
+});
+
+test('D30: Die Antworten stehen unter CC BY-SA 4.0, das sagt die Seite einmal unter den Antworten; ohne Antworttext sagt sie nichts', () => {
+  const zeile = /<p class="lizenz">Die Antworten auf dieser Seite stehen unter der Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="noopener">CC BY-SA 4\.0<\/a>, wie das Skript\.<\/p>/g;
+  assert.equal((questionPage(geprueft(), site).match(zeile) ?? []).length, 1);
+  assert.equal((questionPage(question(), site).match(zeile) ?? []).length, 1, 'auch ungeprüft');
+  assert.doesNotMatch(questionPage(question({ status: 'kein_beleg' }), site), /Die Antworten auf dieser Seite/);
+  assert.doesNotMatch(questionPage({ ...question(), antworten: [] }, site), /Die Antworten auf dieser Seite/);
 });
