@@ -11,7 +11,7 @@ import { CC0, createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
 import { createPublisher, publishAll } from '../lib/publish.js';
-import { openSpool } from '../lib/spool.js';
+import { openSpool, textDigest } from '../lib/spool.js';
 import { askPage, indexPage, robotsTxt } from '../lib/site.js';
 import { openStore } from '../lib/store.js';
 
@@ -62,7 +62,8 @@ async function setup({ spooling = true, now = Date.now } = {}) {
   /** was ein Worker abliefern würde, ohne Worker */
   const deliver = (id, result = { status: 'ok', modell: 'attrappe', text: 'Antwort.[1]', zitate: [zitat], kapitel: KAPITEL, vektor: [0, 1, 0] }) => {
     const job = spool.jobs().find(j => j.entry.id === id);
-    spool.finish(job.file, { id, ...result });
+    /** wie der Worker: Ein Ergebnis mit Vektor sagt, für welchen Wortlaut er gilt */
+    spool.finish(job.file, { id, ...(result.vektor && !('von' in result) ? { von: textDigest(job.entry.text) } : {}), ...result });
     return fragen.collect();
   };
   const mine = async (id, geheimnis) => (await post('meine', { fragen: [{ id, geheimnis }] })).data.fragen[0];
@@ -831,4 +832,58 @@ test('D35: Läuft für die Frage schon ein anderer Auftrag, wartet der Vektor, s
   assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Was ist ein Neuron?', titel: true, nurTitel: true }]);
   await c.deliver('s01', { art: 'titel', titel: 'Neuron: Was ist das?' });
   assert.deepEqual(c.inbox(), [{ id: 's01', text: 'Was ist ein künstliches Neuron?', nurVektor: true }]);
+});
+
+test('D35: Wird die Frage bei der Freigabe geändert, wird der Vektor des alten Wortlauts nie öffentlich; der Worker rechnet den neuen', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ frage: 'Max Mustermann meint, Backpropagation sei teuer. Stimmt das?', einwilligung: true });
+  await c.deliver(data.id);
+  assert.deepEqual(c.pending.get(data.id).entwurf.vektor, [0, 1, 0]);
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: 'Ist Backpropagation teuer?', kapitel: KAPITEL, antwort: 'Antwort.[1]', kurztitel: 'Backpropagation: teuer?', aktion: 'freigeben' }, cookie);
+  assert.deepEqual(c.store.question(data.id).vektor, [0, 0, 0], 'Nullen statt des Vektors, der den Namen noch kennt');
+  assert.deepEqual(JSON.parse(fs.readFileSync(c.file('daten/fragen.json'), 'utf8')).find(f => f.id === data.id).vektor, [0, 0, 0]);
+  assert.deepEqual(c.store.staleVectors(), [{ id: data.id, text: 'Ist Backpropagation teuer?' }]);
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: 'Ist Backpropagation teuer?', nurVektor: true }]);
+  await c.deliver(data.id, { art: 'vektor', vektor: [0, 0, 1] });
+  assert.deepEqual(c.store.question(data.id).vektor, [0, 0, 1]);
+  assert.deepEqual(c.store.staleVectors(), []);
+});
+
+test('D35: Bleibt die Frage bei der Freigabe, wie sie war, gilt der Vektor aus dem Entwurf, und niemand rechnet neu', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask({ einwilligung: true });
+  await c.deliver(data.id);
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: 'Antwort.[1]', kurztitel: 'Backpropagation: effizient?', aktion: 'freigeben' }, await c.signIn());
+  assert.deepEqual(c.store.question(data.id).vektor, [0, 1, 0]);
+  assert.deepEqual(c.store.staleVectors(), []);
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), []);
+});
+
+test('D35: Eine Frage, die nie bei Claude war, bekommt ihren Vektor trotzdem: lokal, und Claude sieht sie weiter nicht', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, antwort: 'Eine eigene Antwort der Moderation.', aktion: 'freigeben' }, await c.signIn());
+  assert.deepEqual(c.inbox(), []);
+  await c.fragen.collect();
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: FRAGE, nurVektor: true }], 'nur der Vektor, kein Entwurf und kein Titel');
+});
+
+test('D35: Ein Ergebnis für einen anderen Wortlaut setzt keinen Vektor, auch nicht mit der Antwort nach der Freigabe', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { data } = await c.ask();
+  const cookie = await c.signIn();
+  await c.form(`/eidl/mod/neu/${data.id}/`, { frage: FRAGE, kapitel: KAPITEL, kurztitel: 'Backpropagation: effizient?', aktion: 'freigeben' }, cookie);
+  await c.form(`/eidl/mod/f/${data.id}/`, { frage: 'Warum ist Backpropagation so effizient?', kurztitel: 'Backpropagation: effizient?', aktion: 'speichern' }, cookie);
+  await c.deliver(data.id);
+  const question = c.store.question(data.id);
+  assert.equal(question.antworten[0].status, 'ungeprüft', 'die Antwort kommt an');
+  assert.deepEqual(question.vektor, [0, 0, 0], 'der Vektor gehört zum alten Wortlaut und bleibt draußen');
+  assert.deepEqual(c.inbox(), [{ id: data.id, text: 'Warum ist Backpropagation so effizient?', nurVektor: true }]);
 });

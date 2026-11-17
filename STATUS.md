@@ -36,8 +36,8 @@ _Stand 2026-11-17._
     vier Rechtstext-Seiten die neuen Absätze, der alte Satz über den Checker ist weg. `style.css` und `stimmen.js` gleichen dem Bau.
     `GET` auf die API gibt 405, `mod/` 200, alles bleibt `noindex`, die Sitemap leer. Keine Frage trägt „gemeinfrei“: Unter Version 3
     ist noch keine freigegeben.
-- **Gebaut am Nachmittag des 2026-11-17, nicht ausgespielt** (Konrads Entscheidungen, Plan D30, D34 bis D36):
-  - Der Fuß jeder Seite verlinkt die Anmeldung der Moderation (`881f9db`, beide Probeläufe mit vorhergesagter Liste).
+- **Gebaut und ausgespielt am Nachmittag des 2026-11-17** (Konrads Entscheidungen, Plan D30, D34 bis D36; Commits `881f9db` und `a918710`):
+  - Der Fuß jeder Seite verlinkt die Anmeldung der Moderation.
   - _Lizenzen:_ Die Beispielfragen tragen „gemeinfrei“ (CC0 1.0), die Antworten stehen unter CC BY-SA 4.0: eine Zeile unter den Antworten,
     zwei Sätze im Impressum, der Abschnitt „Zitate und Antworten“ in den Nutzungsbedingungen, `license` in `QAPage`. Die Seite trägt kein
     `rel="license"` mehr, weil drei Lizenzen auf ihr stehen.
@@ -48,8 +48,33 @@ _Stand 2026-11-17._
     21 stehen so nicht mehr im Skript und bleiben. Am Host ist der Bestand ein anderer, die Zahl dort kenne ich nicht.
   - Tests gegen den lokalen Bau (68 Seiten, 29 Fragen): `npm test` 278 von 278, `npm run smoke` 21 von 21 in Chromium, Firefox und
     WebKit, `npm run smoke:mod` 26 von 26 in Chromium und Firefox.
+  - _Ausgespielt_ auf Konrads Wort, nach beiden Probeläufen: `site/deploy.sh` um 16:34:50 mit 68 HTML-Seiten und `daten/fragen.json`
+    samt komprimierten Fassungen (276 Dateien) und der Löschung von `f/s30/` im Docroot; `site/deploy-app.sh` um 16:35:18 mit sechs
+    Dateien unter `lib/`, `server/web.mjs` und `seeds/kurztitel.json`. `hainrich2-web` nach fünf Sekunden aktiv, ohne automatischen
+    Neustart. `daten/fragen.json` stand nicht in der Vorhersage: Sie ändert sich, weil s30 aus den Seeds fiel, und am Host kommt sie
+    ohnehin aus `live/`.
+  - _Am Host nachgesehen, nur lesend:_ Smoke 21 von 21 in Chromium, Firefox und WebKit. Alle 31 Frageseiten tragen den Link
+    „Moderation“, die Zeile zur Lizenz der Antworten und `license` in `QAPage`, keine mehr `rel="license"`. 29 tragen „gemeinfrei“, die
+    zwei Testfragen nicht. Impressum und Nutzungsbedingungen zeigen die neuen Sätze. **Drei von 134 Zitaten sind umgezogen**, alle mit
+    unverändertem Wortlaut: s29 [3] und `0cfd2b864eda` [4], deren Überschrift im Skript anders heißt, und s12 [5], dessen Adresse jetzt
+    auf den Text statt auf den Folienlink zeigt (Vergleich der öffentlichen Seiten vor und nach dem Ausspielen). Prüfdaten und
+    Fragetexte sind unverändert. **Kein Vektor hat sich geändert** (bis 16:39). Das passt: Die Texte der 29 Beispielfragen am Host
+    gleichen dem Repo, bearbeitet wurde dort keiner. Dass ein Auftrag `nurVektor` am Host durchläuft, hat damit noch niemand gesehen.
+- **Gebaut am Abend des 2026-11-17, nicht committet und nicht ausgespielt** (Nachtrag zu D35): Ändert die Moderation eine Frage bei
+  der Freigabe, wurde bisher der Vektor aus dem Entwurf übernommen, also der des eingereichten Wortlauts; nach einer Redaktion stünde
+  er öffentlich in `daten/fragen.json`. Jetzt trägt jedes Ergebnis des Worker ein Kennzeichen seines Wortlauts, ein Vektor wird nur
+  gesetzt, wenn es zum Text passt, und sonst rechnet der Worker ihn aus dem freigegebenen Text neu. `npm test` 283 von 283. Am Host
+  gilt bis zum Ausspielen das alte Verhalten; freigegeben wurde dort seit dem 05.11. keine Frage.
+- Am Host hinter der Anmeldung angesehen, 2026-11-17 gegen 17 Uhr, in Konrads Browser und nur lesend: Alle 31 Kurztitel sind
+  gespeichert (Konrad hat die 29 Vorschläge bestätigt, einen gekürzt und zwei selbst geschrieben), sie stehen in den Titeln der
+  öffentlichen Seiten. `/eidl/mod/zahlen/`: 0 Anfragen in den letzten sieben Tagen, 13 im Monat für 1,33 $ von 15 $, keine Fehlerzeile,
+  0 Kurztitel-Anfragen. **Einen echten Aufruf mit SDK 1.8.0 gab es also noch nicht**, und der Aufruf für den Kurztitel ist weiter nie
+  gelaufen. In diesem Monat wurden zwei Fragen eingereicht (05.11.), eine abgelehnt und eine selbst gelöscht; auf die Moderation
+  wartet nichts. Die Texte der 29 Beispielfragen am Host gleichen dem Repo, ein neuer Vektor war dort also nicht fällig.
 - Die GitHub-App `konrads-ci-runner` ist seit dem 2026-11-17 für dieses Repo abgewählt (in den Einstellungen der App, auf Konrads Wort;
   nach dem Neuladen zeigt GitHub noch `laberampel`, `pycear` und `ci-probe`).
+- Am Host von Hand gelöscht, 2026-11-17 auf Konrads Wort: s30, endgültig, über `store.deleteQuestion` mit der Rolle `konsole` (14:48
+  UTC; vorher zurückgezogen mit einer Antwort und vier Zitaten). Danach 31 Fragen, `f/s30/` gibt 404, die Suche kennt sie nicht.
 - Am Host von Hand geändert, 2026-11-17 auf Konrads Wort: der Tippfehler „ortohogonale“ in der Antwort zu s21, über `store.editAnswer`
   mit der Rolle `konsole` im Verlauf, die Seite neu geschrieben. Nachgesehen: `f/s21/` trägt das Wort in keiner der drei Kodierungen mehr.
 - Abhängigkeiten, Stand 2026-11-16: gepinnt sind transformers.js 4.3.2 (vorher 4.3.0), Playwright 1.65.1 (vorher 1.63.0) und das
@@ -177,7 +202,6 @@ _Stand 2026-11-17._
 - Bleibt eine freigegebene Frage wegen Deckel oder Ausfall ohne Antwort, gibt es keinen zweiten Versuch. Die Seite sagt dann „noch keine
   Antwort“.
 - Was D18 offenließ, gilt so: Eine englische Frage bekommt einen Entwurf in ihrer Sprache, die Moderation entscheidet.
-- Bearbeitete Fragen behalten am Host ihren alten Vektor, bis der Stand vom Nachmittag des 17.11. ausgespielt ist (D35).
 - Kein Smoke-Test in der CI. Er braucht den gebauten Baum und die Modelle, beides liegt außerhalb des Repos, und es fehlt ein
   Schritt, der sie holt und prüft. Auch kein Pre-Push-Hook (Playbook §5 Punkt 7).
 - Kein Web-Manifest, es bräuchte `manifest-src` in der CSP. Der Laptop-Key liegt außerhalb des Repos und ist getestet.
@@ -228,8 +252,8 @@ _Stand 2026-11-17._
 
 ## Nächster Schritt
 
-Der Umbau vom 2026-11-17 ist ausgespielt. Konrad bestätigt die Kurztitel unter `/eidl/mod/titel/` und sieht dabei, ob die Vorschläge
-angekommen sind.
+Bis auf den Nachtrag zum Vektor vom Abend ist alles vom 2026-11-17 ausgespielt, der Host läuft auf `a918710`. Die Kurztitel sind
+bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Das Ende der Vorschau ist seine Entscheidung, vorher bekommen die Studierenden den Link (2026-11-06); erst dann wird Geprüftes

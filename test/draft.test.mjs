@@ -247,3 +247,10 @@ test('D35: `nurVektor` rechnet lokal, fragt niemanden und bucht nichts; das Erge
   assert.deepEqual(book.entries, []);
   assert.ok(!JSON.stringify(result).includes('rückwärts'));
 });
+
+test('D35: Jedes Ergebnis mit Vektor nennt das Kennzeichen seines Wortlauts, auch ohne Beleg', async () => {
+  const { textDigest } = await import('../lib/spool.js');
+  const mit = await draftFor(job, { corpus, call: async () => cited('Ja.'), ledger: ledger(), day: DAY });
+  const ohne = await draftFor(job, { corpus, call: async () => plain('KEIN_BELEG'), ledger: ledger(), day: DAY });
+  assert.deepEqual([mit.von, ohne.von], [textDigest(job.text), textDigest(job.text)]);
+});
