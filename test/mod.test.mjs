@@ -506,7 +506,7 @@ test('D29: Mit der Prüfung bekommt die Antwort ihr Datum, zurückgesetzt verlie
   assert.equal(c.store.question('s01').antworten[0].geprueftAm, null);
   await c.form('/eidl/mod/f/s01/', { frage: 'Was ist ein Neuron?', antwort: 'Ein Neuron rechnet.[1]', aktion: 'pruefen' }, { cookie });
   assert.equal(c.store.question('s01').antworten[0].geprueftAm, today);
-  assert.match(c.read('f/s01/index.html'), new RegExp(`Geprüft am ${today.split('-').reverse().join('\\.')} von <a href="../../ueber/#wer-prüft">Konrad Völkel</a>, Autor des Skripts`));
+  assert.match(c.read('f/s01/index.html'), new RegExp(`Antwort eines Sprachmodells, geprüft am ${today.split('-').reverse().join('\\.')} von <a href="../../ueber/#wer-prüft">Konrad Völkel</a>, Autor des Skripts`));
   await c.form('/eidl/mod/f/s01/', { aktion: 'zuruecksetzen' }, { cookie });
   assert.equal(c.store.question('s01').antworten[0].geprueftAm, null);
   assert.doesNotMatch(c.read('f/s01/index.html'), /class="pruefung"/);

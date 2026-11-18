@@ -141,7 +141,7 @@ pre { overflow-x: auto; }
 /* „Melden“ führt zum Impressum; es steht rechts vor der Nummer und nimmt ihr den Platz nicht */
 .melden { margin: -.3rem 0 -.3rem auto; padding: .3rem .1rem; color: var(--leise); font-size: .85rem; }
 .melden + .nummer { margin-left: 0; }
-.pruefung { margin: 0 0 .5rem; color: var(--gut); font-size: .9rem; }
+.pruefung { margin: 0 0 .5rem; color: var(--gut); font-size: .9rem; text-wrap: pretty; }
 .pruefung a { color: inherit; }
 .lizenz { margin: .3rem 0 0; color: var(--leise); font-size: .85rem; }
 .frage h1 { margin: 0; }
@@ -194,6 +194,8 @@ pre { overflow-x: auto; }
 
 .einstieg h1 { font-size: 1.25rem; }
 .einstieg p { margin: 0 0 .8rem; }
+/* Die Kapitelseite ist das Ziel der Links aus dem Skript: zwei Sätze, was das Forum ist */
+.einleitung { margin: .6rem 0 .9rem; max-width: 46rem; font-size: .95rem; }
 .titelzeile h2 { margin: 0; font-size: 1.2rem; }
 .titelzeile { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; }
 .knopf.fragen { border-color: var(--marke); background: var(--marke); color: var(--grund); }

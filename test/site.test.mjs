@@ -328,7 +328,7 @@ test('die Frageseite führt weiter: zum Kapitel und zum Unterforum, mit Datum un
     'der Faden ist ein Artikel, und die Frage steht als Erstes in ihrer Karte: So nimmt ein Textextraktor sie mit');
   assert.match(html, /<a class="marke-zitat" href="#z1" aria-label="Zitat 1">\[1\]<\/a>/);
   assert.match(html, /<section class="zitate" data-nosnippet>/, 'die Trefferbeschreibung soll aus der Antwort kommen, nicht aus dem Skript');
-  assert.match(html, /<section class="zitate" data-nosnippet><h2>Originaltext aus dem Skript<\/h2>\s*<p class="lizenz">[^\n]*<\/p>\s*<aside><figure id="z1">[\s\S]*<\/figure><\/aside>\s*<\/section>/,
+  assert.match(html, /<section class="zitate" data-nosnippet><h2>Originaltext aus dem Skript<\/h2>\s*<p class="lizenz">[^\n]*<\/p>\s*<aside aria-label="Zitate aus dem Skript"><figure id="z1">[\s\S]*<\/figure><\/aside>\s*<\/section>/,
     'die Zitate selbst stehen in einem aside, Überschrift und Lizenz davor: Sonst misst ein Extraktor seinen Auszug an ihnen und verwirft die Frage');
   assert.match(html, /<a class="sprung" href="#inhalt">Zum Inhalt<\/a>[\s\S]*<main id="inhalt">/);
 });
@@ -369,7 +369,9 @@ test('I9: Steht neben einer geprüften Antwort eine ungeprüfte, bleibt die Seit
 
 test('D29: Eine geprüfte Antwort sagt, wer geprüft hat und wann; das Datum der Frage steht nicht mehr neben „geprüft“', () => {
   const html = questionPage(geprueft(), site);
-  assert.match(html, /<p class="pruefung">Geprüft am 06\.11\.2026 von <a href="\.\.\/\.\.\/ueber\/#wer-prüft">Konrad Völkel<\/a>, Autor des Skripts\.<\/p>/);
+  assert.match(html, /<p class="pruefung">Antwort eines Sprachmodells, geprüft am 06\.11\.2026 von <a href="\.\.\/\.\.\/ueber\/#wer-prüft">Konrad Völkel<\/a>, Autor des Skripts\.<\/p>/,
+    'der Vermerk nennt auch die Herkunft: Im extrahierten Text fehlt der Absenderkasten, und der Hinweis auf das Sprachmodell kommt erst nach der Antwort');
+  assert.ok(html.indexOf('Antwort eines Sprachmodells') < html.indexOf('<div class="text">'), 'vor dem ersten Satz der Antwort');
   const antwort = html.slice(html.indexOf('id="b2"'));
   assert.doesNotMatch(antwort.slice(0, antwort.indexOf('</header>')), /2026-11-04/);
   assert.doesNotMatch(questionPage(question(), site), /class="pruefung"/);
@@ -399,10 +401,43 @@ test('A4: An der Frage und an jeder Antwort steht ein Link „Melden“, am Entw
     ['Beitrag 1 melden', 'Beitrag 2 melden'], 'der Name sagt, welcher Beitrag gemeint ist, und enthält die sichtbare Beschriftung');
 });
 
+test('die Zeile über den Zitaten nennt jedes zitierte Kapitel einmal, mit Link auf seine Seite im Skript, außerhalb des aside', () => {
+  const zitat = (titel, url) => ({ titel, pfad: ['A'], url, text: 'Wortlaut.' });
+  const page = zitate => questionPage({ ...question(), antworten: [{ ...question().antworten[0], zitate }] }, site);
+  const zeile = html => html.match(/<p class="lizenz">Aus dem Skript[^\n]*<\/p>/)[0];
+  const zwei = page([zitat('Tensoren', 'https://skript.test/tensoren/#a:~:text=Ein%20Tensor'), zitat('Tensoren', 'https://skript.test/tensoren/#b'), zitat('Autograd & Graph', 'https://skript.test/autograd/')]);
+  assert.match(zeile(zwei), /, Kapitel <a href="https:\/\/skript\.test\/tensoren\/" rel="noopener">„Tensoren“<\/a> und <a href="https:\/\/skript\.test\/autograd\/" rel="noopener">„Autograd &amp; Graph“<\/a>, Lizenz /,
+    'zwei Zitate aus einem Kapitel nennen es einmal, ohne Sprungziel und ohne Textfragment');
+  const drei = page([zitat('A', 'https://skript.test/a/#x'), zitat('B', 'https://skript.test/b/#x'), zitat('C', 'https://skript.test/c/#x')]);
+  assert.match(zeile(drei), /„A“<\/a>, <a [^>]*>„B“<\/a> und <a [^>]*>„C“<\/a>, Lizenz /);
+  assert.ok(zwei.indexOf('<p class="lizenz">Aus dem Skript') < zwei.indexOf('<aside aria-label="Zitate aus dem Skript">'), 'vor dem aside: Was darin steht, wirft ein Extraktor weg');
+  assert.doesNotMatch(questionPage({ ...question(), antworten: [{ ...question().antworten[0], zitate: [] }] }, site), /Aus dem Skript „/, 'ohne Zitat keine Zeile');
+});
+
+test('eine Beschreibung endet nicht auf einer Frage, in einer Klammer, in einem offenen Zitat oder mit einem leeren Satzanfang', () => {
+  const of = antwort => descriptionOf(questionPage({ ...question(), antworten: [{ ...question().antworten[0], text: antwort }] }, site));
+  const SUMME = '$\\sum_{i=1}^n x_i$';
+  assert.equal(of(`Das ist normal und kein Fehler. Das Skript sagt ausdrücklich: Der Loss darf von Batch zu Batch steigen.[1]\n\n**Warum?** Beim SGD gilt ${SUMME} und mehr.`),
+    'Das ist normal und kein Fehler. Das Skript sagt ausdrücklich: Der Loss darf von Batch zu Batch steigen.', 'eine Zwischenüberschrift als Frage ist kein letzter Satz');
+  assert.match(of('Ja, das stimmt. Aber warum ist das so? Weil die Summe aller Gewichte nach jedem Schritt gleich bleibt, und das gilt für jede Schicht, wie das Skript an mehreren Stellen ausführlich zeigt und begründet.'),
+    /^Ja, das stimmt\. Aber warum ist das so\? Weil die Summe aller Gewichte .* …$/, 'bliebe ohne die Frage zu wenig, bleibt sie stehen, und der nächste Satz beginnt');
+  assert.equal(of(`Die Lernrate ist ein Hyperparameter, kein Parameter. In der Perzeptronregel ${SUMME} heißt es ausdrücklich so.`),
+    'Die Lernrate ist ein Hyperparameter, kein Parameter.', 'drei Wörter vor der Formel tragen nichts: Der ganze Satz steht für sich, auch unter 70 Zeichen');
+  assert.equal(of('Ein einzelnes Neuron berechnet eine Schwelle. Geometrisch beschreibt die Gleichung eine Hyperebene im Raum der Eingaben (in der Ebene ist das eine Gerade, im Raum eine Ebene), und mehr.'),
+    'Ein einzelnes Neuron berechnet eine Schwelle. Geometrisch beschreibt die Gleichung eine Hyperebene im Raum der Eingaben …', 'nicht in einer offenen Klammer');
+  assert.equal(of('Die Begründung liefert die Originalarbeit: „Human evaluations of machine translation are extensive but expensive. [...] We propose a method of automatic machine translation evaluation that is quick, inexpensive, and language-independent.“ BLEU ist also ein Ersatz.'),
+    'Die Begründung liefert die Originalarbeit: „Human evaluations of machine translation are extensive but expensive. …“', 'ein offenes Zitat schließt mit Auslassung');
+  const lang = of(`Das Skript sagt: „${'Wort '.repeat(26)}endet hier. Und der zweite Satz des Zitats ist so lang, dass er nicht mehr in die Beschreibung passt, auf keinen Fall.“`);
+  assert.ok(lang.length <= 155 && lang.endsWith(' …“'), `${lang.length}: ${lang}`);
+  assert.equal(of('Ein ReLU-Neuron ist tot, wenn [es] immer 0 liefert, weil die Eingabe immer negativ ist. Bei `x[i]` und $a[i]$ bleibt die Klammer, bei [Text](https://skript.test/x) der Linktext.'),
+    'Ein ReLU-Neuron ist tot, wenn es immer 0 liefert, weil die Eingabe immer negativ ist. Bei x[i] und a[i] bleibt die Klammer, bei Text der Linktext.',
+    'ein Einschub im Zitat verliert seine Klammern, Code, Formel und Link bleiben, wie sie sind');
+});
+
 test('Befund 17: Der Fuß nennt den Betreiber, das Zitat Autor und Lizenz', () => {
   const html = questionPage(question(), site);
   assert.match(html, /Ein privates Angebot von <a href="\.\.\/\.\.\/impressum\/">Konrad Völkel<\/a>, nicht der Heinrich-Heine-Universität/);
-  assert.match(html, /<p class="lizenz">Aus dem Skript „Einführung in Deep Learning“ von Konrad Völkel, Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="noopener">CC BY-SA 4\.0<\/a>\.<\/p>/);
+  assert.match(html, /<p class="lizenz">Aus dem Skript „Einführung in Deep Learning“ von Konrad Völkel, Kapitel <a href="https:\/\/skript\.test\/kapitel\/" rel="noopener">„Tensoren“<\/a>, Lizenz <a href="https:\/\/creativecommons\.org\/licenses\/by-sa\/4\.0\/deed\.de" rel="noopener">CC BY-SA 4\.0<\/a>\.<\/p>/);
   assert.match(html, /Diese Frage ist gemeinfrei \(<a href="https:\/\/creativecommons\.org\/publicdomain\/zero\/1\.0\/deed\.de" rel="noopener">CC0 1\.0<\/a>\)/, 'die Beispielfragen stammen vom Betreiber und sind gemeinfrei');
   assert.doesNotMatch(questionPage({ ...question(), lizenz: null }, site), /gemeinfrei/, 'ohne Erklärung kein Vermerk');
   assert.doesNotMatch(html, /rel="license/, 'drei Lizenzen auf einer Seite: Welche für was gilt, sagen Text und strukturierte Daten');
@@ -442,13 +477,14 @@ test('D32: Eine geprüfte Frage trägt QAPage, mit dem Bot als Bot und dem Zitat
   assert.equal(antwort.url, 'https://example.test/eidl/f/s01/#b2');
   assert.ok(html.includes('id="b2"'));
   assert.equal(antwort.text, 'Es rechnet eine Summe. Bei `x[1]` bleibt das, $a[1]$ auch, gibt es nicht.');
-  assert.deepEqual(antwort.author, { '@type': 'Organization', name: 'hAInrich2-Bot (Claude von Anthropic), von der Moderation geprüft' });
+  assert.deepEqual(antwort.author, { '@type': 'Organization', name: 'hAInrich2-Bot (Claude von Anthropic), von der Moderation geprüft', url: 'https://example.test/eidl/ueber/' },
+    'mit Adresse: Googles Live-Test vermisste sie am 2026-11-18, und die Über-Seite sagt, was der Bot ist');
   assert.deepEqual(antwort.citation, [{ '@type': 'CreativeWork', name: 'Tensoren › Abschnitt', url: 'https://skript.test/kapitel/#abschnitt' }]);
   assert.equal(antwort.dateModified, '2026-11-06');
   assert.ok(!JSON.stringify(blocks[1]).includes('upvoteCount'));
   assert.equal(person.name, 'Konrad Völkel');
   assert.deepEqual([page.reviewedBy, page.lastReviewed], [{ '@id': person['@id'] }, '2026-11-06'], 'der Prüfvermerk steht auch im Markup');
-  assert.match(html, /<p class="pruefung">Geprüft am 06\.11\.2026 von /, 'und nennt denselben Tag wie die Seite, dort als Text: Ein Extraktor streicht <time>');
+  assert.match(html, /<p class="pruefung">Antwort eines Sprachmodells, geprüft am 06\.11\.2026 von /, 'und nennt denselben Tag wie die Seite, dort als Text: Ein Extraktor streicht <time>');
   for (const url of JSON.stringify(blocks).match(/"https?:[^"]+"/g)) assert.match(url, /^"https:\/\//);
 
   assert.deepEqual(allData(questionPage(question(), site)).map(b => b['@type']), ['BreadcrumbList']);

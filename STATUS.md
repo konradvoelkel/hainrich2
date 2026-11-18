@@ -179,6 +179,24 @@ _Stand 2026-11-18._
   `site/deploy-app.sh` endete mit Status 255; nachgeholt mit einer einzelnen Verbindung. Danach `hainrich2-web` aktiv, Smoke 19/19 gegen
   den Host, die API weist `GET` mit 405 ab, die Anmeldeseite der Moderation kommt. **Einen echten Aufruf mit SDK 1.8.0 gab es noch
   nicht:** Der erste Entwurf nach dem Ausspielen ist der erste, und das Journal des Workers habe ich nicht gelesen.
+- `research/2026-11-18-seo-audit/`: viertes SEO-Audit, das erste nach dem Ende der Vorschau, am ausgespielten Stand `89a8b4a` mit
+  97 Seiten. Einschätzung 85 von 100 (17.11.: 84). Gemessen: 35 Seiten `index,follow`, die Sitemap nennt genau diese 35; trafilatura
+  nimmt die Frage auf 29 von 29 Seiten vorn mit; Gewicht und Anfragen wie am 17.11. **Googles Live-Test in der Search Console nimmt
+  eine Frageseite an:** indexierbar, Breadcrumbs gültig, Q&A gültig und für Rich Results zulässig, mit fünf unkritischen Hinweisen
+  (Datum der Frage ohne Uhrzeit, drei optionale Felder fehlen). Indexiert ist noch nichts („Discovered – currently not indexed“).
+  **Offen und jetzt live:** Gegen das Skript von heute zitieren mindestens 13 der 29 Antworten Wortlaut, den es so nicht mehr hat,
+  darunter vier der acht vom 17.11.; im extrahierten Text fehlt seit dem Umbau vom 17.11. der Beleg (205 Zitatmarken ohne Ziel, eine
+  einzige Adresse des Skripts in 29 Auszügen); die Links aus dem Skript treffen 29 Kapitelseiten mit `noindex` und ohne Einleitung;
+  s29, s06 und s20 halten ihren Titel nicht; der nächste Schritt liegt unter den Zitaten.
+  **Umgebaut am selben Tag, nicht ausgespielt** (Abschnitt 9 des Berichts), was keine Entscheidung braucht: Die Zeile über den
+  Zitaten nennt die zitierten Kapitel mit Link ins Skript, der Prüfvermerk beginnt mit „Antwort eines Sprachmodells, geprüft am …“,
+  jede Kapitelseite sagt in zwei Sätzen, wer antwortet, wer prüft und dass Fragen einen Kurscode braucht, eine Beschreibung endet nicht
+  mehr auf einer Frage, in einer Klammer oder in einem offenen Zitat, der Bot-Autor im `QAPage` trägt `url`. Gemessen am lokalen Bau
+  aus dem Stand vom Server (27 Fragen): Herkunft in den ersten 400 Zeichen des Auszugs auf 27 von 27 Seiten (vorher 0 von 28),
+  zitiertes Kapitel und Adresse des Skripts im Auszug 27 von 27 (vorher 1 und 0 von 28), die Frage weiter auf allen vorn; 5 von 27
+  Beschreibungen geändert. Der Prüfvermerk braucht bei 375 px drei Zeilen statt zwei. Tests gegen diesen Bau: `npm test` 305 von 305,
+  `npm run smoke` 22 von 22 in Chromium, Firefox und WebKit, `npm run smoke:mod` 27 von 27 in Chromium und Firefox.
+  Offen bleiben der Korpus und die veralteten Zitate, die Schwelle für die Kapitelseiten, `nav.weiter` und die Texte des Betreibers.
 - `research/2026-11-17-seo-audit/`: drittes SEO-Audit, am ausgespielten Stand `d977182` mit 99 Seiten. Startbereitschaft 84 von 100
   (eine Einschätzung; 16.11.: 79). Von den 17 Befunden des 16.11. sind 13 erledigt oder entschieden. Offen vor dem Ende der Vorschau:
   zehn geprüfte Antworten zitieren Wortlaut, den das Skript nicht mehr hat; ein Textextraktor findet die Frage auf 30 von 31

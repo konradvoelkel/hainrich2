@@ -228,7 +228,7 @@ test('jede Frageseite: QAPage genau dort, wo jede Antwort geprüft ist; es nennt
      * Der Prüfvermerk in maschinenlesbarer Form: dieselbe Person, und kein älterer Tag als der jüngste Vermerk der Seite. Jünger darf er
      * sein, die eigene Antwort der Moderation trägt ihr Datum in der Kopfzeile und keinen Vermerk
      */
-    const tage = [...html.matchAll(/<p class="pruefung">Geprüft am (\d\d)\.(\d\d)\.(\d{4}) von/g)].map(([, tag, monat, jahr]) => `${jahr}-${monat}-${tag}`).sort();
+    const tage = [...html.matchAll(/<p class="pruefung">Antwort eines Sprachmodells, geprüft am (\d\d)\.(\d\d)\.(\d{4}) von/g)].map(([, tag, monat, jahr]) => `${jahr}-${monat}-${tag}`).sort();
     expect(seite.reviewedBy, id).toEqual({ '@id': blocks.at(-1)['@graph'].at(-1)['@id'] });
     if (tage.length) expect(seite.lastReviewed >= tage.at(-1), `${id}: ${seite.lastReviewed} gegen ${tage.at(-1)}`).toBe(true);
     const qa = seite.mainEntity;

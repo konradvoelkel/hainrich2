@@ -44,6 +44,17 @@ test('die Kapitelseite trägt Adresse, Titel, Brotkrumen und einen Link ins Form
   assert.match(html, /Zu diesem Kapitel gibt es noch keine Frage\. Stellen Sie die erste\./);
 });
 
+test('die Kapitelseite sagt, was das Forum ist: Sie ist das Ziel der Links aus dem Skript', () => {
+  const html = kapitelPage(backprop, [], site);
+  const einleitung = html.match(/<p class="einleitung">([^\n]*)<\/p>/)[1];
+  assert.match(einleitung, /^Die meisten Antworten schreibt ein Sprachmodell, belegt mit wörtlichen Zitaten aus dem Skript, und die Moderation prüft sie\./, 'derselbe Satz wie auf der Startseite; zu welchem Skript, sagt schon der Seitenkopf');
+  assert.match(einleitung, /Fragen stellen kann nur, wer den Kurscode hat, und den gibt es im Kurs in ILIAS\. Lesen können alle\. <a href="\.\.\/\.\.\/\.\.\/ueber\/">Mehr über die Idee<\/a>$/);
+  assert.ok(html.indexOf('class="einleitung"') < html.indexOf('id="suche"'), 'vor der Suche');
+  const ohne = kapitelPage(backprop, [], { ...site, fragen: false });
+  assert.match(ohne, /<p class="einleitung">[^\n]*prüft sie\. <a href/, 'ohne Fragepfad kein Satz zum Kurscode');
+  assert.doesNotMatch(ohne, /Kurscode/);
+});
+
 test('die Suche auf der Kapitelseite kennt ihren Kapiteltitel und findet ihre Dateien unter der Wurzel', () => {
   const html = kapitelPage(backprop, [], site);
   assert.match(html, /<section class="suche" id="suche" role="search" aria-label="Suche im Forum" hidden data-root="\.\.\/\.\.\/\.\.\/" data-kapitel="Backpropagation">/);
