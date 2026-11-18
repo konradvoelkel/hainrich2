@@ -13,12 +13,15 @@ _Stand 2026-11-18._
   dem Server-Repo): Basic Auth im Webserver für `/eidl/mod` und alles darunter, `/eidl/api/` bleibt offen, die Anmeldung der App
   bleibt dahinter. Von außen gemessen, nur `GET` und ohne Zugangsdaten: 401 für die Moderation, 405 von der App für `/eidl/api/token`
   und `/eidl/api/stimme`, 200 für die Seiten; Smoke gegen den Host 22 von 22. Nachtrag in `research/2026-11-11-threat-model/`.
-- **Gebaut am 2026-11-18, nicht ausgespielt** (Konrad: „Routing der App härten“, Plan D51): Die App bedient nur noch Pfade, die roh
+- **Gebaut und ausgespielt am 2026-11-18 um 11:26** (Konrad: „Routing der App härten“, Plan D51; Commit `21e5d95`): Die App bedient nur noch Pfade, die roh
   schon so dastehen, wie `new URL()` sie auflöst (`plainPath` in `lib/http.js`), und verteilt ausdrücklich auf Abstimmen, Fragepfad
   und Moderation (`createRouter`); alles andere bekommt 404, nichts fällt mehr von selbst an die Moderation. Moderation und
   Fragepfad prüfen es selbst noch einmal. `server/web.mjs`, das Unit-Gerüst und `smoke-mod/start.mjs` benutzen dieselbe Verteilung.
   Belegt: `test/routing.test.mjs` schickt sieben schiefe Pfade roh über die Leitung, gegen die Verteilung und gegen die Moderation
-  allein; keiner erreicht die Anmeldeseite. Gegenprobe: Mit abgeschalteter Prüfung scheitern alle vier Tests.
+  allein; keiner erreicht die Anmeldeseite. Gegenprobe: Mit abgeschalteter Prüfung scheitern alle vier Tests. Am Host roh
+  nachgemessen, nur `GET` und ohne Zugangsdaten: Sieben schiefe Pfade geben 401 von der Schranke oder 404 „Nicht gefunden.“ von der
+  App, keiner die Anmeldeseite; `/eidl/api/token` und `/eidl/api/stimme` 405, das Formular trägt weiter `data-zustimmung="4"`, alle 35
+  Adressen der Sitemap 200, Smoke gegen den Host 22 von 22.
 - **Gebaut und ausgespielt am 2026-11-18** (Konrads Entscheidungen vom selben Tag, Plan D48 und D49; jeden Wortlaut hat er einzeln
   bewilligt, ein Anwalt hat ihn nicht gelesen; Commit `15b4bf4`, statische Seiten um 10:43:22, App um 10:43:37):
   - _Fragen stellen ab 18 (D48):_ „Ich bin mindestens 18 Jahre alt.“ im Zustimmungstext, **Zustimmung Version 4**; der Server nimmt
@@ -41,7 +44,7 @@ _Stand 2026-11-18._
   - _Das Deploy-Skript meldete dabei einen Fehler, der keiner war:_ `site/deploy-app.sh` prüfte zum Schluss die Anmeldeseite der
     Moderation auf 200, und dort antwortet seit demselben Morgen die Schranke mit 401. Der Web-Prozess lief und antwortete. Die
     Prüfung fragt jetzt den Fragepfad (`api/token`: 405 von der App, 503 bei geschlossenem Fragepfad, 502 vom Webserver, wenn die App
-    nicht läuft). Einzeln gegen den Host geprüft; durch ein ganzes Ausspielen ist die neue Prüfung noch nicht gelaufen.
+    nicht läuft). Beim Ausspielen um 11:26 lief sie zum ersten Mal ganz durch: grün, der Web-Prozess antwortete rund acht Sekunden nach dem Neustart.
 - **Gebaut und ausgespielt am 2026-11-17** (Konrads Entscheidungen vom selben Tag, Plan D28 bis D33; Commit `35aa8d4`):
   - _Härtungen (D28):_ Eine ungeprüfte Antwort des Bots verlinkt nur ins Skript, Formeln sind auf 20 em begrenzt, der Worker prüft
     Kennung und Länge jedes Auftrags. An Frage und Antwort steht „Melden“. Der Datenschutz sagt über den Checker nur noch, was er erkennt.
@@ -428,7 +431,7 @@ _Stand 2026-11-18._
 
 ## Nächster Schritt
 
-Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `be5ac44`, App und statische Seiten (ausgespielt am 2026-11-18 um 10:43), mit den Rechtstexten vom selben Tag und Zustimmung Version 4. Die Kurztitel sind bestätigt.
+Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `21e5d95`: die App seit dem 2026-11-18 um 11:26, die statischen Seiten seit 10:43, mit den Rechtstexten vom selben Tag und Zustimmung Version 4. Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Geprüftes ist seit dem Ende der Vorschau indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

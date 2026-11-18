@@ -276,3 +276,11 @@ Journal schreibt, prüft Konrad am Host; in der VM schrieb sie keine. `site/serv
 der Moderation laufen ohne sie.
 
 Offen bleiben danach B1 (verschoben) und B4 (hingenommen); C5 ist hingenommen.
+
+**Nachtrag vom selben Tag, 11:26 (Plan D51): Die App verteilt nur noch eindeutige Pfade.** Die Schranke entscheidet an dem Bild, das
+der Webserver vom Pfad hat. Die App rechnete mit `new URL().pathname`, das `..`, `%2e%2e` und einen Backslash auflöst, und schickte
+alles, was roh nicht mit `api/` begann, an die Moderation. Der Webserver fing diese Formen ab (oben gemessen), die Schranke hing aber
+daran, dass beide Seiten Pfade gleich lesen; der Hinweis kam aus dem Server-Repo. Jetzt bedient die App einen Pfad nur, wenn er roh
+schon so dasteht, wie er aufgelöst würde, und kennt genau drei Ziele: Abstimmen, Fragepfad, Moderation. Alles andere bekommt 404.
+Beleg: `test/routing.test.mjs`, mit Gegenprobe. Am Host roh gemessen, nur `GET` und ohne Zugangsdaten: sieben schiefe Pfade, viermal
+401 von der Schranke, dreimal 404 von der App, nie die Anmeldeseite.
