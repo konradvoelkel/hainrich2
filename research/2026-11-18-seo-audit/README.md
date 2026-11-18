@@ -206,7 +206,8 @@ galten. Alles hinter Kurscode und Anmeldung.
 ## 9. Umgebaut am 2026-11-18, nach dem Bericht
 
 Auf Konrads Wort („Ja, umbauen“) gebaut ist, was keine Entscheidung braucht. Gemessen am lokalen Bau aus dem Stand vom Server (27
-Beispielfragen; die zwei Testfragen baut nur der Server). Ausgespielt ist davon nichts, solange `STATUS.md` es nicht sagt.
+Beispielfragen; die zwei Testfragen baut nur der Server). **Ausgespielt am 2026-11-18 um 02:12** (`25b36b9`) und am Host
+nachgemessen, siehe unter der Tabelle.
 `../2026-11-17-seo-audit/auszug.py` zählt dafür seit heute drei Dinge mehr: Herkunft in den ersten 400 Zeichen, zitiertes Kapitel
 beim Namen, Adresse des Skripts im Auszug mit Links. Die Zahlen „vorher“ stammen aus demselben Skript über den Crawl vom 18.11.
 
@@ -218,6 +219,12 @@ beim Namen, Adresse des Skripts im Auszug mit Links. Die Zahlen „vorher“ sta
 | 7 Ende der Beschreibungen | Eine Beschreibung endet nicht mehr auf einer Frage oder einem Doppelpunkt (wenn ohne den Satz noch 70 Zeichen bleiben), nicht in einer offenen Klammer und nicht in einem offenen Zitat (das schließt mit „…“); ein Satzanfang von unter fünf Wörtern bleibt weg; ein Einschub im Zitat verliert seine Klammern | 5 von 27 geändert: s11 ohne „Warum?“, s22 schließt das Zitat, s15 endet vor der Klammer, s14 ohne „[es]“, s01 ist jetzt der ganze erste Satz (52 Zeichen, vorher 77 mit „In der Perzeptronregel …“). Keine endet auf „?“ oder „:“, 9 enden auf „…“ |
 | 9 Hinweis aus dem Live-Test | Der Autor der Bot-Antwort im `QAPage` trägt `url`, die Über-Seite | im Unit-Test und im Browser-Test |
 | niedrig: Landmarken | Das `<aside>` mit den Zitaten heißt „Zitate aus dem Skript“ | Auszug unverändert, siehe oben |
+
+**Am Host nach dem Ausspielen** (alle 29 Frageseiten neu abgerufen, nur GET, dazu drei Kapitelseiten): Frage vorn im Auszug 29 von
+29; Herkunft in den ersten 400 Zeichen 28 von 28 Seiten mit Antwort des Bots; zitiertes Kapitel beim Namen 28 von 28 Seiten mit
+Zitat; Adresse des Skripts im Auszug mit Links 28 von 28; Bot-Autor mit `url` 28 von 28; keine Beschreibung endet auf „?“ oder „:“,
+10 auf „…“, eine (s22) schließt ihr Zitat mit „…“. Die drei Kapitelseiten tragen die Einleitung und weiter `noindex`. Die
+Browser-Tests gegen den Host: 22 von 22.
 
 **Nicht gebaut, mit Grund.**
 

@@ -188,7 +188,7 @@ _Stand 2026-11-18._
   darunter vier der acht vom 17.11.; im extrahierten Text fehlt seit dem Umbau vom 17.11. der Beleg (205 Zitatmarken ohne Ziel, eine
   einzige Adresse des Skripts in 29 Auszügen); die Links aus dem Skript treffen 29 Kapitelseiten mit `noindex` und ohne Einleitung;
   s29, s06 und s20 halten ihren Titel nicht; der nächste Schritt liegt unter den Zitaten.
-  **Umgebaut am selben Tag, nicht ausgespielt** (Abschnitt 9 des Berichts), was keine Entscheidung braucht: Die Zeile über den
+  **Umgebaut am selben Tag und ausgespielt um 02:12** (`25b36b9`, Abschnitt 9 des Berichts), was keine Entscheidung braucht: Die Zeile über den
   Zitaten nennt die zitierten Kapitel mit Link ins Skript, der Prüfvermerk beginnt mit „Antwort eines Sprachmodells, geprüft am …“,
   jede Kapitelseite sagt in zwei Sätzen, wer antwortet, wer prüft und dass Fragen einen Kurscode braucht, eine Beschreibung endet nicht
   mehr auf einer Frage, in einer Klammer oder in einem offenen Zitat, der Bot-Autor im `QAPage` trägt `url`. Gemessen am lokalen Bau
@@ -196,6 +196,10 @@ _Stand 2026-11-18._
   zitiertes Kapitel und Adresse des Skripts im Auszug 27 von 27 (vorher 1 und 0 von 28), die Frage weiter auf allen vorn; 5 von 27
   Beschreibungen geändert. Der Prüfvermerk braucht bei 375 px drei Zeilen statt zwei. Tests gegen diesen Bau: `npm test` 305 von 305,
   `npm run smoke` 22 von 22 in Chromium, Firefox und WebKit, `npm run smoke:mod` 27 von 27 in Chromium und Firefox.
+  **Am Host nachgemessen** (alle 29 Frageseiten neu abgerufen, nur GET): Frage vorn im Auszug 29 von 29, Herkunft in den ersten
+  400 Zeichen 28 von 28 Seiten mit Antwort des Bots, zitiertes Kapitel und Adresse des Skripts 28 von 28, Bot-Autor mit `url` 28
+  von 28, keine Beschreibung endet auf „?“ oder „:“; drei Kapitelseiten tragen die Einleitung; `npm run smoke` gegen den Host 22
+  von 22. Nicht gemessen: andere Extraktoren als trafilatura, ein echtes Telefon.
   Offen bleiben der Korpus und die veralteten Zitate, die Schwelle für die Kapitelseiten, `nav.weiter` und die Texte des Betreibers.
 - `research/2026-11-17-seo-audit/`: drittes SEO-Audit, am ausgespielten Stand `d977182` mit 99 Seiten. Startbereitschaft 84 von 100
   (eine Einschätzung; 16.11.: 79). Von den 17 Befunden des 16.11. sind 13 erledigt oder entschieden. Offen vor dem Ende der Vorschau:
@@ -383,7 +387,7 @@ _Stand 2026-11-18._
 
 ## Nächster Schritt
 
-Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `749e0b3`, App und statische Seiten. Die Kurztitel sind bestätigt.
+Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `25b36b9`, App und statische Seiten (ausgespielt am 2026-11-18 um 02:12). Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Geprüftes ist seit dem Ende der Vorschau indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.
