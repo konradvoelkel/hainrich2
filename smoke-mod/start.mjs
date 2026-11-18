@@ -13,6 +13,7 @@ import { hashPassphrase } from '../lib/auth.js';
 import { Ledger } from '../lib/budget.js';
 import { runJobs } from '../lib/draft.js';
 import { createFragen } from '../lib/fragen.js';
+import { createRouter } from '../lib/http.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
 import { createPublisher, publishAll } from '../lib/publish.js';
@@ -76,7 +77,7 @@ const mod = createHandler({ store, live, publish, fragen: frageweg, kosten, pass
 const api = createApi({ fragen: frageweg, pending, store, hash: await hashPassphrase(KURSCODE) });
 const voting = createVoting({ store, publish });
 setInterval(() => voting.flush(), 300);
-const routeOf = ({ url }) => (url === '/eidl/api/stimme' ? voting.handle : url.startsWith('/eidl/api/') ? api : mod);
-http.createServer((req, res) => routeOf(req)(req, res)).listen(MOD_PORT, '127.0.0.1');
+/** dieselbe Verteilung wie server/web.mjs */
+http.createServer(createRouter({ base: '/eidl/', api, mod, voting: voting.handle })).listen(MOD_PORT, '127.0.0.1');
 const site = spawn('node', ['site/serve.mjs', String(PORT), built], { stdio: 'inherit', env: { ...process.env, HAINRICH2_MOD: `http://127.0.0.1:${MOD_PORT}`, HAINRICH2_LIVE: live } });
 process.on('exit', () => site.kill());

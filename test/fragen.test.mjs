@@ -8,6 +8,7 @@ import { createApi, READS_PER_MINUTE } from '../lib/api.js';
 import { checkToken, hashPassphrase, issueToken, tokenKey } from '../lib/auth.js';
 import { hardHits, softHits } from '../lib/checker.js';
 import { CC0, createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
+import { createRouter } from '../lib/http.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
 import { createPublisher, publishAll } from '../lib/publish.js';
@@ -37,7 +38,7 @@ async function setup({ spooling = true, now = Date.now } = {}) {
   const hash = await hashPassphrase(CODE);
   const api = createApi({ fragen, pending, store, hash, now });
   const mod = createHandler({ store, live, publish, fragen });
-  const server = http.createServer((req, res) => (req.url.startsWith('/eidl/api/') ? api : mod)(req, res));
+  const server = http.createServer(createRouter({ base: '/eidl/', api, mod }));
   await new Promise(done => server.listen(0, '127.0.0.1', done));
   const origin = `http://127.0.0.1:${server.address().port}`;
   const post = async (name, body, { token, from = origin, headers = {} } = {}) => {

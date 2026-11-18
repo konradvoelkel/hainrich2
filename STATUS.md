@@ -13,6 +13,12 @@ _Stand 2026-11-18._
   dem Server-Repo): Basic Auth im Webserver für `/eidl/mod` und alles darunter, `/eidl/api/` bleibt offen, die Anmeldung der App
   bleibt dahinter. Von außen gemessen, nur `GET` und ohne Zugangsdaten: 401 für die Moderation, 405 von der App für `/eidl/api/token`
   und `/eidl/api/stimme`, 200 für die Seiten; Smoke gegen den Host 22 von 22. Nachtrag in `research/2026-11-11-threat-model/`.
+- **Gebaut am 2026-11-18, nicht ausgespielt** (Konrad: „Routing der App härten“, Plan D51): Die App bedient nur noch Pfade, die roh
+  schon so dastehen, wie `new URL()` sie auflöst (`plainPath` in `lib/http.js`), und verteilt ausdrücklich auf Abstimmen, Fragepfad
+  und Moderation (`createRouter`); alles andere bekommt 404, nichts fällt mehr von selbst an die Moderation. Moderation und
+  Fragepfad prüfen es selbst noch einmal. `server/web.mjs`, das Unit-Gerüst und `smoke-mod/start.mjs` benutzen dieselbe Verteilung.
+  Belegt: `test/routing.test.mjs` schickt sieben schiefe Pfade roh über die Leitung, gegen die Verteilung und gegen die Moderation
+  allein; keiner erreicht die Anmeldeseite. Gegenprobe: Mit abgeschalteter Prüfung scheitern alle vier Tests.
 - **Gebaut und ausgespielt am 2026-11-18** (Konrads Entscheidungen vom selben Tag, Plan D48 und D49; jeden Wortlaut hat er einzeln
   bewilligt, ein Anwalt hat ihn nicht gelesen; Commit `15b4bf4`, statische Seiten um 10:43:22, App um 10:43:37):
   - _Fragen stellen ab 18 (D48):_ „Ich bin mindestens 18 Jahre alt.“ im Zustimmungstext, **Zustimmung Version 4**; der Server nimmt

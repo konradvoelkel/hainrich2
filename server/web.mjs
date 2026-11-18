@@ -16,6 +16,7 @@ import http from 'node:http';
 import { closedApi, createApi } from '../lib/api.js';
 import { relinker } from '../lib/citations.js';
 import { createFragen } from '../lib/fragen.js';
+import { createRouter } from '../lib/http.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
 import { createPublisher, publishAll } from '../lib/publish.js';
@@ -70,8 +71,4 @@ if (open) {
 const voting = stimmen ? createVoting({ store, publish }) : null;
 if (voting) setInterval(safely(voting.flush), FLUSH_MS);
 const mod = createHandler({ store, live, base, publish, fragen, kosten, passages });
-const routeOf = ({ url }) => {
-  if (voting && url === `${base}api/stimme`) return voting.handle;
-  return url.startsWith(`${base}api/`) ? api : mod;
-};
-http.createServer((req, res) => routeOf(req)(req, res)).listen(+port, '127.0.0.1', () => console.log(`127.0.0.1:${port}`));
+http.createServer(createRouter({ base, api, mod, voting: voting?.handle })).listen(+port, '127.0.0.1', () => console.log(`127.0.0.1:${port}`));
