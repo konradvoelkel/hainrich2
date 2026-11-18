@@ -255,3 +255,24 @@ für alle vorbei, keinen Zugang.
 Am Host nach dem Ausspielen: Die Anmeldung gelingt in Konrads Browser, „Melden“ ist auf jeder Frageseite eine vorbereitete E-Mail,
 und der Datenschutz trägt die neuen Abschnitte. Das Geräte-Cookie selbst habe ich dort nicht gesehen (`HttpOnly`), und eine Sperre
 habe ich am Host nicht ausgelöst.
+
+**Konrads Entscheidung vom 2026-11-18 zu C2 und D1 (Plan D50): eine zweite Schranke vor `/eidl/mod/`.** Gebaut im Server-Repo (Rolle
+`hainrich2`), dort in einer VM geprobt und am selben Tag ausgespielt. Der Webserver verlangt für `/eidl/mod` und alles darunter
+Basic Auth, bevor eine Anfrage die App erreicht; `/eidl/api/` bleibt offen. Die Anmeldung der App mit Passphrase, Sitzungs- und
+Geräte-Cookie bleibt dahinter bestehen, und das Passwort der Schranke reicht der Webserver nicht an die App weiter. Ein Rechtstext
+ändert sich nicht: Basic Auth setzt kein Cookie.
+
+| Befund | Was jetzt gilt |
+|---|---|
+| C2 | Ohne den Zugang der Schranke erreicht niemand die Anmeldung der Moderation, also auch nicht ihre Grenze für alle. Für den Kurscode gilt C2 weiter: 60 falsche Versuche in der Minute, dann bekommt niemand ein neues Token. |
+| D1 | Vor der Passphrase steht ein zweites Geheimnis. Beides sind Geheimnisse; ein zweiter Faktor im strengen Sinn ist das nicht. |
+
+Von außen gemessen am 2026-11-18, nur mit `GET` und ohne Zugangsdaten: 401 mit `WWW-Authenticate` für `/eidl/mod/`, `/eidl/mod`,
+`/eidl/mod/zahlen/` und `/eidl/mod/tasten.js`, auch in anderer Schreibweise des Pfads. `/eidl/api/token` und `/eidl/api/stimme`
+antworten auf `GET` mit 405 von der App, ohne `WWW-Authenticate`; Startseite, eine Frageseite, das Frageformular und der Datenschutz
+mit 200. Der Smoke-Test gegen den Host: 22 von 22. Den Weg mit Zugangsdaten habe ich nicht geprüft, ich kenne sie nicht; ihn hat die
+Sitzung im Server-Repo in der VM gemessen, ebenso `POST` auf den Fragepfad. Ob eine abgewiesene Anfrage eine Zeile mit Adresse ins
+Journal schreibt, prüft Konrad am Host; in der VM schrieb sie keine. `site/serve.mjs` ahmt die Schranke nicht nach, die Browser-Tests
+der Moderation laufen ohne sie.
+
+Offen bleiben danach B1 (verschoben) und B4 (hingenommen); C5 ist hingenommen.

@@ -9,6 +9,10 @@ _Stand 2026-11-18._
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, in einem per
   Digest gepinnten `node:24`-Container. Seit dem 2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem
   Runner `ci-eu`: Der nimmt nur private Repos und musste vor einer Veröffentlichung weg.
+- **Seit dem 2026-11-18 steht vor der Moderation eine zweite Schranke** (Konrads Entscheidung, Plan D50; gebaut und ausgespielt aus
+  dem Server-Repo): Basic Auth im Webserver für `/eidl/mod` und alles darunter, `/eidl/api/` bleibt offen, die Anmeldung der App
+  bleibt dahinter. Von außen gemessen, nur `GET` und ohne Zugangsdaten: 401 für die Moderation, 405 von der App für `/eidl/api/token`
+  und `/eidl/api/stimme`, 200 für die Seiten; Smoke gegen den Host 22 von 22. Nachtrag in `research/2026-11-11-threat-model/`.
 - **Gebaut am 2026-11-18, nicht ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D48 und D49; jeden Wortlaut hat er einzeln
   bewilligt, ein Anwalt hat ihn nicht gelesen):
   - _Fragen stellen ab 18 (D48):_ „Ich bin mindestens 18 Jahre alt.“ im Zustimmungstext, **Zustimmung Version 4**; der Server nimmt
@@ -343,7 +347,8 @@ _Stand 2026-11-18._
   einstellbar. Erledigt am 17.11.: keine Pfade eines Rechners mehr im Stand (ein Test hält das), Betriebsnotizen aus Plan und
   Status genommen, Lizenzen im README je Bestandteil, Provenienz um `onnxruntime-node`, `sharp` und libvips ergänzt, Abschnitt
   „Quelltext“ für die Über-Seite hinter einem Schalter, Pre-Push-Hook. Sauber schon vorher: keine Geheimnisse in der Historie nach
-  Mustersuche, keine Serveradresse, eine einzige Autorenadresse, keine Datei über 1 MB.
+  Mustersuche, keine Serveradresse, eine einzige Autorenadresse, keine Datei über 1 MB. Stand 2026-11-18: Das Repo ist öffentlich
+  (D46). C2 und D1 sind seit der zweiten Schranke vor der Moderation enger (D50); als offen beschreibt der Bericht noch B1 und B4.
 
 - Stimmen lassen sich nicht prüfen und die Moderation kann sie nicht zurücksetzen. Wer die Browserdaten löscht, stimmt noch einmal; nur die Grenze je Adresse
   bremst das.
@@ -359,6 +364,9 @@ _Stand 2026-11-18._
 
 ## Nicht geprüft
 
+- Zur Schranke vor der Moderation (D50): Den Weg mit Zugangsdaten hat nur die Sitzung im Server-Repo gemessen, in einer VM. Ob eine
+  abgewiesene Anfrage am Host eine Zeile mit Adresse ins Journal schreibt, prüft Konrad dort als root; in der VM schrieb sie keine.
+  `site/serve.mjs` ahmt die Schranke nicht nach.
 - Aus den Rechtstexten vom 2026-11-18 (D48, D49): Am Host steht davon nichts. „Standort Westeuropa“ stammt aus dem Server-Repo
   (Eintrag vom 2026-09-27), im Dashboard von Cloudflare hat es an diesem Tag niemand nachgesehen. Ob jemand unter 18 fragt, kann die
   Site nicht feststellen. Die zugesagte Eingangsbestätigung zu einer Meldung schreibt ein Mensch; eine Technik dafür gibt es nicht.
