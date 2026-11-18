@@ -4,7 +4,7 @@ _Stand 2026-11-18._
 
 ## Was existiert
 
-- Git-Repo auf `main`, Remote `origin` ist das private `konradvoelkel/hainrich2` auf GitHub.
+- Git-Repo auf `main`, Remote `origin` ist `konradvoelkel/hainrich2` auf GitHub, **öffentlich seit dem 2026-11-18** (Plan D46).
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, in einem per
   Digest gepinnten `node:24`-Container. Seit dem 2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem
@@ -102,7 +102,27 @@ _Stand 2026-11-18._
     waren die ersten echten Aufrufe des Workers mit SDK 1.8.0; die Zahlen-Seite und sein Journal habe ich danach nicht gelesen.
     s29 beginnt weiter mit einer Absage („Die Skriptpassagen vergleichen SGD und Adam nicht hinsichtlich der Generalisierung“). Eine
     Regel, die eine Seite mit veraltetem Zitat aus dem Index hält, gibt es nicht.
-  - **Nicht entschieden:** ob jetzt die Links aus dem Skript und aus dem Blog nachziehen. Sie hingen an der alten Bedingung.
+  - **Das veröffentlichte Skript ist dem Korpus voraus** (gemessen am 18.11. gegen den Stand des Skripts vom 17.11., 23:52 GMT):
+    93 Passagen des Korpus vom 15.11. sind geändert oder weg, 120 geändert oder neu, in allen 29 Kapiteln. Die Moderation misst
+    Zitate am ausgespielten Korpus und meldet deshalb keins als veraltet; gegen das Skript selbst gerechnet zitieren 13 der 27
+    Beispielfragen Wortlaut, den es so nicht mehr hat (18 Zitate: s01, s02, s04, s06, s09, s12, s15, s16, s17, s20, s21, s25, s26).
+    Die zwei Testfragen sind nicht mitgerechnet. Nachziehen heißt: Korpus neu bauen, Verweis umstellen, beides ausspielen; danach
+    listet die Moderation diese Antworten. Der Schnitt lässt den Fuß der Kapitelseiten jetzt weg (Forumszeile, Herkunftszeile,
+    Glossar-Hinweis): Sonst stünde er in sechs Kapiteln im neuen Korpus, und der Bot zitierte ihn als Skript.
+  - **Entschieden am 2026-11-18 (Plan D46):** Die Links aus dem Skript und aus dem Blog dürfen nachziehen; die Sitzungen zu
+    `eidl-skript` und zur persönlichen Website sind benachrichtigt. Der Link im Skript ist seit dem 18.11. live, zum Blog weiß ich nichts. Die Lizenzen im
+    README gelten so. **Das Repo ist seit dem 18.11. um 00:49 öffentlich** (sein Wort). Vorher hat Konrad den Kurscode selbst in der
+    ganzen Historie gesucht, mit verdeckter Eingabe: kein Treffer; ob die Eingabe stimmte, weiß nur er, er hat es bestätigt. Bei
+    GitHub eingeschaltet: Secret Scanning, Push Protection, private Sicherheitsmeldungen; `main` ist gegen Force-Push und Löschen
+    geschützt, auch für Admins, ohne Pflicht zu Pull Requests. GitHub erkennt die Lizenz als AGPL-3.0 und meldet nach dem
+    Einschalten keinen gefundenen Schlüssel. Die Über-Seite verlinkt den Quelltext (`SITE_QUELLTEXT` in `site/site.env`), ausgespielt
+    am 18.11. um 00:52 mit `site/deploy.sh`: wie im Probelauf nur diese eine Seite; am Host steht der Abschnitt, der Link antwortet
+    ohne Anmeldung mit 200, Smoke 22 von 22 in drei Browsern. Kein Tag gesetzt. Geprüft vor dem Umschalten: keine Actions-Secrets, Variablen, Deploy-Keys oder Webhooks; ein Zweig, kein Tag, 63 Commits; eine
+    einzige Autorenadresse, auf seiner eigenen Domain; keine Datei über 300 KB; Mustersuche über die ganze Historie ohne Schlüssel
+    (ein Treffer ist die Formatzeile des Passphrase-Hashs in `lib/auth.js`); keine Serveradresse. Die Historie behält: zwei Zeilen mit
+    der Zustelladresse der Kontaktadresse, sechs mit einem Pfad seines Benutzerverzeichnisses, 40 mit dem Namen des Laufwerks, zwei
+    mit dem Ort der Key-Datei, acht mit `ufw limit`. Feste Werte an einem Kurscode-Namen stehen an vier Stellen, alle in Tests und
+    Messskripten; es sind Testwerte, seine Suche nach dem echten Code fand in der ganzen Historie nichts. `gitleaks` lief nicht.
 - **Gebaut am späten Abend des 2026-11-17 und um 23:04 ausgespielt** (Konrads Listen vom Abend, Plan D37 bis D44; Commit `06fe244`):
   - `QAPage` trägt `reviewedBy` und `lastReviewed`; neben „Frage“ steht an einer Beispielfrage „von Konrad Völkel“.
   - Die Zitate stehen in einem `<aside>`, das Prüfdatum ist Text. Gemessen mit trafilatura am lokalen Bau: Die Frage steht bei 29
@@ -206,7 +226,11 @@ _Stand 2026-11-18._
   getestet und **ausgespielt am 2026-11-12** (App mit Neustart um 09:23, statisch danach): Fragen des Kapitels, Suche mit Kapitelbezug (`lib/rank.js`, `lib/search.js`, `site/such-worker.js`),
   „Frage stellen“ mit `?kapitel=` ins Formular. Der Hinweis reist mit (`pending.db`, Spalte `kapitel`, wird beim Start nachgetragen) und
   ist bei der Moderation vorgewählt; die Entscheidung bleibt dort. Die Kennung ist die Seitenkennung des Skripts, der Bau prüft sie gegen
-  den Korpus. Das Skript verweist noch nicht darauf, und das bleibt so, bis das Forum aus der Vorschau ist (Konrad, 2026-11-12: Vorschau bleibt, bis mindestens eine Studierendenfrage eingereicht ist).
+  den Korpus. **Das Skript verweist seit dem 2026-11-18 darauf** (Plan D46, gesetzt im Repo `eidl-skript`): am Ende jeder der 29
+  Kapitelseiten „Frage zu diesem Kapitel? Im Forum zum Skript; fragen kann, wer den Kurscode aus ILIAS hat, mitlesen können alle.“ An
+  drei Kapitelseiten des veröffentlichten Skripts nachgesehen, die Ziele antworten mit 200, die Startseite trägt keinen Link. Die
+  Kennzeichnung als privates Angebot aus Plan §13 steht dort nicht; nach Auskunft der Sitzung im Skript-Repo hat Konrad sie dort
+  streichen lassen.
 - `site/deploy.sh`: liefert den fertigen Baum per rsync in den Docroot.
 - `site/deploy-app.sh` führt seit 2026-11-16 alle Schritte über eine SSH-Verbindung (vorher drei), nennt beim Scheitern den Schritt und
   was schon auf dem Server liegt, und prüft nach dem Neustart, ob `hainrich2-web` nach fünf Sekunden aktiv ist und keinen automatischen

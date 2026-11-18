@@ -276,7 +276,13 @@ test('die Seite „Über hAInrich2“ ist von überall unten erreichbar', async 
   await page.click('.fuss a:has-text("Über hAInrich2")');
   await expect(page).toHaveURL(/\/eidl\/ueber\/$/);
   await expect(page.locator('h1')).toHaveText('Über hAInrich2');
-  await expect(page.locator('.dokument h2')).toHaveCount(6);
+  /** sechs Abschnitte, dazu „Quelltext“, sobald `SITE_QUELLTEXT` eine Adresse nennt (Plan D40): Dann führt sein Link zum Repository */
+  const abschnitte = await page.locator('.dokument h2').allTextContents();
+  expect(abschnitte.filter(titel => titel !== 'Quelltext')).toHaveLength(6);
+  if (abschnitte.includes('Quelltext')) {
+    expect(abschnitte.at(-1)).toBe('Quelltext');
+    await expect(page.locator('#quelltext + p a').first()).toHaveAttribute('href', /^https:\/\/github\.com\/[\w-]+\/[\w-]+$/);
+  }
   await expect(page.locator('[id="wer-prüft"]')).toHaveText('Wer prüft');
   await expect(page.locator('.dokument a[href*="heicad.hhu.de"]')).toHaveText('hAInrich');
 });

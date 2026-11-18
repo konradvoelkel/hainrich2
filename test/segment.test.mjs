@@ -94,6 +94,26 @@ test('Passagen tragen Pfad, Titel und stabile IDs', () => {
   assert.equal(a.id, b.id);
 });
 
+test('der Fuß einer Kapitelseite ist kein Stoff: Forumszeile, Herkunftszeile und Glossar-Hinweis fallen weg, auch in einer Direktive', () => {
+  const fuss = [
+    ':::{admonition} Zum Weiterlesen',
+    'Ein Satz, der bleibt.',
+    '',
+    'Die Begriffe dieses Kapitels in je ein bis drei Sätzen: [Glossar zur Klausurvorbereitung](https://skript.test/glossar/).',
+    ':::',
+    '',
+    '*Frage zu diesem Kapitel? Im [Forum zum Skript](https://forum.test/eidl/f/kapitel/k/); fragen kann, wer den Kurscode aus ILIAS hat, mitlesen können alle.*',
+    '',
+    '*Dieses Kapitel gehört zu [Einführung in Deep Learning](https://skript.test/), dem Vorlesungsskript zur gleichnamigen Vorlesung.*',
+  ].join('\n');
+  const out = pagePassages(page(`# K\n\n## A\n\nDer Stoff des Abschnitts. ${'x'.repeat(200)}\n\n${fuss}\n`));
+  const text = out.map(p => p.text).join('\n');
+  assert.match(text, /Der Stoff des Abschnitts/);
+  assert.match(text, /Ein Satz, der bleibt\./, 'die Direktive selbst bleibt, nur die Zeile fällt weg');
+  assert.doesNotMatch(text, /Frage zu diesem Kapitel|Forum zum Skript|Dieses Kapitel gehört zu|Glossar zur Klausurvorbereitung|forum\.test/);
+  assert.match(pagePassages(page('# K\n\n## A\n\nWer eine Frage zu diesem Kapitel hat, liest weiter. Das Glossar steht hinten.\n'))[0].text, /Frage zu diesem Kapitel hat/, 'im Fließtext bleibt der Wortlaut');
+});
+
 test('Sprungziele und der Link zur Aufzeichnung verschwinden', () => {
   const out = pagePassages(page('# K\n\n[Vorlesungsaufzeichnung VL 1](https://m)\n\n(ziel)=\n## A\n\nText.\n'));
   assert.deepEqual(out.map(p => p.text), ['Text.']);
