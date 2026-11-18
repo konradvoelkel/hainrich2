@@ -765,7 +765,7 @@ test('D31: Ein Vorschlag, den der Checker sperrt, der zu lang ist oder zu keiner
 test('D30: Eine Frage mit Zustimmung ab Version 3 ist gemeinfrei, eine ältere trägt keinen Vermerk', async t => {
   const c = await setup();
   t.after(c.close);
-  assert.equal(ZUSTIMMUNG.version, 3);
+  assert.ok(ZUSTIMMUNG.version >= CC0.ab);
   assert.match(ZUSTIMMUNG.oeffentlich, /gemeinfrei \(CC0 1\.0\)/);
   assert.match(ZUSTIMMUNG.oeffentlich, /eine Antwort und einen Kurztitel/);
   const cookie = await c.signIn();
@@ -779,6 +779,20 @@ test('D30: Eine Frage mit Zustimmung ab Version 3 ist gemeinfrei, eine ältere t
   assert.equal(c.store.question(alt.id).lizenz, null);
   assert.doesNotMatch(fs.readFileSync(c.file(`f/${alt.id}/index.html`), 'utf8'), /gemeinfrei/);
   assert.equal((await c.ask({ zustimmung: 2 })).status, 400, 'mit der alten Fassung lässt sich nichts mehr einreichen');
+});
+
+test('D48: Fragen stellt, wer volljährig ist; das steht im Zustimmungstext, und die Fassung davor nimmt der Server nicht mehr an', async t => {
+  const c = await setup();
+  t.after(c.close);
+  assert.equal(ZUSTIMMUNG.version, 4);
+  assert.match(ZUSTIMMUNG.oeffentlich, /Ich bin mindestens 18 Jahre alt\.$/);
+  assert.equal((await c.ask({ zustimmung: 3 })).status, 400, 'ein Formular mit Version 3, das noch offen war');
+  assert.equal((await c.ask()).status, 201);
+  /** Wer unter Version 3 gefragt hat und noch wartet, hat seine Frage schon gemeinfrei gegeben: Der Vermerk bleibt */
+  const cookie = await c.signIn();
+  const davor = c.pending.add({ text: 'Eine Frage unter Version 3?', zustimmung: 3, einwilligung: false, treffer: [], zustand: 'wartet' });
+  await c.form(`/eidl/mod/neu/${davor.id}/`, { frage: 'Eine Frage unter Version 3?', kapitel: KAPITEL, aktion: 'freigeben' }, cookie);
+  assert.equal(c.store.question(davor.id).lizenz, CC0.kennung);
 });
 
 test('D35: Eine bearbeitete Frage bekommt ihren Vektor neu, lokal im Worker; die Suche im Browser sieht ihn danach', async t => {

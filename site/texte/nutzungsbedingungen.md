@@ -2,6 +2,10 @@
 
 hAInrich2 ist ein privates Angebot von Konrad Völkel, nicht der Heinrich-Heine-Universität Düsseldorf. Die Nutzung ist freiwillig und hat keinen Einfluss auf Prüfungen oder Bewertungen.
 
+## Wer fragen darf
+
+Fragen stellen darf, wer den Kurscode hat und mindestens 18 Jahre alt ist. Lesen und abstimmen können alle.
+
 ## Was hierher gehört
 
 Fragen zum Inhalt des Skripts „Einführung in Deep Learning“. Fragen zu Übungsaufgaben, Klausuren und Organisatorischem gehören nicht hierher und werden abgelehnt.
@@ -24,11 +28,11 @@ Ihre Rechte aus dem Datenschutz bleiben davon unberührt: Löschen lassen könne
 
 ## Antworten des Bots
 
-Antworten erzeugt ein Sprachmodell. Sie können falsch sein, auch wenn sie ein Zitat tragen; das Zitat selbst stammt wörtlich aus dem Skript. Ein Entwurf ist ungeprüft, geprüfte Antworten sind als solche gekennzeichnet.
+Antworten erzeugt ein Sprachmodell. Sie können falsch sein, auch wenn sie ein Zitat tragen; das Zitat selbst stammt wörtlich aus dem Skript, in der Fassung vom Tag der Antwort. Ein Entwurf ist ungeprüft, geprüfte Antworten sind als solche gekennzeichnet.
 
 ## Zitate und Antworten
 
-Die Zitate aus dem Skript und die Antworten im Forum stehen unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de).
+Die Zitate aus dem Skript und die Antworten im Forum stehen, soweit sie urheberrechtlich geschützt sind, unter der Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de).
 
 ## Rechtswidrige Inhalte
 

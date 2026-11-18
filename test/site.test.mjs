@@ -527,7 +527,29 @@ test('D30: Das Frageformular sagt neben dem Haken, was gemeinfrei heißt', async
   const html = askPage({ ...site, fragen: true, entwurf: true });
   assert.match(html, /Ich gebe meine Frage gemeinfrei \(CC0 1\.0\)/);
   assert.match(html, /Gemeinfrei heißt: Sie verzichten auf alle Rechte an Ihrer Frage, und das lässt sich nicht zurücknehmen/);
-  assert.match(html, /data-zustimmung="3"/);
+  assert.match(html, /data-zustimmung="4"/);
+  assert.match(html, /Ich bin mindestens 18 Jahre alt\./);
+});
+
+test('D49: Die Rechtstexte sagen, wo die Sicherungen liegen, was ein Löschen nicht erreicht und wie das Forum zur Universität steht', () => {
+  const read = name => fs.readFileSync(new URL(`../site/texte/${name}.md`, import.meta.url), 'utf8');
+  const sicherungen = read('datenschutz').split(/^## /m).find(a => a.startsWith('Sicherungen\n'));
+  assert.match(sicherungen, /Cloudflare \(R2-Speicher, Standort Westeuropa\)/);
+  assert.match(sicherungen, /höchstens sechs Monate/);
+  assert.match(sicherungen, /Wird das Forum eingestellt, werden seine Datenbanken gelöscht/);
+  assert.doesNotMatch(sicherungen, /lit\. f/, 'sonst verlangt der Bau den Verweis auf das Widerspruchsrecht');
+  assert.ok(read('datenschutz').indexOf('## Sicherungen') < read('datenschutz').indexOf('## Eigene Beiträge'), 'vor dem Abschnitt, den der Bau ersetzt');
+  assert.match(read('datenschutz-fragen'), /Suchmaschinen und andere automatische Programme[^.]*Training von Sprachmodellen/);
+  assert.match(read('datenschutz-fragen'), /kennt und mindestens 18 Jahre alt ist/);
+  assert.match(read('nutzungsbedingungen'), /## Wer fragen darf\n\nFragen stellen darf, wer den Kurscode hat und mindestens 18 Jahre alt ist\./);
+  for (const name of ['impressum', 'nutzungsbedingungen']) {
+    assert.match(read(name), /in der Fassung vom Tag der Antwort/, name);
+    assert.match(read(name), /soweit sie urheberrechtlich geschützt sind/, name);
+  }
+  assert.match(read('impressum'), /die Universität betreibt es nicht, hat es nicht beauftragt und ist dafür nicht verantwortlich/);
+  assert.doesNotMatch(read('impressum'), /in keiner Verbindung/);
+  assert.match(read('impressum'), /Kontaktstelle für Behörden und für Nutzer nach Art\. 11 und 12 der Verordnung \(EU\) 2022\/2065/);
+  assert.match(read('ueber'), /soll es das sagen, statt etwas zu erfinden\. Verlass ist darauf nicht/);
 });
 
 test('der Fuß führt zur Anmeldung der Moderation, von jeder Tiefe aus und ohne Empfehlung an Suchmaschinen', () => {

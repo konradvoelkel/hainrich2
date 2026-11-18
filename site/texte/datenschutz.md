@@ -8,6 +8,10 @@ Verantwortlich im Sinne der DSGVO ist Konrad Völkel, die Kontaktangaben stehen 
 
 Wer hier liest, bekommt keine Cookies. Diese Website verwendet kein Tracking, keine Analyse-Dienste und keine Werbung, und sie lädt nichts von fremden Servern nach — auch keine Schriften. Sie wird auf einem Server der Hetzner Online GmbH (Gunzenhausen, Deutschland) betrieben, der beim Abruf technisch notwendig Ihre IP-Adresse verarbeitet; **Zugriffsprotokolle werden nicht geführt.**
 
+## Sicherungen
+
+Von der Datenbank des Forums entsteht regelmäßig eine Sicherung. Sie wird auf dem Server verschlüsselt und liegt dann bei Cloudflare (R2-Speicher, Standort Westeuropa); Cloudflare kann den Inhalt nicht lesen. Eine Sicherung wird höchstens sechs Monate aufbewahrt. Fragen, über die die Moderation noch nicht entschieden hat, kommen in keine Sicherung. Wird das Forum eingestellt, werden seine Datenbanken gelöscht; die Sicherungen laufen danach binnen sechs Monaten aus.
+
 ## Die Suche
 
 Die Suche läuft vollständig in Ihrem Browser. Beim ersten Klick/Fokus ins Suchfeld lädt er ein Sprachmodell und die Texte von diesem Server und legt sie in seinem Zwischenspeicher ab, damit er sie nicht jedes Mal neu laden muss. Was Sie in die Suche eintippen, verlässt Ihren Rechner nicht.

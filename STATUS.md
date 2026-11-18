@@ -9,6 +9,22 @@ _Stand 2026-11-18._
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, in einem per
   Digest gepinnten `node:24`-Container. Seit dem 2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem
   Runner `ci-eu`: Der nimmt nur private Repos und musste vor einer Veröffentlichung weg.
+- **Gebaut am 2026-11-18, nicht ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D48 und D49; jeden Wortlaut hat er einzeln
+  bewilligt, ein Anwalt hat ihn nicht gelesen):
+  - _Fragen stellen ab 18 (D48):_ „Ich bin mindestens 18 Jahre alt.“ im Zustimmungstext, **Zustimmung Version 4**; der Server nimmt
+    Version 3 nicht mehr an, eine wartende Frage unter Version 3 behält ihren Vermerk „gemeinfrei“. Abschnitt „Wer fragen darf“ in den
+    Nutzungsbedingungen, je ein Halbsatz im Datenschutz und auf der Über-Seite. Geprüft wird das Alter nicht.
+  - _Rechtstexte genauer (D49):_ Der Datenschutz hat einen Abschnitt „Sicherungen“ (verschlüsselt bei Cloudflare R2, Standort
+    Westeuropa, höchstens sechs Monate; beim Ende des Forums werden die Datenbanken gelöscht) und nennt unter „Löschen nach der
+    Freigabe“ die Kopien bei Suchmaschinen und Crawlern. Das Impressum sagt, dass das Forum eine Lehrveranstaltung an der HHU
+    begleitet und die Universität es nicht betreibt, nicht beauftragt hat und nicht verantwortet; es benennt die Kontaktadresse als
+    Kontaktstelle nach Art. 11 und 12 der Verordnung (EU) 2022/2065 und sagt eine Eingangsbestätigung und eine Rückmeldung zu jeder
+    Meldung zu. Zitate sind wörtlich „in der Fassung vom Tag der Antwort“, Antworten stehen unter CC BY-SA 4.0, „soweit sie
+    urheberrechtlich geschützt sind“. Die Über-Seite sagt, dass der Bot sagen „soll“, wenn er nichts findet.
+  - _Belegt:_ zwei neue Tests (`test/fragen.test.mjs` zu Version 4, mit Gegenprobe gegen Version 3 im Code; `test/site.test.mjs` zu
+    den Sätzen). Im gebauten Baum stehen alle vierzehn nachgesehenen Sätze auf ihren vier Seiten, der alte Satz „in keiner Verbindung“
+    ist weg. **Am selben Tag auszuspielen:** statische Seiten und App, weil das Formular unter `f/neu/` aus dem Web-Prozess kommt. Wer
+    beim Neustart ein Formular mit Version 3 offen hat, muss neu laden.
 - **Gebaut und ausgespielt am 2026-11-17** (Konrads Entscheidungen vom selben Tag, Plan D28 bis D33; Commit `35aa8d4`):
   - _Härtungen (D28):_ Eine ungeprüfte Antwort des Bots verlinkt nur ins Skript, Formeln sind auf 20 em begrenzt, der Worker prüft
     Kennung und Länge jedes Auftrags. An Frage und Antwort steht „Melden“. Der Datenschutz sagt über den Checker nur noch, was er erkennt.
@@ -343,6 +359,9 @@ _Stand 2026-11-18._
 
 ## Nicht geprüft
 
+- Aus den Rechtstexten vom 2026-11-18 (D48, D49): Am Host steht davon nichts. „Standort Westeuropa“ stammt aus dem Server-Repo
+  (Eintrag vom 2026-09-27), im Dashboard von Cloudflare hat es an diesem Tag niemand nachgesehen. Ob jemand unter 18 fragt, kann die
+  Site nicht feststellen. Die zugesagte Eingangsbestätigung zu einer Meldung schreibt ein Mensch; eine Technik dafür gibt es nicht.
 - Aus dem Umbau vom 2026-11-17: Der Aufruf für den Kurztitel ist nie gegen die echte API gelaufen, nur gegen Attrappen. Ob das Modell
   die Länge einhält und ob `fallbacks` mit dieser Anfrage durchgeht, zeigt erst der erste echte Vorschlag; scheitert er, fehlt nur der
   Vorschlag. Die Migration von `public.db` lief am Host durch: Der Dienst startete, und die Prüfdaten stehen an 30 Seiten. Ob die 29
@@ -388,6 +407,7 @@ _Stand 2026-11-18._
 ## Nächster Schritt
 
 Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `25b36b9`, App und statische Seiten (ausgespielt am 2026-11-18 um 02:12). Die Kurztitel sind bestätigt.
+Die Rechtstexte vom 2026-11-18 mit Zustimmung Version 4 (D48, D49) sind gebaut und warten auf das Ausspielen: statische Seiten und App am selben Tag.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Geprüftes ist seit dem Ende der Vorschau indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.

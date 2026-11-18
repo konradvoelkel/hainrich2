@@ -8,7 +8,7 @@ hAInrich2 ist ein Frage-Antwort-Forum zum Skript „Einführung in Deep Learning
 
 ## Ein Forum mit einem sehr aktiven Antworter
 
-Das Forum sieht aus wie jedes andere, nur dass einer der Teilnehmer ständig da ist: hAInrich2, ein Sprachmodell, derzeit Claude Opus 5.5 von Anthropic. Es antwortet nur aus dem Skript, mit Ihrer Einwilligung binnen einer Minute, sonst nach der Freigabe. Findet es nichts, sagt es das, statt etwas zu erfinden.
+Das Forum sieht aus wie jedes andere, nur dass einer der Teilnehmer ständig da ist: hAInrich2, ein Sprachmodell, derzeit Claude Opus 5.5 von Anthropic. Es antwortet nur aus dem Skript, mit Ihrer Einwilligung binnen einer Minute, sonst nach der Freigabe. Findet es nichts, soll es das sagen, statt etwas zu erfinden. Verlass ist darauf nicht, deshalb die Moderation.
 
 Genauso wichtig ist eine aktive Moderation. Sprachmodelle machen Fehler, auch überzeugend klingende. Die Moderation liest Fragen und Antworten, korrigiert, antwortet bei Bedarf selbst und sorgt dafür, dass nichts Falsches stehen bleibt. Was sie noch nicht geprüft hat, trägt das Zeichen „ungeprüft“.
 
@@ -24,7 +24,7 @@ Das spart viel. Lesen und Suchen brauchen kein großes Sprachmodell: Die Seiten 
 
 ## Eher ein FAQ-Wiki als ein Forum
 
-Fragen stellen kann nur, wer den Kurscode hat, und den gibt es im Kurs in ILIAS. Lesen und abstimmen können alle Menschen, ohne Anmeldung. Eine Frage erscheint erst, wenn die Moderation sie freigegeben hat, und ihre Antwort ist entweder geprüft oder als „ungeprüft“ gekennzeichnet. Wer fragt, bleibt anonym und gibt die Frage gemeinfrei (CC0 1.0), damit alle sie frei weiterverwenden können. Antworten tragen nur den Namen des Bots oder den der Moderation.
+Fragen stellen kann nur, wer volljährig ist und den Kurscode hat, und den gibt es im Kurs in ILIAS. Lesen und abstimmen können alle Menschen, ohne Anmeldung. Eine Frage erscheint erst, wenn die Moderation sie freigegeben hat, und ihre Antwort ist entweder geprüft oder als „ungeprüft“ gekennzeichnet. Wer fragt, bleibt anonym und gibt die Frage gemeinfrei (CC0 1.0), damit alle sie frei weiterverwenden können. Antworten tragen nur den Namen des Bots oder den der Moderation.
 
 Im Grunde ist das eher ein gemeinsames FAQ-Wiki, in dem es vielleicht nebensächlich ist, wer was geschrieben hat. Wie gut das ankommt, müssen wir noch ausprobieren.
 
