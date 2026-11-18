@@ -66,12 +66,15 @@ else
   "${SSH[@]}" "$VPS_HOST" 'sudo systemctl restart hainrich2-web && sleep 5 && systemctl is-active --quiet hainrich2-web && [ "$(systemctl show -p NRestarts --value hainrich2-web)" = 0 ]'
   # Aktiv heißt nicht, dass er antwortet: Beim Start schreibt der Prozess erst alle Seiten neu und packt sie. Am 2026-11-17 kam die
   # erste Antwort elf Sekunden nach dem Neustart (gemessen im Server-Repo, seit die Unit eine CPUQuota von einem Kern hat); die Prüfung
-  # oben war da schon grün. Erst die Anmeldeseite der Moderation zeigt, dass er Anfragen bedient. Sie kommt ohne Anmeldung mit 200.
+  # oben war da schon grün. Erst eine Antwort der App selbst zeigt, dass er Anfragen bedient. Die Anmeldeseite der Moderation taugt
+  # dafür seit dem 2026-11-18 nicht mehr: Davor steht die Schranke des Webservers (Plan D50), sie sagt ohne Zugang 401, ob die App
+  # läuft oder nicht. Der Fragepfad geht ohne Schranke an die App: Auf GET antwortet sie mit 405, bei geschlossenem Fragepfad mit 503.
+  # Läuft sie nicht, kommt vom Webserver 502.
   schritt='Antwort'
-  url="$(sed -n 's/^SITE_ORIGIN=//p' site/site.env)$(sed -n 's/^SITE_BASE=//p' site/site.env)mod/"
+  url="$(sed -n 's/^SITE_ORIGIN=//p' site/site.env)$(sed -n 's/^SITE_BASE=//p' site/site.env)api/token"
   stand "hainrich2-web ist neu gestartet und aktiv, antwortet aber nach $WARTEN Sekunden nicht unter $url: ssh $VPS_HOST journalctl -u hainrich2-web -n 50"
   seit=$SECONDS
-  until [ "$(curl -s -o /dev/null --max-time 5 -w '%{http_code}' "$url" || true)" = 200 ]; do
+  until case "$(curl -s -o /dev/null --max-time 5 -w '%{http_code}' "$url" || true)" in 405 | 503) true ;; *) false ;; esac; do
     [ $((SECONDS - seit)) -lt "$WARTEN" ] || exit 1
     sleep 1
   done

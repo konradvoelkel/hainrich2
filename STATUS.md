@@ -13,8 +13,8 @@ _Stand 2026-11-18._
   dem Server-Repo): Basic Auth im Webserver für `/eidl/mod` und alles darunter, `/eidl/api/` bleibt offen, die Anmeldung der App
   bleibt dahinter. Von außen gemessen, nur `GET` und ohne Zugangsdaten: 401 für die Moderation, 405 von der App für `/eidl/api/token`
   und `/eidl/api/stimme`, 200 für die Seiten; Smoke gegen den Host 22 von 22. Nachtrag in `research/2026-11-11-threat-model/`.
-- **Gebaut am 2026-11-18, nicht ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D48 und D49; jeden Wortlaut hat er einzeln
-  bewilligt, ein Anwalt hat ihn nicht gelesen):
+- **Gebaut und ausgespielt am 2026-11-18** (Konrads Entscheidungen vom selben Tag, Plan D48 und D49; jeden Wortlaut hat er einzeln
+  bewilligt, ein Anwalt hat ihn nicht gelesen; Commit `15b4bf4`, statische Seiten um 10:43:22, App um 10:43:37):
   - _Fragen stellen ab 18 (D48):_ „Ich bin mindestens 18 Jahre alt.“ im Zustimmungstext, **Zustimmung Version 4**; der Server nimmt
     Version 3 nicht mehr an, eine wartende Frage unter Version 3 behält ihren Vermerk „gemeinfrei“. Abschnitt „Wer fragen darf“ in den
     Nutzungsbedingungen, je ein Halbsatz im Datenschutz und auf der Über-Seite. Geprüft wird das Alter nicht.
@@ -27,8 +27,15 @@ _Stand 2026-11-18._
     urheberrechtlich geschützt sind“. Die Über-Seite sagt, dass der Bot sagen „soll“, wenn er nichts findet.
   - _Belegt:_ zwei neue Tests (`test/fragen.test.mjs` zu Version 4, mit Gegenprobe gegen Version 3 im Code; `test/site.test.mjs` zu
     den Sätzen). Im gebauten Baum stehen alle vierzehn nachgesehenen Sätze auf ihren vier Seiten, der alte Satz „in keiner Verbindung“
-    ist weg. **Am selben Tag auszuspielen:** statische Seiten und App, weil das Formular unter `f/neu/` aus dem Web-Prozess kommt. Wer
-    beim Neustart ein Formular mit Version 3 offen hat, muss neu laden.
+    ist weg.
+  - _Am Host nachgesehen, nur lesend:_ Die vier Textseiten gleichen dem Bau Byte für Byte und tragen die zwölf nachgesehenen Sätze;
+    `f/neu/` trägt `data-zustimmung="4"` und den Satz zum Alter; alle 35 Adressen der Sitemap antworten mit 200; Smoke gegen den Host
+    22 von 22; die Schranke vor der Moderation steht nach dem Neustart weiter (401). Wer beim Neustart ein Formular mit Version 3 offen
+    hatte, muss neu laden.
+  - _Das Deploy-Skript meldete dabei einen Fehler, der keiner war:_ `site/deploy-app.sh` prüfte zum Schluss die Anmeldeseite der
+    Moderation auf 200, und dort antwortet seit demselben Morgen die Schranke mit 401. Der Web-Prozess lief und antwortete. Die
+    Prüfung fragt jetzt den Fragepfad (`api/token`: 405 von der App, 503 bei geschlossenem Fragepfad, 502 vom Webserver, wenn die App
+    nicht läuft). Einzeln gegen den Host geprüft; durch ein ganzes Ausspielen ist die neue Prüfung noch nicht gelaufen.
 - **Gebaut und ausgespielt am 2026-11-17** (Konrads Entscheidungen vom selben Tag, Plan D28 bis D33; Commit `35aa8d4`):
   - _Härtungen (D28):_ Eine ungeprüfte Antwort des Bots verlinkt nur ins Skript, Formeln sind auf 20 em begrenzt, der Worker prüft
     Kennung und Länge jedes Auftrags. An Frage und Antwort steht „Melden“. Der Datenschutz sagt über den Checker nur noch, was er erkennt.
@@ -367,7 +374,8 @@ _Stand 2026-11-18._
 - Zur Schranke vor der Moderation (D50): Den Weg mit Zugangsdaten hat nur die Sitzung im Server-Repo gemessen, in einer VM. Ob eine
   abgewiesene Anfrage am Host eine Zeile mit Adresse ins Journal schreibt, prüft Konrad dort als root; in der VM schrieb sie keine.
   `site/serve.mjs` ahmt die Schranke nicht nach.
-- Aus den Rechtstexten vom 2026-11-18 (D48, D49): Am Host steht davon nichts. „Standort Westeuropa“ stammt aus dem Server-Repo
+- Aus den Rechtstexten vom 2026-11-18 (D48, D49): Dass der Server eine Frage mit Version 3 abweist, zeigt nur der Unit-Test; am Host
+  habe ich nichts abgesendet. „Standort Westeuropa“ stammt aus dem Server-Repo
   (Eintrag vom 2026-09-27), im Dashboard von Cloudflare hat es an diesem Tag niemand nachgesehen. Ob jemand unter 18 fragt, kann die
   Site nicht feststellen. Die zugesagte Eingangsbestätigung zu einer Meldung schreibt ein Mensch; eine Technik dafür gibt es nicht.
 - Aus dem Umbau vom 2026-11-17: Der Aufruf für den Kurztitel ist nie gegen die echte API gelaufen, nur gegen Attrappen. Ob das Modell
@@ -414,8 +422,7 @@ _Stand 2026-11-18._
 
 ## Nächster Schritt
 
-Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `25b36b9`, App und statische Seiten (ausgespielt am 2026-11-18 um 02:12). Die Kurztitel sind bestätigt.
-Die Rechtstexte vom 2026-11-18 mit Zustimmung Version 4 (D48, D49) sind gebaut und warten auf das Ausspielen: statische Seiten und App am selben Tag.
+Die Vorschau ist seit dem 2026-11-17 beendet. Am Host läuft `be5ac44`, App und statische Seiten (ausgespielt am 2026-11-18 um 10:43), mit den Rechtstexten vom selben Tag und Zustimmung Version 4. Die Kurztitel sind bestätigt.
 
 Konrad testet den Fragepfad auf dem echten Host. Die Lücken im Skript sind abgearbeitet (2026-11-06): „Warum rückwärts?“ steht im Skript, 15 Antworten sind bearbeitet, s21 ist wieder online, s30 fehlt weiter.
 Der Korpus ist neu gebaut und ausgespielt. Geprüftes ist seit dem Ende der Vorschau indexierbar. Der Blindvergleich hat keine Frist und entscheidet nur noch das Modell für neue Antworten.
