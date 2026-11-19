@@ -113,7 +113,7 @@ Browser --POST-> /api/* --> hainrich2-web      kein API-Key, liest und schreibt 
                              Claude API
 ```
 
-- **`hainrich2-web`:** Node 24 aus der Rolle `node`, `node:http` und `node:sqlite`, keine
+- **`hainrich2-web`:** Node 26 aus der Rolle `node` (seit dem 2026-11-19, davor 24), `node:http` und `node:sqlite`, keine
   Framework-Abhängigkeit. Nur Schreibpfade und Moderation. `MemoryMax` eng gesetzt.
 - **`live/`:** Der Web-Prozess schreibt Startseite, Frageseiten, Sitemap und `daten/fragen.json` samt `.br`, `.zst` und `.gz`
   in ein eigenes Verzeichnis, Caddy bedient diese Pfade von dort. Im Docroot würde das `--delete` von `site/deploy.sh` jede

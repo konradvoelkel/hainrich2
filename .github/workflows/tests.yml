@@ -35,11 +35,11 @@ jobs:
     timeout-minutes: 15
     # Im Container, damit Node genau die Fassung des VPS ist (`node_major` im Server-Repo) und nicht
     # die, die das Runner-Image gerade mitbringt.
-    # Gepinnt per Digest, aufgelöst am 2026-11-06; der Tag davor ist nur für Menschen. `slim` hat
-    # kein git. actions/checkout holt den Stand dann als Archiv über die API, und ein
-    # .git-Verzeichnis braucht hier nichts.
+    # Gepinnt per Digest, aufgelöst am 2026-11-19, als der VPS auf Node 26 ging (davor 24.22.2); der
+    # Tag davor ist nur für Menschen. `slim` hat kein git. actions/checkout holt den Stand dann als
+    # Archiv über die API, und ein .git-Verzeichnis braucht hier nichts.
     container:
-      image: node:24.22.2-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
+      image: node:26.13.1-bookworm-slim@sha256:5df79989ed685e09f0a98019db4cebfb22fb9df1a53c0161664a011f7ff6b0f1
     steps:
       # Per Commit-SHA gepinnt, ein Tag lässt sich verschieben. Der Kommentar nennt die Fassung,
       # aufgelöst am 2026-11-06 mit `gh api repos/actions/checkout/git/ref/tags/v5.1.0`.

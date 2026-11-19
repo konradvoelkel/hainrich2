@@ -1,14 +1,22 @@
 # Status
 
-_Stand 2026-11-18._
+_Stand 2026-11-19._
 
 ## Was existiert
 
 - Git-Repo auf `main`, Remote `origin` ist `konradvoelkel/hainrich2` auf GitHub, **öffentlich seit dem 2026-11-18** (Plan D46).
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.
 - CI seit 2026-11-06: `.github/workflows/tests.yml` fährt `npm test` bei jedem Push und Pull Request auf `main`, in einem per
-  Digest gepinnten `node:24`-Container. Seit dem 2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem
-  Runner `ci-eu`: Der nimmt nur private Repos und musste vor einer Veröffentlichung weg.
+  Digest gepinnten Node-Container in der Fassung des VPS, seit dem 2026-11-19 `node:26.13.1` (davor `node:24.22.2`). Seit dem
+  2026-11-10 läuft sie auf GitHubs `ubuntu-24.04`, nicht mehr auf Konrads eigenem Runner `ci-eu`: Der nimmt nur private Repos und
+  musste vor einer Veröffentlichung weg.
+- **Seit dem 2026-11-19, 09:40, läuft am Host Node 26.13.1** statt 24 (Wechsel aus dem Server-Repo, auf Konrads Wort dort; der
+  Web-Prozess startete dabei neu). Vorher lokal unter 26.13.1 geprüft, mit denselben `node_modules`, die `site/deploy-app.sh`
+  verschickt: `npm test` 311 von 311 ohne Warnung; Modell und Korpus über `lib/corpus.js` geladen wie im Worker, unter Node 22, 24
+  und 26 bitgleiche Vektoren und dieselben Treffer; `smoke` 22 von 22, `smoke:mod` 27 von 27; `server/web.mjs` gegen eine
+  Wegwerf-Datenbank. Danach von außen gemessen, nur `GET`: `/eidl/api/token` und `/eidl/api/stimme` 405 von der App, Moderation 401
+  von der Schranke, schiefe Pfade 401 oder 404, Formular mit `data-zustimmung="4"`, Sitemap mit 35 Adressen, Smoke gegen den Host 22
+  von 22. Nicht geprüft: der erste Lauf des Workers unter Node 26 am Host.
 - **Seit dem 2026-11-18 steht vor der Moderation eine zweite Schranke** (Konrads Entscheidung, Plan D50; gebaut und ausgespielt aus
   dem Server-Repo): Basic Auth im Webserver für `/eidl/mod` und alles darunter, `/eidl/api/` bleibt offen, die Anmeldung der App
   bleibt dahinter. Von außen gemessen, nur `GET` und ohne Zugangsdaten: 401 für die Moderation, 405 von der App für `/eidl/api/token`
