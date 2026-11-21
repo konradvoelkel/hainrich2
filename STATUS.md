@@ -1,8 +1,14 @@
 # Status
 
-_Stand 2026-11-19._
+_Stand 2026-11-21._
 
 ## Was existiert
+
+- **Geprüft am 2026-11-21 gegen Googles Modern Web Guidance** (Commit `64a6d70`, gelesen, das Werkzeug lief nicht), am Code von
+  `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Behoben ist
+  noch keine. Die gewichtigsten: Die Stichwortsuche wartet auf `transformers.min.js` und fällt mit ihr aus; ein Doppelklick schickt eine
+  Frage zweimal ab; Fokus und Fehlermeldungen im Fragepfad; Feldränder unter 3 zu 1. Im Browser ist nichts davon gemessen. Eine
+  Browser-Politik hat das Repo nicht, ein Vorschlag steht im Bericht.
 
 - Git-Repo auf `main`, Remote `origin` ist `konradvoelkel/hainrich2` auf GitHub, **öffentlich seit dem 2026-11-18** (Plan D46).
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.
