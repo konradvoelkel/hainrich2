@@ -37,8 +37,14 @@ pruefe() {
   echo "pre-push: ${sha:0:7}: Pakete wie in package-lock.json"
   npm ls --all >/dev/null
   echo "pre-push: ${sha:0:7}: Unit-Tests"
+  # Der Reporter steht hier fest. Ab Node 24 schreibt `node --test` auch in eine Datei im Spec-Format („ℹ tests 311“), das grep unten
+  # fand nichts, und unter `set -euo pipefail` endete der Hook ohne ein Wort, bei grünen Tests (2026-11-21, Playbook §3.7). Das Tor ist
+  # der Exit-Code von npm test; die Zusammenfassung ist nur Anzeige und sagt es, wenn sie fehlt.
+  local -x NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--test-reporter=tap"
   npm test >"$tmp/test-$sha.log" 2>&1 || { tail -n 60 "$tmp/test-$sha.log"; echo "pre-push: ${sha:0:7}: npm test ist rot, nichts gepusht" >&2; return 1; }
-  grep -E '^# (tests|pass|fail) ' "$tmp/test-$sha.log" | tr '\n' ' '; echo
+  local summe
+  summe=$(grep -E '^# (tests|pass|fail) ' "$tmp/test-$sha.log" | tr '\n' ' ' || true)
+  if [ -n "$summe" ]; then echo "$summe"; else echo "pre-push: ${sha:0:7}: npm test ist grün, aber das Log hat keine TAP-Zusammenfassung; den Reporter prüfen" >&2; fi
   cd "$root"
 }
 

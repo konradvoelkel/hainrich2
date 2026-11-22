@@ -17,6 +17,19 @@ test('der Pre-Push-Hook fährt jeden Schritt der CI', () => {
   assert.match(hook, /^set -euo pipefail$/m);
 });
 
+/**
+ * Ab Node 24 schreibt `node --test` auch in eine Datei im Spec-Format. Der Hook las die Zusammenfassung im TAP-Format, fand nichts, und
+ * `set -euo pipefail` beendete ihn ohne ein Wort, obwohl alle Tests grün waren (2026-11-21, Playbook §3.7).
+ */
+test('der Hook legt den Reporter fest, und eine Zusammenfassung ohne Treffer beendet ihn nicht', () => {
+  const hook = read('.githooks/pre-push');
+  assert.match(hook, /^\s*local -x NODE_OPTIONS="\$\{NODE_OPTIONS:\+\$NODE_OPTIONS \}--test-reporter=tap"$/m);
+  const zeile = hook.split('\n').find(z => z.includes("grep -E '^# (tests|pass|fail) '"));
+  assert.ok(zeile, 'die Zusammenfassung wird noch gelesen');
+  assert.match(zeile, /\|\| true\)$/, 'ein grep ohne Treffer darf unter set -e den Hook nicht beenden');
+  assert.match(hook, /keine TAP-Zusammenfassung/, 'fehlt sie, sagt der Hook das');
+});
+
 test('der Hook prüft den gepushten Commit in einem eigenen Worktree und räumt ihn auch nach einem Fehler weg', () => {
   const hook = read('.githooks/pre-push');
   assert.match(hook, /git worktree add --quiet --detach "\$wt" "\$sha"/);
