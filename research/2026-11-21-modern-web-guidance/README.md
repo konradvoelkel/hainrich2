@@ -195,7 +195,7 @@ nachahmt.
 
 ## 9. Nachtrag vom 2026-11-22: behoben
 
-Auf Konrads Wort gebaut, nicht ausgespielt. Behoben sind 13 der 55 Abweichungen ganz und zwei zum Teil:
+Auf Konrads Wort gebaut und am 2026-11-22 um 13:40 ausgespielt (Commit `4cb856e`). Behoben sind 13 der 55 Abweichungen ganz und zwei zum Teil:
 
 | Befund | Was jetzt gilt | Stelle |
 |---|---|---|
@@ -223,6 +223,11 @@ Nebenbei: `site/serve.mjs` sendet jetzt COOP und HSTS wie der Host.
 - **Pfeile:** Ein gedrückter Pfeil ist zu sehen, und `aria-describedby` nennt die Frage.
 - **Kurscode:** Ein falscher Code setzt den Fokus aufs Feld, die Meldung hängt daran, und nach einer Eingabe ist das Feld wieder gültig.
 - **„Meine Fragen“:** Nach dem Entfernen des letzten Eintrags steht der Fokus im Formular.
+
+**Am Host danach, nur `GET`:**
+- Smoke 23 von 23 in Chromium, Firefox und WebKit, auch der Test mit gesperrtem `transformers.min.js`.
+- Die Seiten aus `live/` tragen das neue Markup.
+- Der alte `transformers-cache` ist nach dem ersten Laden weg.
 
 **Nicht geprüft:**
 - Kein Vorleseprogramm hat die Seiten gelesen.

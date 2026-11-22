@@ -7,7 +7,8 @@ _Stand 2026-11-22._
 - **Geprüft am 2026-11-21 gegen Googles Modern Web Guidance** (Commit `64a6d70`, gelesen, das Werkzeug lief nicht), am Code von
   `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Eine
   Browser-Politik hat das Repo nicht, ein Vorschlag steht im Bericht.
-  - **Gebaut am 2026-11-22, nicht ausgespielt** (Bericht, Abschnitt 9): 13 Abweichungen ganz, zwei zum Teil.
+  - **Gebaut und ausgespielt am 2026-11-22** (Konrad: „Jetzt ausspielen“; Commit `4cb856e`, statische Seiten um 13:40:11, App um
+    13:40:26 mit Neustart von `hainrich2-web`; Bericht, Abschnitt 9): 13 Abweichungen ganz, zwei zum Teil.
     - _Suche:_ Die Stichwortsuche hängt nicht mehr an `transformers.min.js`. Das Modell liegt nicht mehr im Cache Storage.
     - _Fragepfad:_ Ein Doppelklick schickt nichts zweimal. Der Fokus bleibt, und Fehler hängen am Feld. Meldungen stehen leer bereit.
       `aria-invalid` folgt `:user-invalid`.
@@ -20,6 +21,12 @@ _Stand 2026-11-22._
     - `smoke` 23 von 23 in Chromium, Firefox und WebKit, darunter ein neuer Test, der `transformers.min.js` sperrt.
     - `smoke:mod` 27 von 27 in Chromium und Firefox.
     - Im Browser angesehen: Pfeile, Fehler am Kurscode, Fokus nach dem Entfernen.
+    - _Am Host danach, nur `GET`:_
+      - Smoke 23 von 23 in Chromium, Firefox und WebKit, auch mit gesperrtem `transformers.min.js`.
+      - Die Seiten aus `live/` tragen das neue Markup: Pfad als Liste, Pfeile mit `aria-describedby`, `color-scheme`.
+      - `/eidl/api/token` und `/eidl/api/stimme` 405, Moderation 401, Formular mit `data-zustimmung="4"`.
+      - Alle 35 Adressen der Sitemap 200.
+      - Im eingebauten Browser: Der alte `transformers-cache` ist nach dem Laden weg, die Suche ist bereit, die Konsole leer.
   - **Offen:** der Feldrand unter 3 zu 1 (das Bild entscheidet Konrad), die Maske am Formelrand, die übrigen niedrigen Punkte.
   - **Nicht geprüft:** mit einem Vorleseprogramm.
 
