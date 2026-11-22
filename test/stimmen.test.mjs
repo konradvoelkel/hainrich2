@@ -130,11 +130,22 @@ test('ohne Schalter gibt es weder Pfeile noch Skript', () => {
   assert.ok(questionPage(seed('s01', 'Was ist ein Tensor?'), site).includes('stimmen.js'));
 });
 
+/** research/2026-11-21-modern-web-guidance, HTML b9 und b11 */
+test('in einer Liste nennen die Pfeile ihre Frage, auf der Frageseite reicht der Name', () => {
+  const forum = UNTERFOREN.find(u => u.kapitel.includes('Tensoren'));
+  const page = forumPage(forum, [seed('s01', 'Was ist ein Tensor?'), seed('s02', 'Was ist ein Skalar?')], site);
+  assert.match(page, /<button type="button" class="pfeil hoch" data-wert="1" aria-label="Gute Frage" aria-describedby="thema-s01"/);
+  assert.match(page, /<button type="button" class="pfeil runter" data-wert="-1" aria-label="Schlechte Frage" aria-describedby="thema-s02"/);
+  assert.match(page, /<a id="thema-s02" href="\.\.\/s02\/">Was ist ein Skalar\?<\/a>/);
+  assert.match(page, /<table class="liste themen" aria-label="Fragen im Unterforum /);
+  assert.doesNotMatch(questionPage(seed('s01', 'Was ist ein Tensor?'), site), /aria-describedby/);
+});
+
 test('Formeln im Fragetext sind auf der Seite, in der Liste und in der Suche gesetzt', () => {
   const forum = UNTERFOREN.find(u => u.kapitel.includes('Tensoren'));
   const question = { ...seed('s01', 'Was ist $x^2$?'), vektor: [1, 0] };
   assert.match(questionPage(question, site), /<h1>Was ist <span class="katex">/);
-  assert.match(forumPage(forum, [question], site), /<a href="..\/s01\/">Was ist <span class="katex">/);
+  assert.match(forumPage(forum, [question], site), /<a id="thema-s01" href="..\/s01\/">Was ist <span class="katex">/);
   assert.ok(!questionPage(question, site).includes('<h1>Was ist $x^2$'));
   assert.match(searchEntry(question).html, /katex/);
   assert.equal(searchEntry(question).text, 'Was ist $x^2$?');

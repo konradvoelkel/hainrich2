@@ -7,6 +7,14 @@ import { askPage, excerpt, foreignSource, forumPage, indexPage, mailOf, MODERATI
 const site = { origin: 'https://example.test', base: '/eidl/', skript: 'https://skript.test/', vorschau: false, ladegroesse: 'rund 25 MB' };
 const passage = { id: 'p1', page: 'kapitel', title: 'Tensoren', path: ['Abschnitt'], text: 'Ein **Perzeptron** rechnet $w^T x$ aus, und zwar genau so und nicht anders.', hash: 'h1', link: 'https://skript.test/kapitel/#abschnitt' };
 const seed = { id: 's01', frage: 'Was <b>rechnet</b> ein Perzeptron?', kapitel: 'kapitel' };
+
+/** research/2026-11-21-modern-web-guidance, CSS B8 und HTML b9: vor dem Stylesheet weiß der Browser vom Dunkelmodus, die Tabelle hat einen Namen */
+test('jede Seite nennt beide Farbschemata im Kopf, die Startseite benennt ihre Tabelle', () => {
+  const html = indexPage([], site);
+  assert.match(html, /<meta name="viewport"[^>]*>\n<meta name="color-scheme" content="light dark">\n<title>/);
+  assert.match(html, /<table class="liste foren" aria-label="Unterforen">/);
+  assert.match(notFoundPage(site), /<meta name="color-scheme" content="light dark">/);
+});
 const row = { seed: 's01', model: 'm', status: 'ok', text: 'Es rechnet eine Summe.[1] Bei `x[1]` bleibt das, $a[1]$ auch, [2] gibt es nicht.', cited: [{ id: 'p1', hash: 'h1', text: 'vom Modell verändert' }], check: { hinweise: ['geheim'] }, input: 1 };
 const question = (overrides = {}) => publicQuestion(seed, { ...row, ...overrides }, [passage], '2026-11-04');
 
@@ -319,7 +327,8 @@ test('der Stolperdraht für fremde Quellen schlägt an, Links lässt er durch', 
 
 test('die Frageseite führt weiter: zum Kapitel und zum Unterforum, mit Datum und einem Namen für jeden Beitrag', () => {
   const html = questionPage(question(), site);
-  assert.match(html, /<nav class="pfad" aria-label="Pfad">.*<a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/nav>/, 'das Kapitel steht im Pfad');
+  assert.match(html, /<nav class="pfad" aria-label="Pfad"><ol role="list">.*<li><a href="\.\.\/kapitel\/tensoren\/">Tensoren<\/a><\/li><\/ol><\/nav>/, 'das Kapitel steht im Pfad');
+  assert.doesNotMatch(html, /aria-current/, 'die Frageseite selbst steht nicht im Pfad');
   assert.equal(html.match(/href="\.\.\/kapitel\/tensoren\/"/g).length, 1, 'und nur dort: Der zweite Link unter der Frage schob die Antwort nach unten');
   assert.match(html, /<nav class="weiter" aria-label="Weiter"><a href="\.\.\/grundlagen\/">Mehr Fragen im Unterforum Grundlagen<\/a><a href="https:\/\/skript\.test\/tensoren\/" rel="noopener">Kapitel „Tensoren“ im Skript lesen<\/a><\/nav>/);
   assert.doesNotMatch(html, /Alle Fragen zu/, 'bei 25 von 31 Fragen führte der Link auf eine Liste mit nur dieser Frage');

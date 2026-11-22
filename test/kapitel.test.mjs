@@ -36,7 +36,7 @@ test('die Kapitelseite trägt Adresse, Titel, Brotkrumen und einen Link ins Form
   assert.match(html, /<link rel="canonical" href="https:\/\/example\.test\/eidl\/f\/kapitel\/backpropagation\/">/);
   assert.match(html, /<h1>Fragen zu „Backpropagation“<\/h1>/);
   assert.match(html, /<a class="knopf fragen" href="\.\.\/\.\.\/neu\/\?kapitel=backpropagation" rel="nofollow">Frage stellen<\/a>/);
-  assert.match(html, /<a href="\.\.\/\.\.\/\.\.\/">Forum<\/a> <span aria-hidden="true">›<\/span> <a href="\.\.\/\.\.\/lernen\/">Lernen und Training<\/a>/);
+  assert.match(html, /<nav class="pfad" aria-label="Pfad"><ol role="list"><li><a href="\.\.\/\.\.\/\.\.\/">Forum<\/a><\/li><li><a href="\.\.\/\.\.\/lernen\/">Lernen und Training<\/a><\/li><li aria-current="page">/, 'der Pfad ist eine Liste, die Kapitelseite ist die aktuelle Seite');
   assert.match(html, /href="https:\/\/skript\.test\/backpropagation\/">Kapitel im Skript/);
   assert.match(html, /"name":"Backpropagation"/);
   assert.match(html, /src="\.\.\/\.\.\/\.\.\/logo\.svg"/);
@@ -68,10 +68,10 @@ test('erst drei geprüfte Fragen machen die Kapitelseite indexierbar, und nur ih
   const other = { ...reviewed(question()), id: 's02', kapitel: 'Tensoren' };
   const closed = kapitelPage(backprop, [open], site);
   assert.match(closed, /name="robots" content="noindex"/);
-  assert.match(closed, /<a href="\.\.\/\.\.\/s01\/">/);
+  assert.match(closed, /<a id="thema-s01" href="\.\.\/\.\.\/s01\/">/);
   const one = kapitelPage(backprop, [reviewed(open), other], site);
   assert.match(one, /name="robots" content="noindex"/, 'eine Liste mit einer Frage ist zu dünn für den Index');
-  assert.match(one, /<a href="\.\.\/\.\.\/s01\/">/);
+  assert.match(one, /<a id="thema-s01" href="\.\.\/\.\.\/s01\/">/);
   assert.doesNotMatch(one, /s02/, 'Fragen aus anderen Kapiteln gehören nicht auf diese Seite');
   const three = ['s01', 's03', 's04'].map(id => ({ ...reviewed(open), id }));
   assert.match(kapitelPage(backprop, three.slice(0, 2), site), /name="robots" content="noindex"/);

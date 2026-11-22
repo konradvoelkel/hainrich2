@@ -1,8 +1,10 @@
 /**
  * Besitzt Modell und Rangfolge. Die Stichwortsuche steht sofort, das Modell kommt dazu; scheitert es,
  * bleibt sie als Rückfall. Embeddings liefern Kandidaten, einen Schwellwert gibt es nicht (Plan §6.3).
+ *
+ * transformers.js kommt erst in `modell()`. Statisch importiert hielt es die Stichwortsuche an seinen 141 KB fest, und lud es nicht,
+ * startete der ganze Worker nicht, auch nicht die Stichwortsuche (research/2026-11-21-modern-web-guidance, Abschnitt 2).
  */
-import * as transformers from './transformers.min.js';
 import { buildBm25, dot, FUSE_K, fuse } from './search.js';
 import { biasKeywords, centerPassages, KAPITEL_BONUS, profile, rankQuestions } from './rank.js';
 import { createEmbedder } from './model.js';
@@ -30,11 +32,15 @@ async function stichworte() {
   stichwortPassagen = buildBm25(passagen.map(p => [p.titel, ...p.pfad, p.text].join(' ')));
 }
 
+/** Bis zum 2026-11-21 lag das Modell im Cache Storage (lib/model.js); wer damals gesucht hat, trägt dort noch rund 21 MB */
+const raeumeCache = () => caches.delete('transformers-cache').catch(() => {});
+
 async function modell() {
   const [vektoren, embedder] = await Promise.all([
     json('daten/vektoren.json'),
-    createEmbedder(transformers, { modelPath: './models/', wasmPath: './wasm/' }),
+    import('./transformers.min.js').then(transformers => createEmbedder(transformers, { modelPath: './models/', wasmPath: './wasm/' })),
   ]);
+  if (self.caches) raeumeCache();
   const centered = centerPassages(vektoren.passagen);
   const frageVektoren = fragen.map(f => f.vektor);
   semantik = { embedder, centered, passagen: vektoren.passagen, fragen: frageVektoren, profile: frageVektoren.map(v => profile(centered, v)) };

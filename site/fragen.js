@@ -12,6 +12,7 @@ const FRAGEN = 'eidl:fragen';
 
 const formCode = document.getElementById('code');
 const formFrage = document.getElementById('frage');
+const kurscode = document.getElementById('kurscode');
 const text = document.getElementById('fragetext');
 const zustimmung = document.getElementById('zustimmung');
 const einwilligung = document.getElementById('einwilligung');
@@ -49,11 +50,64 @@ async function post(pfad, daten, token) {
   }
 }
 
-const fehler = (form, meldung = '') => {
-  const feld = form.querySelector('.fehler');
-  feld.textContent = meldung;
-  feld.hidden = !meldung;
+/**
+ * Ungültig heißt ein Feld erst nach einer Eingabe oder einem Versuch (`:user-invalid`). Ohne `aria-invalid="false"` meldeten Firefox und
+ * Safari leere Pflichtfelder schon beim Laden als ungültig (research/2026-11-21-modern-web-guidance, HTML b20).
+ */
+const nutzerUngueltig = feld => {
+  try {
+    return feld.matches(':user-invalid');
+  } catch {
+    return false;
+  }
 };
+const markiere = feld => feld.setAttribute('aria-invalid', String(nutzerUngueltig(feld)));
+for (const feld of [kurscode, text, zustimmung]) {
+  const geaendert = () => { feld.removeAttribute('aria-describedby'); markiere(feld); };
+  feld.addEventListener('input', geaendert);
+  feld.addEventListener('change', geaendert);
+  /** Solange eine Meldung vom Server am Feld hängt, bleibt es ungültig, bis jemand etwas ändert */
+  feld.addEventListener('blur', () => { if (!feld.hasAttribute('aria-describedby')) markiere(feld); });
+  feld.addEventListener('invalid', () => feld.setAttribute('aria-invalid', 'true'));
+}
+
+/**
+ * Der Fehlerabsatz steht immer in der Seite und wechselt nur seinen Text: Eine Live-Region, die erst mit ihrem Text eingeblendet wird,
+ * liest nicht jedes Vorleseprogramm vor (HTML b18). Betrifft die Meldung ein Feld, hängt sie daran, und die Tastatur geht dorthin (b19).
+ */
+function fehler(form, meldung = '', feld = null) {
+  const absatz = form.querySelector('.fehler');
+  absatz.textContent = meldung;
+  for (const markiert of form.querySelectorAll(`[aria-describedby="${absatz.id}"]`)) {
+    markiert.removeAttribute('aria-describedby');
+    markiert.setAttribute('aria-invalid', 'false');
+  }
+  if (!feld) return;
+  feld.setAttribute('aria-invalid', 'true');
+  feld.setAttribute('aria-describedby', absatz.id);
+  feld.focus();
+}
+
+/**
+ * Ein zweiter Klick, solange die Antwort aussteht, schickt nichts: Sonst stand dieselbe Frage zweimal in der Moderation, mit Einwilligung
+ * samt zwei Entwürfen (HTML b4). `aria-disabled` statt `disabled`: Ein gesperrter Knopf verlöre den Fokus, die Tastatur stünde am Seitenanfang.
+ */
+function beimAbsenden(form, tun) {
+  let laeuft = false;
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (laeuft) return;
+    laeuft = true;
+    const knopf = event.submitter ?? form.querySelector('button');
+    knopf?.setAttribute('aria-disabled', 'true');
+    try {
+      await tun();
+    } finally {
+      laeuft = false;
+      knopf?.removeAttribute('aria-disabled');
+    }
+  });
+}
 
 function zeigeFormular() {
   const da = !!lies(TOKEN, null);
@@ -68,11 +122,14 @@ const absatz = (klasse, inhalt) => {
   return p;
 };
 
-function knopf(beschriftung, tun) {
+/** `rolle` findet den Knopf nach dem Neubau der Liste wieder, `frage` nennt ihn: Jede Zeile hat dieselben Knöpfe (HTML b11) */
+function knopf(beschriftung, rolle, frage, tun) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'knopf';
   button.textContent = beschriftung;
+  button.dataset.rolle = rolle;
+  button.setAttribute('aria-describedby', frage);
   button.addEventListener('click', tun);
   return button;
 }
@@ -100,19 +157,23 @@ function stand(frage) {
 function zeile(eintrag, frage) {
   const li = document.createElement('li');
   li.className = 'meine-frage';
+  li.dataset.id = eintrag.id;
   const kopf = absatz('frage-text', frage.text ?? eintrag.text);
+  kopf.id = `meine-${eintrag.id}`;
   /** fertig gesetzt vom Server, wie der Entwurf; ohne Antwort von dort bleibt die Kopie aus diesem Browser */
   if (frage.html) kopf.innerHTML = frage.html;
   li.append(kopf);
+  const entfernen = () => knopf('Aus der Liste entfernen', 'entfernen', kopf.id, () => vergiss(eintrag.id));
   if (frage.zustand === 'öffentlich') {
     const a = document.createElement('a');
     a.href = `../../${frage.url}`;
     a.textContent = 'Steht jetzt im Forum';
-    li.append(a, knopf('Aus der Liste entfernen', () => vergiss(eintrag.id)));
+    a.dataset.rolle = 'forum';
+    li.append(a, entfernen());
   } else if (frage.zustand === 'abgelehnt') {
-    li.append(absatz('meta', `Abgelehnt: ${frage.grund} Der Text ist auf dem Server gelöscht.`), knopf('Aus der Liste entfernen', () => vergiss(eintrag.id)));
+    li.append(absatz('meta', `Abgelehnt: ${frage.grund} Der Text ist auf dem Server gelöscht.`), entfernen());
   } else if (frage.zustand === 'weg') {
-    li.append(absatz('meta', 'Diese Frage gibt es auf dem Server nicht mehr. Unbearbeitete Fragen werden nach vier Wochen gelöscht.'), knopf('Aus der Liste entfernen', () => vergiss(eintrag.id)));
+    li.append(absatz('meta', 'Diese Frage gibt es auf dem Server nicht mehr. Unbearbeitete Fragen werden nach vier Wochen gelöscht.'), entfernen());
   } else {
     li.append(absatz('meta', stand(frage)));
     if (frage.entwurf?.html) {
@@ -120,42 +181,82 @@ function zeile(eintrag, frage) {
       karte.innerHTML = frage.entwurf.html;
       li.append(karte);
     }
-    li.append(knopf('Frage löschen', () => loesche(eintrag)));
+    li.append(knopf('Frage löschen', 'loeschen', kopf.id, () => loesche(eintrag)));
   }
   return li;
 }
 
+/** Wo die Tastatur in der Liste stand: Zeile, Knopf und Platz, damit sie nach dem Neubau dort weitermacht */
+function fokusInListe() {
+  const aktiv = document.activeElement;
+  const li = aktiv?.closest?.('#meine-liste > li');
+  return li ? { id: li.dataset.id, rolle: aktiv.dataset.rolle ?? null, platz: [...liste.children].indexOf(li) } : null;
+}
+
+/**
+ * Nach dem Neubau steht die Tastatur wieder am selben Knopf. Ist die Zeile weg (gelöscht, entfernt), geht sie zur Zeile, die jetzt an
+ * ihrem Platz steht, ohne Zeile zur Überschrift, ohne Liste zum Frageformular. Vorher fiel sie an den Seitenanfang (HTML b3).
+ */
+function fokusZurueck(vorher) {
+  if (!vorher) return;
+  const zeilen = [...liste.children];
+  const gleich = zeilen.find(li => li.dataset.id === vorher.id);
+  const ziel = gleich?.querySelector(`[data-rolle="${vorher.rolle}"]`)
+    ?? (zeilen[Math.min(vorher.platz, zeilen.length - 1)] ?? null)?.querySelector('[data-rolle]');
+  if (ziel) { ziel.focus(); return; }
+  if (!bereich.hidden) {
+    const kopf = bereich.querySelector('h2');
+    kopf.tabIndex = -1;
+    kopf.focus();
+    return;
+  }
+  (formFrage.hidden ? kurscode : text).focus();
+}
+
 let takt = null;
 let seit = 0;
+/** Was zuletzt in der Liste stand: Alle drei Sekunden neu gebaut, nähme die Liste jedem Vorleseprogramm und der Tastatur den Platz */
+let zuletzt = null;
 
 async function aktualisiere() {
   clearTimeout(takt);
   const eintraege = lies(FRAGEN, []);
+  const vorher = fokusInListe();
   bereich.hidden = !eintraege.length;
-  if (!eintraege.length) { liste.replaceChildren(); return; }
+  if (!eintraege.length) {
+    liste.replaceChildren();
+    zuletzt = null;
+    fokusZurueck(vorher);
+    return;
+  }
   const { status, daten } = await post('meine', { fragen: eintraege.map(({ id, geheimnis }) => ({ id, geheimnis })) });
-  if (status !== 200) { liste.replaceChildren(absatz('fehler', daten.fehler)); return; }
-  liste.replaceChildren(...daten.fragen.map((frage, i) => zeile(eintraege[i], frage)));
+  if (status !== 200) { liste.replaceChildren(absatz('fehler', daten.fehler)); zuletzt = null; return; }
+  const jetzt = JSON.stringify([eintraege.map(e => [e.id, e.text]), daten.fragen]);
+  if (jetzt !== zuletzt) {
+    zuletzt = jetzt;
+    const fokus = fokusInListe() ?? vorher;
+    liste.replaceChildren(...daten.fragen.map((frage, i) => zeile(eintraege[i], frage)));
+    fokusZurueck(fokus);
+  }
   const laeuft = daten.fragen.some(f => f.zustand === 'entwurf');
   if (!laeuft) seit = 0;
   else if (!seit) seit = Date.now();
   if (laeuft && Date.now() - seit < FRIST_MS) takt = setTimeout(aktualisiere, TAKT_MS);
 }
 
-formCode.addEventListener('submit', async event => {
-  event.preventDefault();
+beimAbsenden(formCode, async () => {
   fehler(formCode);
-  const { status, daten } = await post('token', { kurscode: document.getElementById('kurscode').value });
-  if (status !== 200) { fehler(formCode, daten.fehler); return; }
+  const { status, daten } = await post('token', { kurscode: kurscode.value });
+  if (status !== 200) { fehler(formCode, daten.fehler, status === 401 ? kurscode : null); return; }
   schreib(TOKEN, daten.token);
-  document.getElementById('kurscode').value = '';
+  kurscode.value = '';
+  kurscode.setAttribute('aria-invalid', 'false');
   zeigeFormular();
   /** Das Formular, das den Fokus hielt, ist jetzt verborgen. Ohne diesen Schritt stünde die Tastatur am Seitenanfang */
   text.focus();
 });
 
-formFrage.addEventListener('submit', async event => {
-  event.preventDefault();
+beimAbsenden(formFrage, async () => {
   fehler(formFrage);
   const frage = text.value.trim();
   const { status, daten } = await post('fragen', { frage, zustimmung: +formFrage.dataset.zustimmung, einwilligung: !!einwilligung?.checked, ...(kapitel ? { kapitel: kapitel.slug } : {}) }, lies(TOKEN, null));
@@ -163,17 +264,20 @@ formFrage.addEventListener('submit', async event => {
     schreib(TOKEN, null);
     zeigeFormular();
     fehler(formCode, 'Bitte geben Sie den Kurscode noch einmal ein.');
-    document.getElementById('kurscode').focus();
+    kurscode.focus();
     return;
   }
   if (status !== 201) {
-    fehler(formFrage, daten.treffer ? `${daten.fehler} Gefunden: ${daten.treffer.join(', ')}.` : daten.fehler);
+    /** 422 betrifft den Text: zu kurz, zu lang oder vom Checker gesperrt */
+    fehler(formFrage, daten.treffer ? `${daten.fehler} Gefunden: ${daten.treffer.join(', ')}.` : daten.fehler, status === 422 ? text : null);
     return;
   }
   schreib(FRAGEN, [{ id: daten.id, geheimnis: daten.geheimnis, text: frage }, ...lies(FRAGEN, [])]);
   text.value = '';
   zustimmung.checked = false;
   if (einwilligung) einwilligung.checked = false;
+  /** leer, aber nicht falsch: Gefragt wurde ja schon */
+  for (const feld of [text, zustimmung]) feld.setAttribute('aria-invalid', 'false');
   await aktualisiere();
   bereich.scrollIntoView();
   /** sagen, dass es geklappt hat, und die Tastatur dorthin stellen, wo die Frage jetzt steht */

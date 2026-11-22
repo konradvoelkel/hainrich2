@@ -13,8 +13,14 @@ const PORT = Number(process.argv[2] ?? 8771);
 const ROOT = path.resolve(process.argv[3] ?? process.env.HAINRICH2_SITE ?? ort('site'));
 const { HAINRICH2_MOD: MOD, HAINRICH2_LIVE: LIVE } = process.env;
 const LIVE_PATHS = /^\/eidl\/(?:index\.html|f\/.*|sitemap\.xml|daten\/fragen\.json)?$/;
-/** wie im Caddy-Block für den ganzen Host; no-referrer ändert, was der Browser als Origin schickt */
-const HOST_HEADERS = { 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer' };
+/**
+ * wie im Caddy-Block für den ganzen Host; no-referrer ändert, was der Browser als Origin schickt. COOP und HSTS stehen seit dem 2026-11-21
+ * auch hier, gemessen am Host (research/2026-11-21-modern-web-guidance, Abschnitt 5); über http://localhost übergeht der Browser HSTS.
+ */
+const HOST_HEADERS = {
+  'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'no-referrer',
+  'Cross-Origin-Opener-Policy': 'same-origin', 'Strict-Transport-Security': 'max-age=31536000',
+};
 const CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',

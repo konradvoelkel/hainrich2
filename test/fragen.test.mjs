@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createApi, READS_PER_MINUTE } from '../lib/api.js';
 import { checkToken, hashPassphrase, issueToken, tokenKey } from '../lib/auth.js';
 import { hardHits, softHits } from '../lib/checker.js';
-import { CC0, createFragen, GRUENDE, ZUSTIMMUNG } from '../lib/fragen.js';
+import { CC0, createFragen, GRUENDE, MIN_FRAGE, ZUSTIMMUNG } from '../lib/fragen.js';
 import { createRouter } from '../lib/http.js';
 import { createHandler } from '../lib/mod.js';
 import { openPending } from '../lib/pending.js';
@@ -179,6 +179,15 @@ test('I1: Harte Treffer werden gar nicht erst gespeichert, auch mit Einwilligung
   assert.ok(data.treffer.length);
   assert.equal(c.pending.count(), 0);
   assert.deepEqual(c.inbox(), []);
+});
+
+test('eine zu kurze Frage nennt die Mindestlänge', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const { status, data } = await c.ask({ frage: 'Warum?' });
+  assert.equal(status, 422);
+  assert.match(data.fehler, new RegExp(`mindestens ${MIN_FRAGE} Zeichen`));
+  assert.equal(c.pending.count(), 0);
 });
 
 test('I1: Weiche Treffer halten den Entwurf zurück, die Frage wartet auf die Moderation', async t => {
@@ -432,10 +441,22 @@ test('weiche Regeln: Personen schlagen an, Fachwörter nicht', () => {
 test('die Einwilligung ist nicht vorbelegt, und ohne Schlange gibt es sie gar nicht', () => {
   const page = askPage({ ...site, fragen: true, entwurf: true });
   assert.match(page, /<input type="checkbox" id="einwilligung">/);
-  assert.match(page, /<input type="checkbox" id="zustimmung" required>/);
+  assert.match(page, /<input type="checkbox" id="zustimmung" required aria-invalid="false">/);
   assert.ok(page.includes(ZUSTIMMUNG.entwurf));
   assert.ok(!askPage({ ...site, fragen: true, entwurf: false }).includes('einwilligung'));
   assert.match(page, /noindex/);
+});
+
+/** research/2026-11-21-modern-web-guidance, HTML b5, b10, b18, b20, b24 */
+test('das Frageformular: Meldungen stehen leer bereit, Felder gelten vorab nicht als ungültig, der Kurscode bleibt, wie er getippt ist', () => {
+  const page = askPage({ ...site, fragen: true, entwurf: true });
+  assert.match(page, /<p class="fehler" id="code-fehler" role="alert"><\/p>/);
+  assert.match(page, /<p class="fehler" id="frage-fehler" role="alert"><\/p>/);
+  assert.doesNotMatch(page, /class="fehler"[^>]*hidden/, 'eine Live-Region, die erst eingeblendet wird, liest nicht jedes Vorleseprogramm vor');
+  assert.match(page, /<input id="kurscode" [^>]*autocapitalize="none" autocorrect="off"[^>]*aria-invalid="false">/);
+  assert.match(page, /<textarea id="fragetext" [^>]*required aria-invalid="false">/);
+  assert.match(page, /<ol class="meine" id="meine-liste" role="list">/);
+  assert.match(page, /<li aria-current="page">Frage stellen<\/li><\/ol><\/nav>/);
 });
 
 test('der Knopf erscheint erst, wenn der Fragepfad offen ist', () => {

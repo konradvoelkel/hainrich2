@@ -75,6 +75,16 @@ test('Englisch findet die deutsche Frage', async ({ page }) => {
   await expect(page.locator('#treffer-fragen')).toContainText('MLP');
 });
 
+/** Bis zum 2026-11-21 importierte der Worker transformers.js statisch: Lud die Datei nicht, ging auch die Stichwortsuche nicht */
+test('ohne die Bibliothek des Sprachmodells bleibt die Stichwortsuche', async ({ page }) => {
+  await page.route('**/transformers.min.js', r => r.abort());
+  await page.goto('/eidl/');
+  await page.locator('#suchfeld').focus();
+  await expect(page.locator('#suchstatus')).toContainText('Stichwortsuche funktioniert weiter', { timeout: 60_000 });
+  await page.locator('#suchfeld').fill('Perzeptron');
+  await expect(page.locator('#treffer-skript li').first()).toBeVisible();
+});
+
 test('ohne WASM bleibt die Stichwortsuche', async ({ page }) => {
   await page.route('**/wasm/**', r => r.abort());
   await page.goto('/eidl/');

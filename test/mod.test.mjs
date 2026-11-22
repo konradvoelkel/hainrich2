@@ -208,6 +208,8 @@ test('jede Antwort trägt CSP und no-store, Abmelden beendet die Sitzung', async
   const edit = await (await c.get('/eidl/mod/f/s01/', cookie)).text();
   assert.deepEqual(edit.match(/<script[^>]*>/g), ['<script src="/eidl/mod/tasten.js" defer>'], 'nur das eine Skript, nichts inline');
   assert.ok(!MOD_CSP.includes('unsafe'));
+  assert.match(MOD_CSP, /require-trusted-types-for 'script'; trusted-types 'none'/, 'keine Senke, also auch keine Policy');
+  assert.match(edit, /<meta name="color-scheme" content="light dark">/);
   await c.form('/eidl/mod/abmelden', {}, { cookie });
   assert.match(await (await c.get('/eidl/mod/', cookie)).text(), /Passphrase/);
 });

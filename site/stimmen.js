@@ -23,18 +23,15 @@ const schreib = stimmen => {
 
 const wuerfle = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
 
+/** Steht immer da und wechselt nur den Text: Eine Live-Region, die erst eingeblendet wird, liest nicht jedes Vorleseprogramm vor */
 const meldung = document.createElement('p');
 meldung.className = 'fehler';
 meldung.setAttribute('role', 'alert');
-meldung.hidden = true;
 document.querySelector('main').prepend(meldung);
 
+/** Wie es aussieht, folgt aus `aria-pressed` (site/style.css), nicht aus der Farbe allein */
 function zeige(box, wert) {
-  for (const pfeil of box.querySelectorAll('.pfeil')) {
-    const an = +pfeil.dataset.wert === wert;
-    pfeil.classList.toggle('an', an);
-    pfeil.setAttribute('aria-pressed', String(an));
-  }
+  for (const pfeil of box.querySelectorAll('.pfeil')) pfeil.setAttribute('aria-pressed', String(+pfeil.dataset.wert === wert));
 }
 
 async function stimme(box, klick) {
@@ -46,7 +43,7 @@ async function stimme(box, klick) {
   const vorher = punkte.textContent;
   punkte.textContent = String(+vorher + wert - eintrag.wert);
   zeige(box, wert);
-  meldung.hidden = true;
+  meldung.textContent = '';
   let antwort = null;
   try {
     antwort = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, kennung: eintrag.kennung, wert }) });
@@ -58,7 +55,6 @@ async function stimme(box, klick) {
     punkte.textContent = vorher;
     zeige(box, eintrag.wert);
     meldung.textContent = antwort ? fehler.message : 'Der Server antwortet gerade nicht. Bitte später noch einmal.';
-    meldung.hidden = false;
   }
 }
 

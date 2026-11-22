@@ -60,6 +60,9 @@ h2 { font-size: 1.05rem; line-height: 1.35; margin: 1.4rem 0 .4rem; }
 
 .meta { display: flex; flex-wrap: wrap; gap: .25rem .6rem; align-items: center; margin: .15rem 0; color: var(--leise); font-size: .9rem; }
 .pfad { margin: 0 0 .8rem; font-size: .95rem; }
+/* Der Pfad ist eine Liste, die Trenner stehen nur im Bild; der zweite Wert schweigt für Vorleseprogramme, wo der Browser ihn kennt */
+nav.pfad ol { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .35em; margin: 0; padding: 0; list-style: none; }
+nav.pfad li + li::before { content: "›"; content: "›" / ""; margin-inline-end: .35em; }
 
 .badge { padding: .02rem .45rem; border-radius: .3rem; background: var(--flaeche); color: var(--tinte); font-size: .8rem; white-space: nowrap; }
 .badge.offen { background: var(--offen-grund); color: var(--offen); }
@@ -183,6 +186,8 @@ pre { overflow-x: auto; }
 .knopf { padding: .5rem .8rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); color: var(--tinte); text-decoration: none; white-space: nowrap; }
 .fehler, .gemeldet { margin: .6rem 0; padding: .5rem .7rem; border-radius: .4rem; }
 .fehler { background: var(--offen-grund); color: var(--offen); }
+/* Meldungen, die ein Skript füllt, stehen leer bereit: Eine Live-Region, die erst eingeblendet wird, liest nicht jedes Vorleseprogramm vor */
+.fehler:empty { margin: 0; padding: 0; }
 .gemeldet { background: var(--gut-grund); color: var(--gut); }
 .vorschlag { max-height: 24rem; overflow-y: auto; }
 .mod pre { overflow-x: auto; padding: .5rem; border: 1px solid var(--linie); border-radius: .4rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .85rem; }
@@ -203,6 +208,8 @@ pre { overflow-x: auto; }
 .formular .haken { display: grid; grid-template-columns: auto 1fr; gap: .6rem; align-items: start; font-weight: 400; }
 .formular .haken input { width: auto; margin-top: .3rem; }
 .formular button { justify-self: start; }
+/* Solange die Antwort aussteht, schickt ein zweiter Klick nichts (site/fragen.js) */
+.formular button[aria-disabled="true"] { opacity: .6; cursor: progress; }
 .meine { padding: 0; list-style: none; }
 .meine-frage { margin: 1rem 0; padding: .8rem 1rem; border: 1px solid var(--linie); border-radius: .4rem; background: var(--karte); }
 .meine-frage .frage-text { margin: 0 0 .3rem; font-weight: 600; white-space: pre-wrap; }
@@ -216,8 +223,9 @@ pre { overflow-x: auto; }
 .pfeil { padding: .2rem .5rem; border: 0; background: none; color: var(--leise); font: inherit; line-height: 1; cursor: pointer; border-radius: .3rem; }
 .pfeil[hidden] { display: none; }
 .pfeil:hover { background: var(--flaeche); color: var(--marke); }
+/* Gedrückt zeigt Fläche und Umriss, nicht nur die Farbe; der Umriss bleibt auch im Kontrastmodus (research/2026-11-21-modern-web-guidance, CSS B11) */
+.pfeil[aria-pressed="true"] { color: var(--marke); background: var(--flaeche); outline: 1px solid currentColor; outline-offset: -1px; }
 .pfeil:focus-visible { outline: 2px solid var(--marke); outline-offset: 1px; }
-.pfeil.an { color: var(--marke); }
 .thema { display: flex; gap: .6rem; align-items: flex-start; }
 .thema > div:last-child { min-width: 0; }
 @media (max-width: 34rem) {

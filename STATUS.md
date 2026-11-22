@@ -1,14 +1,27 @@
 # Status
 
-_Stand 2026-11-21._
+_Stand 2026-11-22._
 
 ## Was existiert
 
 - **Geprüft am 2026-11-21 gegen Googles Modern Web Guidance** (Commit `64a6d70`, gelesen, das Werkzeug lief nicht), am Code von
-  `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Behoben ist
-  noch keine. Die gewichtigsten: Die Stichwortsuche wartet auf `transformers.min.js` und fällt mit ihr aus; ein Doppelklick schickt eine
-  Frage zweimal ab; Fokus und Fehlermeldungen im Fragepfad; Feldränder unter 3 zu 1. Im Browser ist nichts davon gemessen. Eine
+  `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Eine
   Browser-Politik hat das Repo nicht, ein Vorschlag steht im Bericht.
+  - **Gebaut am 2026-11-22, nicht ausgespielt** (Bericht, Abschnitt 9): 13 Abweichungen ganz, zwei zum Teil.
+    - _Suche:_ Die Stichwortsuche hängt nicht mehr an `transformers.min.js`. Das Modell liegt nicht mehr im Cache Storage.
+    - _Fragepfad:_ Ein Doppelklick schickt nichts zweimal. Der Fokus bleibt, und Fehler hängen am Feld. Meldungen stehen leer bereit.
+      `aria-invalid` folgt `:user-invalid`.
+    - _Semantik und Bild:_ gedrückte Pfeile mit Fläche und Umriss, Pfad als Liste, Namen für Tabellen und Pfeile,
+      `<meta name="color-scheme">`.
+    - _Moderation:_ Trusted Types in `MOD_CSP`.
+    - _Testserver:_ `site/serve.mjs` sendet COOP und HSTS wie der Host.
+  - **Belegt:**
+    - `npm test` 315 von 315.
+    - `smoke` 23 von 23 in Chromium, Firefox und WebKit, darunter ein neuer Test, der `transformers.min.js` sperrt.
+    - `smoke:mod` 27 von 27 in Chromium und Firefox.
+    - Im Browser angesehen: Pfeile, Fehler am Kurscode, Fokus nach dem Entfernen.
+  - **Offen:** der Feldrand unter 3 zu 1 (das Bild entscheidet Konrad), die Maske am Formelrand, die übrigen niedrigen Punkte.
+  - **Nicht geprüft:** mit einem Vorleseprogramm.
 
 - Git-Repo auf `main`, Remote `origin` ist `konradvoelkel/hainrich2` auf GitHub, **öffentlich seit dem 2026-11-18** (Plan D46).
 - `DEVELOPMENT_PLAN.md`, `CLAUDE.md`, dieses Dokument.

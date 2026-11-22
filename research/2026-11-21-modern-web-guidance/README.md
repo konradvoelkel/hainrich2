@@ -192,3 +192,39 @@ nachahmt.
    `transformers.min.js` habe ich nachgerechnet.
 4. **Kopfzeilen am Host:** `curl` mit `GET` auf vier Adressen.
 5. **Zitate:** Die kurzen Zitate aus den Leitfäden stehen unter deren Lizenz, Apache-2.0.
+
+## 9. Nachtrag vom 2026-11-22: behoben
+
+Auf Konrads Wort gebaut, nicht ausgespielt. Behoben sind 13 der 55 Abweichungen ganz und zwei zum Teil:
+
+| Befund | Was jetzt gilt | Stelle |
+|---|---|---|
+| Performance b1 | Der Worker lädt `transformers.min.js` erst in `modell()`. Die Stichwortsuche steht ohne die Datei, ein Smoke-Test sperrt sie. | `site/such-worker.js`, `smoke/site.spec.mjs` |
+| Performance b3 | Anders gelöst als vorgeschlagen: kein Cache Storage mehr (`env.useBrowserCache = false`), es gilt der HTTP-Cache, für das Modell ein Tag. Ein Ordner mit Prüfsumme hätte den Worker am Server gebrochen, er liest das Modell aus `models/e5s-16384/` im Docroot. Der alte `transformers-cache` wird gelöscht. | `lib/model.js`, `site/such-worker.js` |
+| HTML b3 | „Meine Fragen“ wird nur neu gebaut, wenn sich etwas geändert hat. Der Fokus bleibt am Knopf, nach dem Löschen geht er zur nächsten Zeile, zur Überschrift oder ins Formular. | `site/fragen.js` |
+| HTML b4 | Ein zweites Absenden, solange die Antwort aussteht, schickt nichts; der Knopf trägt so lange `aria-disabled`. | `site/fragen.js` |
+| HTML b9 | Die Tabellen haben Namen, die leere Kopfzelle der Zahlen heißt „Was“. | `lib/site.js`, `lib/mod-pages.js` |
+| HTML b10 | `role="list"` an den Listen ohne Aufzählungszeichen. | `lib/site.js`, `lib/mod-pages.js` |
+| HTML b11 | Die Pfeile einer Liste und die Knöpfe unter „Meine Fragen“ nennen ihre Frage über `aria-describedby`. | `lib/site.js`, `site/fragen.js` |
+| HTML b18 | Die Meldungen stehen leer bereit und wechseln nur den Text. | `lib/site.js`, `site/fragen.js`, `site/stimmen.js`, `site/style.css` |
+| HTML b20 | `aria-invalid="false"`, bis `:user-invalid` greift. | `lib/site.js`, `site/fragen.js` |
+| HTML b24 | Der Pfad ist eine `ol`, die Seite selbst trägt `aria-current`, die Trenner setzt das Stylesheet. | `lib/site.js`, `site/style.css` |
+| CSS B8 | `<meta name="color-scheme" content="light dark">` in beiden Köpfen. | `lib/site.js`, `lib/mod-pages.js` |
+| CSS B11 | Ein gedrückter Pfeil hat Fläche und Umriss. | `site/style.css`, `site/stimmen.js` |
+| Sicherheit B6 | `MOD_CSP` erzwingt Trusted Types ohne Policy. | `lib/mod.js` |
+| HTML b5, zum Teil | Am Kurscode `autocapitalize="none" autocorrect="off"`. Der Name in der Anmeldung und die Beschriftung „Weiter“ sind unverändert. | `lib/site.js` |
+| HTML b19, zum Teil | Fehler vom Server hängen an Kurscode und Fragetext, die Tastatur geht dorthin. Eine zu kurze Frage nennt die Mindestlänge. Die Formulare der Moderation sind unverändert. | `site/fragen.js`, `lib/api.js` |
+
+Nebenbei: `site/serve.mjs` sendet jetzt COOP und HSTS wie der Host.
+
+**Offen aus Abschnitt 2:** der Feldrand (Punkt 4, braucht Konrads Wort zum Bild) und die Maske am Formelrand (Punkt 10, mit der Tastatur zu prüfen).
+
+**Geprüft:** `npm test` 315 von 315. `npm run smoke` 23 von 23 in Chromium, Firefox und WebKit, am lokalen Bau mit dem Stand vom Server vom 18.11. `smoke:mod` 27 von 27 in Chromium und Firefox. Im eingebauten Browser angesehen, an der Wegwerf-Datenbank von `smoke-mod/start.mjs`:
+- **Pfeile:** Ein gedrückter Pfeil ist zu sehen, und `aria-describedby` nennt die Frage.
+- **Kurscode:** Ein falscher Code setzt den Fokus aufs Feld, die Meldung hängt daran, und nach einer Eingabe ist das Feld wieder gültig.
+- **„Meine Fragen“:** Nach dem Entfernen des letzten Eintrags steht der Fokus im Formular.
+
+**Nicht geprüft:**
+- Kein Vorleseprogramm hat die Seiten gelesen.
+- Den Fokus beim Neubau der Liste, während ein Entwurf läuft, prüft nur `smoke:mod` indirekt.
+- Die Moderation unter WebKit läuft weiter in keinem Test.
