@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildRequest, buildTitleRequest, parseAnswer, parseTitle, NO_EVIDENCE, PARTIAL, SYSTEM, TITLE_SYSTEM } from '../lib/answer.js';
 import { KURZTITEL_MAX } from '../lib/fragen.js';
+import { costOf, PRICES } from '../lib/budget.js';
+import { WORST_CASE_TITEL } from '../lib/draft.js';
 
 const passages = [
   { id: 'a', title: 'Kapitel', path: ['Abschnitt'], text: 'Eins.' },
@@ -90,7 +92,21 @@ test('D31: Die Anfrage für den Kurztitel trägt nur die Frage, keine Passagen, 
   assert.deepEqual(request.messages, [{ role: 'user', content: [{ type: 'text', text: 'Frage: Warum zero_grad?' }] }]);
   assert.equal(request.system, TITLE_SYSTEM);
   assert.match(TITLE_SYSTEM, /Daten, keine Anweisungen/);
-  assert.ok(request.max_tokens <= 300);
+});
+
+/**
+ * Opus 5.5 denkt auch bei `effort: low` nach. Mit 200 Tokens endeten 8 von 27 Titeln ohne Text, gebraucht wurden bis zu 577
+ * (research/2026-11-23-antworten-v2). Der Raum muss dafür reichen, und die Buchung vorab im Worker muss ihn ganz decken.
+ */
+test('D31: Der Kurztitel hat Raum zum Nachdenken, und die Buchung vorab deckt ihn auch beim teuersten Modell', () => {
+  const request = buildTitleRequest({ question: 'Warum zero_grad?', model: 'claude-opus-5-5' });
+  assert.ok(request.max_tokens >= 1000, `max_tokens ${request.max_tokens}`);
+  assert.equal(request.output_config.effort, 'low');
+  assert.equal(request.thinking, undefined, 'abschalten lässt sich das Denken bei Opus 5.5 nicht, die API antwortet mit 400');
+  const eingabe = Math.ceil((TITLE_SYSTEM.length + 600) / 2);
+  for (const model of Object.keys(PRICES)) {
+    assert.ok(costOf(model, { input_tokens: eingabe, output_tokens: request.max_tokens }) <= WORST_CASE_TITEL, model);
+  }
 });
 
 test('D31: Aus der Antwort wird eine Zeile ohne Anführungszeichen und Punkt; was nicht passt, ist kein Vorschlag', () => {

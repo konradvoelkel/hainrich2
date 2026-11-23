@@ -4,6 +4,12 @@ _Stand 2026-11-23._
 
 ## Was existiert
 
+- **Gemessen am 2026-11-23** (`research/2026-11-23-antworten-v2/`, 2,09 $ auf Konrads Wort, nichts am Host): Prompt-Version 2 hält, die
+  Suche nach verbotenen Wendungen schlägt bei 1 von 27 Beispielfragen an (Version 1: 14 von 27), alle acht Grenzfälle wie erwartet.
+  **Kurztitel scheiterten im Betrieb zu einem Drittel:** Mit `max_tokens: 200` kamen 8 von 27 leer zurück, weil Opus 5.5 auch bei
+  `effort: low` nachdenkt; mit 2000 alle 27. Auf Konrads Wort („Ja, bauen“) steht `buildTitleRequest` jetzt auf 2000 und die Buchung
+  vorab (`WORST_CASE_TITEL`) auf 0,06 $; nicht committet, am Host läuft noch 200. Ein zweiter Anlauf mit ganzen Kapiteln machte keine von
+  zehn Teilantworten vollständig (E13).
 - **Am 2026-11-23 gebaut und ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D52; Bericht
   `research/2026-11-21-modern-web-guidance/`, Abschnitt 10; Commit `9663120`, auf sein Wort „Jetzt ausspielen“ statische Seiten bis
   17:15:50, App um 17:15:57 mit Neustart von `hainrich2-web`):
