@@ -3,6 +3,7 @@
  * Entwurf kommt fertig gerendert vom Server, wie jede Antwort. Während er läuft, fragt die Seite alle paar Sekunden nach.
  */
 import './zitate.js';
+import { setzeHTML } from './sicher.js';
 
 const API = '../../api/';
 const TAKT_MS = 3000;
@@ -139,8 +140,22 @@ function vergiss(id) {
   aktualisiere();
 }
 
+/**
+ * Die Rückfrage vor dem Löschen. Bei `confirm()` stand die Tastatur auf OK, Enter löschte also; hier steht sie auf „Behalten“, und Escape
+ * behält auch (research/2026-11-21-modern-web-guidance, HTML b23). Nach dem Schließen gibt der Browser den Fokus an den Knopf zurück.
+ */
+const rueckfrage = document.getElementById('loeschen');
+function sollLoeschen(eintrag) {
+  rueckfrage.querySelector('#loeschen-frage').textContent = document.getElementById(`meine-${eintrag.id}`)?.textContent ?? eintrag.text ?? '';
+  rueckfrage.returnValue = '';
+  return new Promise(resolve => {
+    rueckfrage.addEventListener('close', () => resolve(rueckfrage.returnValue === 'loeschen'), { once: true });
+    rueckfrage.showModal();
+  });
+}
+
 async function loesche(eintrag) {
-  if (!confirm('Diese Frage löschen? Das lässt sich nicht rückgängig machen.')) return;
+  if (!(await sollLoeschen(eintrag))) return;
   await post('loeschen', { id: eintrag.id, geheimnis: eintrag.geheimnis });
   vergiss(eintrag.id);
 }
@@ -161,7 +176,7 @@ function zeile(eintrag, frage) {
   const kopf = absatz('frage-text', frage.text ?? eintrag.text);
   kopf.id = `meine-${eintrag.id}`;
   /** fertig gesetzt vom Server, wie der Entwurf; ohne Antwort von dort bleibt die Kopie aus diesem Browser */
-  if (frage.html) kopf.innerHTML = frage.html;
+  if (frage.html) setzeHTML(kopf, frage.html);
   li.append(kopf);
   const entfernen = () => knopf('Aus der Liste entfernen', 'entfernen', kopf.id, () => vergiss(eintrag.id));
   if (frage.zustand === 'öffentlich') {
@@ -178,7 +193,7 @@ function zeile(eintrag, frage) {
     li.append(absatz('meta', stand(frage)));
     if (frage.entwurf?.html) {
       const karte = document.createElement('div');
-      karte.innerHTML = frage.entwurf.html;
+      setzeHTML(karte, frage.entwurf.html);
       li.append(karte);
     }
     li.append(knopf('Frage löschen', 'loeschen', kopf.id, () => loesche(eintrag)));

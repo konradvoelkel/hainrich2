@@ -1,9 +1,21 @@
 # Status
 
-_Stand 2026-11-22._
+_Stand 2026-11-23._
 
 ## Was existiert
 
+- **Am 2026-11-23 gebaut, noch nicht ausgespielt** (Konrads Entscheidungen vom selben Tag, Plan D52; Bericht
+  `research/2026-11-21-modern-web-guidance/`, Abschnitt 10):
+  - _Trusted Types öffentlich:_ DOMPurify 3.4.18 säubert HTML vom Server im Browser ein zweites Mal, die Policy `hainrich` lässt nur den
+    Such-Worker als Skript zu (`site/sicher.js`). Die CSP in `site/serve.mjs` verlangt das; am Host fehlt sie, bis die Skripte draußen sind.
+  - _Moderation:_ Fehler vom Server stehen an ihrem Feld, die Tastatur geht dorthin, ohne Skript.
+  - _Fragepfad:_ Löschen fragt in einem `<dialog>`, die Tastatur steht auf „Behalten“. Der Browser darf den Kurscode anbieten.
+  - _Bild:_ Eingabefelder mit einem Rand von mindestens 3:1.
+  - _Tage:_ Tag der Frage und Prüftag sind Berliner Tage (`lib/tag.js`), Zähler und Deckel bleiben UTC.
+  - _Tests:_ ein Browser-Test für den schnellen Doppelklick beim Abstimmen, mit Gegenprobe.
+  - **Belegt am lokalen Bau:** `npm test` 321 von 321; `npm run smoke` 24 von 24 in Chromium, Firefox und WebKit; `smoke:mod` 28 von 28 in
+    Chromium und Firefox.
+  - **Nicht geprüft:** Vorleseprogramm, Moderation unter WebKit, alles am Host.
 - **Geprüft am 2026-11-21 gegen Googles Modern Web Guidance** (Commit `64a6d70`, gelesen, das Werkzeug lief nicht), am Code von
   `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Eine
   Browser-Politik hat das Repo nicht, ein Vorschlag steht im Bericht.

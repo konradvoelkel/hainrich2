@@ -98,12 +98,14 @@ const copy = (from, name) => {
 };
 const dep = (...p) => path.join(repo, 'node_modules', ...p);
 
-for (const name of ['style.css', 'app.js', 'fragen.js', 'stimmen.js', 'zitate.js', 'such-worker.js']) copy(path.join(here, name), name);
+for (const name of ['style.css', 'app.js', 'fragen.js', 'stimmen.js', 'zitate.js', 'sicher.js', 'such-worker.js']) copy(path.join(here, name), name);
 for (const name of ['logo.svg', 'favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'muster.svg', MODERATION.bild, OG_CARD.file]) copy(path.join(here, 'brand', name), name);
 /** Browser und Crawler fragen an der Wurzel des Hosts danach, egal was die Seite nennt */
 fs.copyFileSync(path.join(here, 'brand/favicon.ico'), path.join(staging, 'favicon.ico'));
 for (const name of ['search.js', 'rank.js', 'model.js']) copy(path.join(repo, 'lib', name), name);
 copy(dep('@huggingface/transformers/dist/transformers.min.js'), 'transformers.min.js');
+/** säubert HTML vom Server im Browser ein zweites Mal, für Trusted Types (site/sicher.js); die Lizenz steht im Kopf der Datei */
+copy(dep('dompurify/dist/purify.es.mjs'), 'purify.js');
 for (const name of ['ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm']) copy(dep('onnxruntime-web/dist', name), `wasm/${name}`);
 copy(dep('katex/dist/katex.min.css'), 'katex/katex.min.css');
 copy(dep('@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2'), 'schrift/bricolage-grotesque.woff2');

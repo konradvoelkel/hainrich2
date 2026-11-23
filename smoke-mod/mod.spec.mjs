@@ -101,6 +101,8 @@ test('ein harter Treffer wird nicht gespeichert, das Getippte bleibt stehen', as
   await page.click('button[value="speichern"]');
   await expect(page.locator('.fehler').first()).toContainText('E-Mail-Adresse');
   await expect(page.locator('#antwort')).toHaveValue(/a@example\.test/);
+  await expect(page.locator('#antwort'), 'die Tastatur steht im Feld mit dem Fehler, auch ohne Skript (HTML b19)').toBeFocused();
+  await expect(page.locator('#antwort')).toHaveAccessibleDescription(/E-Mail-Adresse/);
 });
 
 test('Cursortasten und Knopf blättern, im Textfeld bleibt die Taste beim Feld', async ({ page }) => {
@@ -198,10 +200,26 @@ test('Mit Einwilligung kommt der Entwurf sofort und nur für die fragende Person
   await expect(page.locator('.meine-frage .antwort .katex')).toBeVisible();
   await expect(page.locator('.meine-frage .hinweis')).toContainText('außer Ihnen sieht ihn nur die Moderation');
 
+  const meine = page.waitForResponse(r => r.url().endsWith('/eidl/api/meine'));
   await page.reload();
   await expect(page.locator('.meine-frage .frage-text')).toHaveText('Was bedeutet Broadcasting bei Tensoren genau?');
   await expect(page.locator('.meine-frage .antwort .badge')).toHaveText('Entwurf');
   await expect(page.locator('#fragetext')).toBeVisible();
+
+  /**
+   * Trusted Types (E19, site/sicher.js): DOMPurify nimmt am HTML vom Server nichts weg, auch nicht das MathML von KaTeX. Was es entfernt,
+   * steht nach jedem Aufruf in `DOMPurify.removed`; das Modul ist dasselbe, das die Seite lädt.
+   */
+  const [eintrag] = (await (await meine).json()).fragen;
+  const entfernt = await page.evaluate(async htmls => {
+    const { default: DOMPurify } = await import('/eidl/purify.js');
+    return htmls.map(html => {
+      DOMPurify.sanitize(html, { ADD_TAGS: ['semantics', 'annotation'] });
+      return DOMPurify.removed.map(r => r.element?.nodeName ?? `@${r.attribute?.name}`);
+    });
+  }, [eintrag.html, eintrag.entwurf.html]);
+  expect(entfernt).toEqual([[], []]);
+  await expect(page.locator('.meine-frage .antwort annotation[encoding="application/x-tex"]').first()).toBeAttached();
 
   /** ein anderer Browser: kein Geheimnis, keine Frage */
   const stranger = await (await browser.newContext()).newPage();
@@ -236,8 +254,20 @@ test('Ohne Einwilligung wartet die Frage, und löschen lässt sie sich selbst', 
   await page.waitForTimeout(1000);
   await expect(page.locator('.meine-frage .antwort')).toHaveCount(0);
 
-  page.once('dialog', dialog => dialog.accept());
-  await page.click('.meine-frage button:has-text("Frage löschen")');
+  /** Ein eigener Dialog statt `confirm()` (HTML b23): Die Tastatur steht auf „Behalten“, Escape behält, danach ist sie wieder am Knopf */
+  const loeschen = page.locator('.meine-frage button:has-text("Frage löschen")');
+  const rueckfrage = page.getByRole('dialog', { name: 'Diese Frage löschen?' });
+  await loeschen.focus();
+  await page.keyboard.press('Enter');
+  await expect(rueckfrage).toBeVisible();
+  await expect(rueckfrage).toContainText('Eine Frage ohne Einwilligung zum Thema Tensoren?');
+  await expect(rueckfrage.getByRole('button', { name: 'Behalten' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(rueckfrage).toBeHidden();
+  await expect(page.locator('.meine-frage')).toHaveCount(1);
+  await expect(loeschen).toBeFocused();
+  await page.keyboard.press('Enter');
+  await rueckfrage.getByRole('button', { name: 'Löschen', exact: true }).click();
   await expect(page.locator('#meine')).toBeHidden();
   expect(problems).toEqual([]);
 });
@@ -316,6 +346,37 @@ test('In der Liste abstimmen sortiert sie um, und ein zweiter Browser zählt ext
   }, { timeout: 10_000 }).toBe(last);
   await expect(box(page).locator('.hoch')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator(`.stimme[data-id="${ids[0]}"] .hoch`)).toHaveAttribute('aria-pressed', 'false');
+  expect(problems).toEqual([]);
+});
+
+/**
+ * Klicks reihen sich auf (site/stimmen.js). Ohne die Reihe läse ein zweiter Klick, der die Antwort auf den ersten nicht abwartet, den alten
+ * Stand: Er würfelte eine zweite Kennung und schickte noch einmal +1, die Frage hätte zwei Stimmen statt keiner. s01 bekommt sonst keine
+ * Stimme, und am Ende steht sie, wie sie war: Die Reihenfolge im Unterforum bleibt.
+ */
+test('ein schneller zweiter Klick wartet auf den ersten und nimmt die Stimme zurück', async ({ page }) => {
+  const problems = watch(page);
+  const gesendet = [];
+  const punkte = [];
+  await page.route('**/eidl/api/stimme', async route => {
+    gesendet.push(route.request().postDataJSON());
+    if (gesendet.length === 1) await new Promise(resolve => setTimeout(resolve, 1500));
+    const antwort = await route.fetch();
+    punkte.push((await antwort.json()).punkte);
+    await route.fulfill({ response: antwort });
+  });
+  await page.goto('/eidl/f/s01/');
+  const hoch = page.locator('.stimme .hoch');
+  await hoch.click();
+  await hoch.click();
+  expect(gesendet.length, 'der zweite Klick wartet, bis der erste beantwortet ist').toBe(1);
+  await expect.poll(() => punkte.length).toBe(2);
+  expect(gesendet.map(s => s.wert)).toEqual([1, 0]);
+  expect(gesendet[1].kennung, 'dieselbe Kennung: eine Stimme, die zurückgenommen wird').toBe(gesendet[0].kennung);
+  expect(punkte[1]).toBe(punkte[0] - 1);
+  await expect(page.locator('.stimme .punkte')).toHaveText(String(punkte[1]));
+  await expect(hoch).toHaveAttribute('aria-pressed', 'false');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('eidl:stimmen')).s01.wert)).toBe(0);
   expect(problems).toEqual([]);
 });
 

@@ -2,6 +2,8 @@
  * Suche auf der Startseite: DOM hier, Modell und Rangfolge im Worker. Der startet erst beim ersten Fokus,
  * Crawler und reine Leser laden also nichts. Es wird nichts gesendet.
  */
+import { setzeHTML, suchWorker } from './sicher.js';
+
 const TIMEOUT_MS = 90_000;
 const DEBOUNCE_MS = 200;
 
@@ -28,7 +30,7 @@ const zeile = (kopf, href, unten, html) => {
   const li = document.createElement('li');
   const a = document.createElement('a');
   a.href = href;
-  if (html) a.innerHTML = html;
+  if (html) setzeHTML(a, html);
   else a.textContent = kopf;
   const p = document.createElement('p');
   p.textContent = unten;
@@ -87,7 +89,7 @@ function modellFehlt() {
 
 function start() {
   status.textContent = bereit();
-  worker = new Worker(`${wurzel}such-worker.js`, { type: 'module' });
+  worker = suchWorker();
   const frist = setTimeout(() => { if (!modellDa) modellFehlt(); }, TIMEOUT_MS);
   worker.onerror = () => { clearTimeout(frist); modellFehlt(); };
   worker.onmessage = ({ data }) => {

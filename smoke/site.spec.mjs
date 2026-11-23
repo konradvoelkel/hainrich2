@@ -202,6 +202,22 @@ test('die Überschriften stehen in der eigenen Schrift, geladen vom eigenen Host
   expect(seen.problems).toEqual([]);
 });
 
+/** E19 (site/sicher.js): Wo der Browser Trusted Types kennt, nimmt die Seite kein HTML als Zeichenkette an. Dass die Suche dabei läuft, zeigt der Test davor */
+test('Trusted Types: rohes HTML wird abgewiesen, wo der Browser sie kennt', async ({ page, browserName }) => {
+  await page.goto('/eidl/');
+  const ergebnis = await page.evaluate(() => {
+    if (!window.trustedTypes) return 'unbekannt';
+    try {
+      document.createElement('div').innerHTML = '<b>roh</b>';
+      return 'angenommen';
+    } catch {
+      return 'abgewiesen';
+    }
+  });
+  expect(ergebnis).not.toBe('angenommen');
+  if (browserName === 'chromium') expect(ergebnis).toBe('abgewiesen');
+});
+
 test('strukturierte Daten stehen in der Seite, und die strenge CSP stört sich nicht daran', async ({ page }) => {
   const seen = watch(page);
   await page.goto('/eidl/f/s01/');

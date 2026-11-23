@@ -8,6 +8,7 @@ import zlib from 'node:zlib';
 import { DatabaseSync } from 'node:sqlite';
 import { checkDevice, DEVICE_SECONDS, hashPassphrase, issueDevice } from '../lib/auth.js';
 import { createHandler, MOD_CSP } from '../lib/mod.js';
+import { pendingPage } from '../lib/mod-pages.js';
 import { publishAll } from '../lib/publish.js';
 import { openStore } from '../lib/store.js';
 import { questionPage } from '../lib/site.js';
@@ -488,8 +489,8 @@ test('D31: Alle Kurztitel auf einer Seite, ein Knopf; bei einem Fehler wird nich
   const schlecht = await c.form('/eidl/mod/titel/', { 't-s01': 'Neuron: Was rechnet es?', 't-s02': 'x'.repeat(60), aktion: 'titel_speichern' }, { cookie });
   assert.equal(schlecht.status, 422);
   const wieder = await schlecht.text();
-  assert.match(wieder, /s02: Der Kurztitel braucht 5 bis 53 Zeichen, es sind 60/);
-  assert.match(wieder, new RegExp(`name="t-s02" maxlength="53" value="${'x'.repeat(60)}"`));
+  assert.match(wieder, new RegExp(`<p class="fehler" id="t-s02-fehler">Der Kurztitel braucht 5 bis 53 Zeichen, es sind 60\\.</p>\n<input id="t-s02" name="t-s02" maxlength="53" value="${'x'.repeat(60)}" aria-invalid="true" aria-describedby="t-s02-fehler" autofocus>`), 'der Fehler steht am Feld, die Tastatur geht dorthin');
+  assert.doesNotMatch(wieder, /id="t-s01"[^>]*aria-invalid/);
   assert.deepEqual(c.store.questions().map(q => q.kurztitel), [null, null]);
 
   assert.equal((await c.form('/eidl/mod/titel/', { 't-s01': 'Neuron: Was rechnet es?', 't-s02': 'Tensor oder Array?', aktion: 'titel_speichern' }, { cookie })).status, 303);
@@ -609,6 +610,52 @@ test('D33: Die Vorschau endet per Schalter, nur für admin und nur mit Haken, un
   assert.equal(robots('f/s01/index.html'), 'noindex');
   assert.match(c.read('index.html'), /class="vorschau"/);
   assert.doesNotMatch(c.read('sitemap.xml'), /<url>/);
+});
+
+/** research/2026-11-21-modern-web-guidance, HTML b19: Die Seiten kommen ohne Skript aus, also `autofocus` am ersten Feld mit Fehler */
+const autofocus = html => [...html.matchAll(/<(?:input|textarea|select)\b[^>]*\bautofocus\b[^>]*>/g)].map(m => m[0].match(/(?:id|name)="([^"]+)"/)[1]);
+
+test('Fehler vom Server stehen an ihrem Feld, und die Tastatur geht zum ersten', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const cookie = await c.signIn();
+  const res = await c.form('/eidl/mod/f/s01/', { frage: 'x', kurztitel: 'Neu', antwort: 'Siehe [7].', aktion: 'speichern' }, { cookie });
+  assert.equal(res.status, 422);
+  const html = await res.text();
+  assert.match(html, /<p class="fehler" id="frage-fehler">Die Frage ist zu kurz\.<\/p>\n<textarea id="frage" name="frage" rows="3" required aria-invalid="true" aria-describedby="frage-fehler" autofocus>x<\/textarea>/);
+  assert.match(html, /<p class="fehler" id="kurztitel-fehler">Der Kurztitel braucht 5 bis 53 Zeichen, es sind 3\.<\/p>\n<input id="kurztitel" [^>]*aria-invalid="true" aria-describedby="kurztitel-fehler">/);
+  assert.match(html, /<p class="fehler" id="antwort-fehler">Den Verweis \[7\] gibt es nicht, die Antwort hat 1 Zitate\.<\/p>\n<textarea id="antwort" [^>]*aria-invalid="true" aria-describedby="antwort-fehler">/);
+  assert.deepEqual(autofocus(html), ['frage'], 'nur ein Feld bekommt den Fokus');
+  assert.doesNotMatch(html, /role="alert"/, 'nichts steht doppelt oben');
+
+  const ohneHaken = await (await c.form('/eidl/mod/f/s01/', { aktion: 'loeschen' }, { cookie })).text();
+  assert.match(ohneHaken, /<p class="fehler" id="bestaetigt-fehler">Bitte bestätigen Sie[^<]*<\/p>\n<label class="haken"><input type="checkbox" name="bestaetigt" value="1" required aria-invalid="true" aria-describedby="bestaetigt-fehler" autofocus>/);
+  assert.deepEqual(autofocus(ohneHaken), ['bestaetigt']);
+});
+
+test('nach einem Fehlversuch bei der Anmeldung steht die Meldung am Namensfeld, nach zu vielen oben', async t => {
+  const c = await setup();
+  t.after(c.close);
+  const falsch = await (await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: 'falsch' })).text();
+  assert.match(falsch, /<p class="fehler" id="name-fehler">Name oder Passphrase stimmen nicht\.<\/p>\n<input id="name" name="name" autocomplete="username" required aria-invalid="true" aria-describedby="name-fehler" autofocus>/);
+  assert.doesNotMatch(falsch, /value="konrad"/, 'der Name kommt nicht zurück, sonst unterschieden sich die Seiten');
+  for (let i = 0; i < 5; i++) await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: 'falsch' });
+  const gesperrt = await (await c.form('/eidl/mod/anmelden', { name: 'konrad', passphrase: 'falsch' })).text();
+  assert.match(gesperrt, /<p class="fehler" role="alert">Zu viele Versuche\. Bitte später noch einmal\.<\/p>/);
+  assert.doesNotMatch(gesperrt, /aria-invalid|autofocus/);
+});
+
+test('eine neue Frage zeigt Kapitel und Checker-Haken als Feldfehler, ein Fehler an einem fehlenden Feld steht oben', () => {
+  const row = { id: 'n1', text: 'Was rechnet ein Neuron?', tag: '2026-11-23', treffer: ['E-Mail-Adresse'], entwurf: null, zustand: 'wartet', einwilligung: false, kapitel: null };
+  const fehler = [{ feld: 'gesehen', text: 'Der Checker hat angeschlagen, bitte den Text lesen und das bestätigen.' }, { feld: 'kapitel', text: 'Bitte ein Kapitel wählen.' }];
+  const html = pendingPage({ row, user: { name: 'konrad', rolle: 'admin' }, base: '/eidl/', fehler, kapitel: '' });
+  assert.match(html, /<p class="fehler" id="kapitel-fehler">Bitte ein Kapitel wählen\.<\/p>\n<select id="kapitel" name="kapitel" required aria-invalid="true" aria-describedby="kapitel-fehler" autofocus>/);
+  assert.match(html, /<p class="fehler" id="gesehen-fehler">Der Checker[^<]*<\/p>\n<label class="haken"><input type="checkbox" name="gesehen" value="1" aria-invalid="true" aria-describedby="gesehen-fehler">/);
+  assert.deepEqual(autofocus(html), ['kapitel'], 'der Fokus folgt der Reihenfolge der Felder, nicht der Fehler');
+
+  const ohneTreffer = pendingPage({ row: { ...row, treffer: [] }, user: { name: 'konrad', rolle: 'admin' }, base: '/eidl/', fehler: [fehler[0]] });
+  assert.match(ohneTreffer, /<p class="fehler" role="alert">Der Checker hat angeschlagen/, 'kein Fehler geht still verloren');
+  assert.deepEqual(autofocus(ohneTreffer), []);
 });
 
 test('die Moderation kann eine Frage nicht länger machen, als der Worker sie annimmt', async t => {

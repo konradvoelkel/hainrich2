@@ -454,8 +454,11 @@ test('das Frageformular: Meldungen stehen leer bereit, Felder gelten vorab nicht
   assert.match(page, /<p class="fehler" id="frage-fehler" role="alert"><\/p>/);
   assert.doesNotMatch(page, /class="fehler"[^>]*hidden/, 'eine Live-Region, die erst eingeblendet wird, liest nicht jedes Vorleseprogramm vor');
   assert.match(page, /<input id="kurscode" [^>]*autocapitalize="none" autocorrect="off"[^>]*aria-invalid="false">/);
+  assert.doesNotMatch(page.match(/<input id="kurscode"[^>]*>/)[0], /autocomplete/, 'der Browser darf den Kurscode anbieten (Konrad, 23.11.)');
   assert.match(page, /<textarea id="fragetext" [^>]*required aria-invalid="false">/);
   assert.match(page, /<ol class="meine" id="meine-liste" role="list">/);
+  assert.match(page, /<dialog id="loeschen" aria-labelledby="loeschen-titel" aria-describedby="loeschen-frage loeschen-folge">\n<form method="dialog"/, 'die Rückfrage vor dem Löschen ist ein eigener Dialog (HTML b23)');
+  assert.match(page, /<button value="behalten" autofocus>Behalten<\/button><button value="loeschen">Löschen<\/button>/, 'die Tastatur steht auf der sicheren Wahl');
   assert.match(page, /<li aria-current="page">Frage stellen<\/li><\/ol><\/nav>/);
 });
 

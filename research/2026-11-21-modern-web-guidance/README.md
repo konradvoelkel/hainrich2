@@ -233,3 +233,26 @@ Nebenbei: `site/serve.mjs` sendet jetzt COOP und HSTS wie der Host.
 - Kein Vorleseprogramm hat die Seiten gelesen.
 - Den Fokus beim Neubau der Liste, während ein Entwurf läuft, prüft nur `smoke:mod` indirekt.
 - Die Moderation unter WebKit läuft weiter in keinem Test.
+
+## 10. Nachtrag vom 2026-11-23: Konrads Entscheidungen und die nächsten Korrekturen
+
+**Entschieden** (Plan D52): Trusted Types auch öffentlich, mit DOMPurify (Abschnitt 6, Punkt 2, gegen meine Empfehlung); `<dialog>` statt
+`confirm()` (Punkt 4); der dunklere Feldrand (Punkt 5, das Logo für den Dunkelmodus nicht); `autocomplete="off"` am Kurscode war keine
+Absicht und ist weg (Punkt 6); Berliner Tage (Punkt 7). Offen bleiben die Browser-Politik (Punkt 1), die Zustimmungstexte (Punkt 3), das
+spekulative Vorladen (Punkt 8) und das Werkzeug (Punkt 9).
+
+| Befund | Was jetzt gilt | Stelle |
+|---|---|---|
+| Sicherheit B2 | `require-trusted-types-for 'script'; trusted-types hainrich dompurify`. Alles HTML geht durch DOMPurify 3.4.18 (exakt gepinnt), MathML von KaTeX bleibt ganz; die Policy `hainrich` lässt als Skript-Adresse nur den Such-Worker zu. Am Host fehlt die CSP noch, sie kommt nach dem Ausspielen (Abschnitt 5). | `site/sicher.js`, `site/app.js`, `site/fragen.js`, `site/serve.mjs` |
+| HTML b19, jetzt ganz | Auch in der Moderation steht jeder Fehler an seinem Feld, mit `aria-invalid` und `aria-describedby`, und `autofocus` setzt die Tastatur ins erste Feld mit Fehler; die Seiten bleiben ohne Skript. Fehler ohne Feld stehen oben. | `lib/mod.js`, `lib/mod-pages.js` |
+| HTML b23 | Löschen fragt in einem `<dialog>`, die Tastatur steht auf „Behalten“, Escape behält, danach ist sie wieder am Knopf. | `lib/site.js`, `site/fragen.js`, `site/style.css` |
+| HTML b5, jetzt ganz am Kurscode | `autocomplete="off"` ist weg, das Feld hat einen `name`. Der Name in der Anmeldung und „Weiter“ sind unverändert. | `lib/site.js` |
+| CSS B10 | `--feldrand` für Eingabefelder: hell 3,7:1 gegen die Karte, dunkel 3,8:1; vorher 1,4:1. | `site/style.css` |
+| JS (c) 5 | Tag der Frage und Prüftag als Berliner Tage, über `Intl.DateTimeFormat` mit `Europe/Berlin`. Zahlen und Deckel bleiben UTC. | `lib/tag.js`, `lib/fragen.js`, `lib/pending.js`, `lib/store.js` |
+
+**Geprüft am lokalen Bau** (Stand vom Server vom 22.11.): `npm test` 321 von 321. `npm run smoke` 24 von 24 in Chromium, Firefox und
+WebKit, darunter die Suche mit dem Modell im Worker unter Trusted Types und ein Test, dass Chromium rohes HTML abweist. `smoke:mod` 28 von
+28 in Chromium und Firefox, darunter: DOMPurify entfernt am HTML von Frage und Entwurf nichts; der Dialog; die Tastatur im Feld mit dem
+Fehler; ein schneller zweiter Klick auf denselben Pfeil wartet auf den ersten (mit Gegenprobe: ohne die Reihe in `site/stimmen.js` rot).
+
+**Nicht geprüft:** der Dialog und die Feldfehler mit einem Vorleseprogramm; die Moderation unter WebKit; Trusted Types am Host.

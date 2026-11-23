@@ -21,6 +21,9 @@ Cross-Projekt-Regeln stehen in `~/files/work/PLAYBOOK.md`. §5 ist die Startlist
 npm test
 ```
 
+Die Review-Seite des Blindvergleichs auf Port 8770, kein Prüfer: Sie zeigt die Antworten aus Phase 1 ohne Modellnamen, die Bewertungen
+landen in `seeds/bewertung.json`:
+
 ```bash
 node tools/review.mjs
 ```
