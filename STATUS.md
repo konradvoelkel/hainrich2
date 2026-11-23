@@ -8,7 +8,7 @@ _Stand 2026-11-23._
   `research/2026-11-21-modern-web-guidance/`, Abschnitt 10; Commit `9663120`, auf sein Wort „Jetzt ausspielen“ statische Seiten bis
   17:15:50, App um 17:15:57 mit Neustart von `hainrich2-web`):
   - _Trusted Types öffentlich:_ DOMPurify 3.4.18 säubert HTML vom Server im Browser ein zweites Mal, die Policy `hainrich` lässt nur den
-    Such-Worker als Skript zu (`site/sicher.js`). Die CSP in `site/serve.mjs` verlangt das. **Am Host fehlt sie noch:** Der Wunsch liegt seit 17:20 bei der Sitzung „VPS config“.
+    Such-Worker als Skript zu (`site/sicher.js`). Die CSP verlangt das, in `site/serve.mjs` wie am Host; dort seit 17:23:40 (Server-Repo `f4793b9`, auf Konrads Wort dort).
   - _Moderation:_ Fehler vom Server stehen an ihrem Feld, die Tastatur geht dorthin, ohne Skript.
   - _Fragepfad:_ Löschen fragt in einem `<dialog>`, die Tastatur steht auf „Behalten“. Der Browser darf den Kurscode anbieten.
   - _Bild:_ Eingabefelder mit einem Rand von mindestens 3:1.
@@ -16,10 +16,11 @@ _Stand 2026-11-23._
   - _Tests:_ ein Browser-Test für den schnellen Doppelklick beim Abstimmen, mit Gegenprobe.
   - **Belegt am lokalen Bau:** `npm test` 321 von 321; `npm run smoke` 24 von 24 in Chromium, Firefox und WebKit; `smoke:mod` 28 von 28 in
     Chromium und Firefox.
-  - **Am Host danach, nur `GET`:** Smoke 23 von 24 in Chromium, Firefox und WebKit. Rot ist nur „Trusted Types: rohes HTML wird
-    abgewiesen“, weil die CSP dort noch fehlt. Neue Dateien, Dialog, Kurscode-Feld und Zustimmung 4 stehen in den Seiten. Node 26 am
-    Server rechnet Berliner Tage (ICU 78.3, tz 2026e).
-  - **Nicht geprüft:** Vorleseprogramm, Moderation unter WebKit, Trusted Types am Host.
+  - **Am Host danach, nur `GET`:** mit der neuen CSP Smoke 24 von 24 in Chromium, Firefox und WebKit, auch der Test, dass rohes HTML
+    abgewiesen wird, und die Suche mit dem Modell im Worker. Neue Dateien, Dialog, Kurscode-Feld und Zustimmung 4 stehen in den Seiten.
+    Node 26 am Server rechnet Berliner Tage (ICU 78.3, tz 2026e).
+  - **Nicht geprüft:** Vorleseprogramm, Moderation unter WebKit; „Meine Fragen“ mit HTML vom Server unter Trusted Types nur lokal
+    (`smoke:mod`), am Host bräuchte es den Kurscode.
 - **Geprüft am 2026-11-21 gegen Googles Modern Web Guidance** (Commit `64a6d70`, gelesen, das Werkzeug lief nicht), am Code von
   `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Eine
   Browser-Politik hat das Repo nicht, ein Vorschlag steht im Bericht.
