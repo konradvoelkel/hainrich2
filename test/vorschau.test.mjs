@@ -34,7 +34,7 @@ test('mit vorschau bleibt alles draußen; ohne kommen geprüfte Fragen hinein un
   assert.equal(robots('f/s05/index.html'), 'noindex', 'ungeprüft');
   assert.equal(robots('f/grundlagen/index.html'), 'index,follow');
   assert.equal(robots('f/architekturen/index.html'), 'noindex', 'nur Ungeprüftes');
-  assert.equal(robots('f/kapitel/tensoren/index.html'), 'index,follow', 'drei geprüfte Fragen');
+  assert.equal(robots('f/kapitel/tensoren/index.html'), 'index,follow', 'drei geprüfte Fragen, ab zwei indexierbar');
   assert.equal(robots('f/kapitel/backpropagation/index.html'), 'noindex', 'eine geprüfte Frage reicht nicht');
   assert.equal(robots('f/neu/index.html'), 'noindex');
   const orte = [...lies('sitemap.xml').matchAll(/<loc>https:\/\/example\.test\/eidl\/([^<]*)<\/loc>/g)].map(m => m[1]).sort();

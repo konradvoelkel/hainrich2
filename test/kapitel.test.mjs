@@ -63,7 +63,7 @@ test('die Suche auf der Kapitelseite kennt ihren Kapiteltitel und findet ihre Da
   assert.match(indexPage([], site), /<section class="suche" id="suche" role="search" aria-label="Suche im Forum" hidden data-root="">/);
 });
 
-test('erst drei geprüfte Fragen machen die Kapitelseite indexierbar, und nur ihre Fragen stehen dort', () => {
+test('erst zwei geprüfte Fragen machen die Kapitelseite indexierbar, und nur ihre Fragen stehen dort (Plan D53)', () => {
   const open = question();
   const other = { ...reviewed(question()), id: 's02', kapitel: 'Tensoren' };
   const closed = kapitelPage(backprop, [open], site);
@@ -73,10 +73,10 @@ test('erst drei geprüfte Fragen machen die Kapitelseite indexierbar, und nur ih
   assert.match(one, /name="robots" content="noindex"/, 'eine Liste mit einer Frage ist zu dünn für den Index');
   assert.match(one, /<a id="thema-s01" href="\.\.\/\.\.\/s01\/">/);
   assert.doesNotMatch(one, /s02/, 'Fragen aus anderen Kapiteln gehören nicht auf diese Seite');
-  const three = ['s01', 's03', 's04'].map(id => ({ ...reviewed(open), id }));
-  assert.match(kapitelPage(backprop, three.slice(0, 2), site), /name="robots" content="noindex"/);
-  assert.match(kapitelPage(backprop, three, site), /name="robots" content="index,follow"/);
-  assert.match(kapitelPage(backprop, [...three.slice(0, 2), { ...open, id: 's05' }], site), /name="robots" content="noindex"/, 'ungeprüfte zählen nicht');
+  const two = ['s01', 's03'].map(id => ({ ...reviewed(open), id }));
+  assert.match(kapitelPage(backprop, two.slice(0, 1), site), /name="robots" content="noindex"/);
+  assert.match(kapitelPage(backprop, two, site), /name="robots" content="index,follow"/);
+  assert.match(kapitelPage(backprop, [...two.slice(0, 1), { ...open, id: 's05' }], site), /name="robots" content="noindex"/, 'ungeprüfte zählen nicht');
 });
 
 test('ohne Knopf „Frage stellen“ bei abgeschaltetem Fragepfad, die Suche bleibt', () => {
@@ -85,15 +85,15 @@ test('ohne Knopf „Frage stellen“ bei abgeschaltetem Fragepfad, die Suche ble
   assert.match(html, /id="suche"/);
 });
 
-test('das Unterforum verweist auf die Kapitelseiten, die Sitemap nennt nur Kapitel mit drei geprüften Fragen', () => {
+test('das Unterforum verweist auf die Kapitelseiten, die Sitemap nennt nur Kapitel mit zwei geprüften Fragen', () => {
   const lernen = forumPage(UNTERFOREN.find(u => u.slug === 'lernen'), [], site);
   assert.match(lernen, /<a href="\.\.\/kapitel\/backpropagation\/">Backpropagation<\/a>/);
   assert.equal(lernen.match(/href="\.\.\/kapitel\//g).length, 9, 'Lernen und Training hat neun Kapitel');
-  const three = ['s01', 's03', 's04'].map(id => ({ ...reviewed(question()), id }));
-  const map = sitemap(three, site);
+  const two = ['s01', 's03'].map(id => ({ ...reviewed(question()), id }));
+  const map = sitemap(two, site);
   assert.match(map, /<loc>https:\/\/example\.test\/eidl\/f\/kapitel\/backpropagation\/<\/loc>/);
   assert.doesNotMatch(map, /f\/kapitel\/tensoren\//);
-  assert.doesNotMatch(sitemap(three.slice(0, 2), site), /f\/kapitel\//, 'unter drei geprüften Fragen bleibt die Kapitelseite draußen');
+  assert.doesNotMatch(sitemap(two.slice(0, 1), site), /f\/kapitel\//, 'mit einer geprüften Frage bleibt die Kapitelseite draußen');
   assert.doesNotMatch(sitemap([question()], site), /f\/kapitel\//);
 });
 
