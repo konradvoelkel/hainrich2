@@ -4,9 +4,9 @@ _Stand 2026-11-23._
 
 ## Was existiert
 
-- **Kapitelseiten ab zwei geprüften Fragen im Index** (Plan D53, Konrad am 2026-11-25), gebaut und getestet, nicht committet und nicht
-  ausgespielt; am Host gilt noch drei. Damit kämen Logistische Regression, Was ist Deep Learning? und Neuron und Perzeptron in Index und
-  Sitemap. Gemessen am selben Tag, alle Seiten am Host: kein Banner, nirgends `X-Robots-Tag`, `robots.txt` offen, Sitemap 35 Adressen.
+- **Kapitelseiten ab zwei geprüften Fragen im Index** (Plan D53, Konrad am 2026-11-25; `678eccb`, am Host seit 17:37:04 mit
+  `site/deploy-app.sh`). Logistische Regression, Was ist Deep Learning? und Neuron und Perzeptron tragen dort `index,follow` und stehen in
+  der Sitemap (38 Adressen), die übrigen 26 bleiben `noindex`. Smoke gegen den Host danach 24 von 24 in Chromium. Gemessen am selben Tag, alle Seiten am Host: kein Banner, nirgends `X-Robots-Tag`, `robots.txt` offen, Sitemap 35 Adressen.
 - **Gemessen am 2026-11-23** (`research/2026-11-23-antworten-v2/`, 2,09 $ auf Konrads Wort, nichts am Host): Prompt-Version 2 hält, die
   Suche nach verbotenen Wendungen schlägt bei 1 von 27 Beispielfragen an (Version 1: 14 von 27), alle acht Grenzfälle wie erwartet.
   **Kurztitel scheiterten im Betrieb zu einem Drittel:** Mit `max_tokens: 200` kamen 8 von 27 leer zurück, weil Opus 5.5 auch bei
