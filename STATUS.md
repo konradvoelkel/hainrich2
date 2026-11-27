@@ -1,9 +1,13 @@
 # Status
 
-_Stand 2026-11-23._
+_Stand 2026-11-27._
 
 ## Was existiert
 
+- **Die Moderation läuft im Browser-Test jetzt auch unter WebKit** (2026-11-27, auf Konrads Wort „Ja, bauen“). `npm run smoke:mod` kommt über
+  HTTPS mit einem Wegwerf-Zertifikat, das `smoke-mod/start.mjs` mit `openssl` erzeugt; `site/serve.mjs` bedient HTTPS nur, wenn Schlüssel
+  und Zertifikat gesetzt sind. 28 von 28 in Chromium, Firefox und WebKit; vorher scheiterte unter WebKit jeder Test mit Anmeldung
+  (`research/2026-11-17-webkit-cookie/`, Nachtrag). `npm test` 327 von 327, `npm run smoke` 24 von 24 in Chromium. Am Host ändert das nichts.
 - **Kapitelseiten ab zwei geprüften Fragen im Index** (Plan D53, Konrad am 2026-11-25; `678eccb`, am Host seit 17:37:04 mit
   `site/deploy-app.sh`). Logistische Regression, Was ist Deep Learning? und Neuron und Perzeptron tragen dort `index,follow` und stehen in
   der Sitemap (38 Adressen), die übrigen 26 bleiben `noindex`. Smoke gegen den Host danach 24 von 24 in Chromium. Gemessen am selben Tag, alle Seiten am Host: kein Banner, nirgends `X-Robots-Tag`, `robots.txt` offen, Sitemap 35 Adressen.
@@ -29,7 +33,7 @@ _Stand 2026-11-23._
   - **Am Host danach, nur `GET`:** mit der neuen CSP Smoke 24 von 24 in Chromium, Firefox und WebKit, auch der Test, dass rohes HTML
     abgewiesen wird, und die Suche mit dem Modell im Worker. Neue Dateien, Dialog, Kurscode-Feld und Zustimmung 4 stehen in den Seiten.
     Node 26 am Server rechnet Berliner Tage (ICU 78.3, tz 2026e).
-  - **Nicht geprüft:** Vorleseprogramm, Moderation unter WebKit; „Meine Fragen“ mit HTML vom Server unter Trusted Types nur lokal
+  - **Nicht geprüft:** Vorleseprogramm, Moderation unter WebKit (seit dem 27.11. im Test); „Meine Fragen“ mit HTML vom Server unter Trusted Types nur lokal
     (`smoke:mod`), am Host bräuchte es den Kurscode.
 - **Geprüft am 2026-11-21 gegen Googles Modern Web Guidance** (Commit `64a6d70`, gelesen, das Werkzeug lief nicht), am Code von
   `d417706`: 83 Punkte erfüllt, 55 Abweichungen, 22 bewusst anders, Bericht in `research/2026-11-21-modern-web-guidance/`. Eine
@@ -484,7 +488,7 @@ _Stand 2026-11-23._
   am selben Tag live; die Kapitelseiten liefen seit dem 2026-11-12 ohne diesen Satz.
 - Die CSP steht doppelt, in der Rolle und in `site/serve.mjs`. Live sind beide gleich, aber kein Test hält sie
   zusammen.
-- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft lokal in Firefox grün. Unter WebKit scheitert jeder Test mit Anmeldung (2026-11-17: 16 von 25): WebKit nimmt das `Secure`-Cookie auf `http://localhost` nicht an, gemessen in `research/2026-11-17-webkit-cookie/`. Das betrifft nur den Testverbund, der Host läuft über HTTPS; die Moderation ist damit aber in WebKit in keinem Test gelaufen. Die Systempakete für WebKit sind seit dem 17.11. installiert (`playwright install-deps`), daran lag es nicht.
+- Der Smoke-Test ist in Chromium, Firefox und WebKit gegen den echten Host grün (2026-11-06, `SMOKE_BROWSER`). Ein echtes iPhone hat niemand getestet. `smoke:mod` läuft seit dem 2026-11-27 über HTTPS und ist lokal in Chromium, Firefox und WebKit grün; bis dahin scheiterte unter WebKit jeder Test mit Anmeldung, weil WebKit das `Secure`-Cookie auf `http://localhost` nicht annimmt (`research/2026-11-17-webkit-cookie/`). Gegen den Host läuft `smoke:mod` nicht, dort bräuchte es eine Anmeldung.
 - Latenz auf einem echten Telefon; gemessen ist nur CPU-Drosselung im Headless-Chromium.
 - Text-Fragmente nur in Chromium und nur an vier Links geprüft.
 - Alle Trefferquoten stammen aus einem kleinen, selbst geschriebenen Set, nicht aus echten Fragen.

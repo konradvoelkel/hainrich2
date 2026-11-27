@@ -55,7 +55,8 @@ npm run smoke
 ```
 
 Mit `SMOKE_URL=https://hai.konradvoelkel.com` läuft er gegen den echten Host, mit `SMOKE_BROWSER=firefox` oder `webkit` in einem anderen Browser. Die Moderation im echten Browser, gegen eine
-Wegwerf-Datenbank:
+Wegwerf-Datenbank, über HTTPS mit einem Wegwerf-Zertifikat aus `openssl` (sonst meldet WebKit nicht an), mit `SMOKE_BROWSER` auch in
+Firefox und WebKit:
 
 ```bash
 npm run smoke:mod

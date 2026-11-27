@@ -1,9 +1,11 @@
 /**
  * Startet für `npm run smoke:mod` den Verbund wie auf dem Server: Web-Prozess, Worker und statische Site mit Aufteilung, gegen
  * eine Wegwerf-Datenbank. Die Fragen stammen aus dem gebauten Baum, die Antworten sind Attrappen, und auch Claude ist eine:
- * Kein Test ruft die echte API. Erst `node site/build.mjs`.
+ * Kein Test ruft die echte API. Erst `node site/build.mjs`. Die Site kommt über HTTPS wie am Host, mit einem Wegwerf-Zertifikat, das
+ * nur so lange lebt wie das Verzeichnis darunter: WebKit nimmt das `Secure`-Cookie über http://localhost nicht an
+ * (research/2026-11-17-webkit-cookie/), Chromium und Firefox nehmen es, also liefe die Anmeldung sonst nur dort.
  */
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -79,5 +81,11 @@ const voting = createVoting({ store, publish });
 setInterval(() => voting.flush(), 300);
 /** dieselbe Verteilung wie server/web.mjs */
 http.createServer(createRouter({ base: '/eidl/', api, mod, voting: voting.handle })).listen(MOD_PORT, '127.0.0.1');
-const site = spawn('node', ['site/serve.mjs', String(PORT), built], { stdio: 'inherit', env: { ...process.env, HAINRICH2_MOD: `http://127.0.0.1:${MOD_PORT}`, HAINRICH2_LIVE: live } });
+const tls = { key: path.join(dir, 'schluessel.pem'), cert: path.join(dir, 'zertifikat.pem') };
+execFileSync('openssl', ['req', '-x509', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:prime256v1', '-nodes', '-days', '1', '-subj', '/CN=localhost',
+  '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1', '-keyout', tls.key, '-out', tls.cert], { stdio: 'ignore' });
+const site = spawn('node', ['site/serve.mjs', String(PORT), built], {
+  stdio: 'inherit',
+  env: { ...process.env, HAINRICH2_MOD: `http://127.0.0.1:${MOD_PORT}`, HAINRICH2_LIVE: live, HAINRICH2_TLS_KEY: tls.key, HAINRICH2_TLS_CERT: tls.cert },
+});
 process.on('exit', () => site.kill());

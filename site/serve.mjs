@@ -2,16 +2,20 @@
  * Statischer Server für Vorschau und Smoke-Test: node site/serve.mjs [port] [verzeichnis]. Ahmt den
  * Caddy-Block nach, also Umleitung auf /eidl/ und dieselbe CSP. Das ist eine zweite Definition; die
  * gültige steht im Server-Repo, Rolle hainrich2. Mit HAINRICH2_MOD (Adresse des Web-Prozesses) und
- * HAINRICH2_LIVE (dessen Seiten) auch die Aufteilung zwischen beiden.
+ * HAINRICH2_LIVE (dessen Seiten) auch die Aufteilung zwischen beiden. Mit HAINRICH2_TLS_KEY und HAINRICH2_TLS_CERT (Dateien im
+ * PEM-Format) über HTTPS wie am Host: WebKit nimmt das `Secure`-Cookie der Moderation über http://localhost nicht an
+ * (research/2026-11-17-webkit-cookie/), `npm run smoke:mod` braucht es deshalb.
  */
 import http from 'node:http';
+import https from 'node:https';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ort } from '../lib/orte.js';
 
 const PORT = Number(process.argv[2] ?? 8771);
 const ROOT = path.resolve(process.argv[3] ?? process.env.HAINRICH2_SITE ?? ort('site'));
-const { HAINRICH2_MOD: MOD, HAINRICH2_LIVE: LIVE } = process.env;
+const { HAINRICH2_MOD: MOD, HAINRICH2_LIVE: LIVE, HAINRICH2_TLS_KEY: TLS_KEY, HAINRICH2_TLS_CERT: TLS_CERT } = process.env;
+if (!TLS_KEY !== !TLS_CERT) throw new Error('HAINRICH2_TLS_KEY und HAINRICH2_TLS_CERT gehören zusammen');
 const LIVE_PATHS = /^\/eidl\/(?:index\.html|f\/.*|sitemap\.xml|daten\/fragen\.json)?$/;
 /**
  * wie im Caddy-Block für den ganzen Host; no-referrer ändert, was der Browser als Origin schickt. COOP und HSTS stehen seit dem 2026-11-21
@@ -31,7 +35,7 @@ const TYPES = {
   '.wasm': 'application/wasm', '.onnx': 'application/octet-stream', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.xml': 'application/xml', '.txt': 'text/plain', '.png': 'image/png', '.ico': 'image/x-icon',
 };
 
-http.createServer((req, res) => {
+function handle(req, res) {
   const { pathname } = new URL(req.url, 'http://x');
   if (pathname === '/' || pathname === '/eidl') { res.writeHead(301, { Location: '/eidl/' }); res.end(); return; }
   if (MOD && /^\/eidl\/(?:mod|api)(\/|$)/.test(pathname)) {
@@ -53,4 +57,7 @@ http.createServer((req, res) => {
   }
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] ?? 'application/octet-stream', 'Content-Security-Policy': CSP, ...HOST_HEADERS });
   fs.createReadStream(file).pipe(res);
-}).listen(PORT, () => console.log(`http://localhost:${PORT}/eidl/ aus ${ROOT}`));
+}
+
+const server = TLS_KEY ? https.createServer({ key: fs.readFileSync(TLS_KEY), cert: fs.readFileSync(TLS_CERT) }, handle) : http.createServer(handle);
+server.listen(PORT, () => console.log(`${TLS_KEY ? 'https' : 'http'}://localhost:${PORT}/eidl/ aus ${ROOT}`));

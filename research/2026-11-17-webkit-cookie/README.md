@@ -36,3 +36,18 @@ Der Smoke-Test der Site (`npm run smoke`) braucht keine Anmeldung und läuft unt
 für den Test abzuschwächen wäre falsch: Dann liefe der Test gegen etwas, das es auf dem Host nicht gibt.
 
 **Nicht geprüft:** Safari auf einem echten Gerät, und ob WebKit sich mit `http://127.0.0.1` anders verhält als mit `localhost`.
+
+## Nachtrag 2026-11-27: gebaut
+
+Auf Konrads Wort („Ja, bauen“) läuft `npm run smoke:mod` über HTTPS. `smoke-mod/start.mjs` erzeugt beim Start mit `openssl req -x509`
+ein Zertifikat für `localhost`, einen Tag gültig, im Wegwerf-Verzeichnis des Verbunds; `site/serve.mjs` bedient HTTPS, wenn
+`HAINRICH2_TLS_KEY` und `HAINRICH2_TLS_CERT` gesetzt sind, sonst wie bisher HTTP. Playwright bekommt `ignoreHTTPSErrors`, auch beim
+Warten auf den Server. Das Cookie bleibt, wie es ist. Kein Schlüssel liegt im Repo.
+
+| Browser | `smoke:mod` |
+|---|---|
+| Chromium | 28 von 28 |
+| Firefox | 28 von 28 |
+| WebKit | 28 von 28 |
+
+`npm run smoke` (ohne Anmeldung) läuft weiter über HTTP, 24 von 24 in Chromium.

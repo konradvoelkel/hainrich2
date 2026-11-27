@@ -32,7 +32,7 @@ test('Anmelden setzt das Cookie, Abmelden beendet die Sitzung', async ({ page, c
   expect([geraet.httpOnly, geraet.secure, geraet.sameSite, geraet.path]).toEqual([true, true, 'Strict', '/eidl/mod/']);
   const tage = (geraet.expires - Date.now() / 1000) / 86400;
   expect(tage > 179 && tage <= 180, `${tage} Tage`).toBe(true);
-  expect((await context.cookies('http://localhost/eidl/f/s01/')).map(c => c.name)).not.toContain('__Secure-geraet');
+  expect((await context.cookies('https://localhost/eidl/f/s01/')).map(c => c.name)).not.toContain('__Secure-geraet');
   await page.click('form[action*="abmelden"] button');
   await expect(page.locator('#passphrase')).toBeVisible();
   expect((await context.cookies()).map(c => c.name)).toEqual(['__Secure-geraet']);
